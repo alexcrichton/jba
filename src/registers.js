@@ -63,7 +63,7 @@ JBA.Registers.prototype = {
     this.ime  = false;
   },
 
-  set_register: function(reg, value) {
+  set: function(reg, value) {
     switch (reg) {
       case JBA.Reg.A: this.registers[JBA.Reg.A] = value; break;
       case JBA.Reg.B: this.registers[JBA.Reg.B] = value; break;
@@ -95,7 +95,7 @@ JBA.Registers.prototype = {
     }
   },
 
-  get_register: function(reg) {
+  get: function(reg) {
     switch (reg) {
       case JBA.Reg.A: return this.registers[JBA.Reg.A];
       case JBA.Reg.B: return this.registers[JBA.Reg.B];
