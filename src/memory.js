@@ -68,7 +68,13 @@ JBA.Memory.prototype = {
         case JBA.P1:
           var oldP1 = this.memory[JBA.P1];
           value = (value & 0x30) | (oldP1 & ~0x30);
-          value = this.pad.update_input(value);
+
+          if (this.pad == null) {
+            throw "Pad not set when writing to memory!";
+          } else {
+            value = this.pad.update_input(value);
+          }
+
           if (value != oldP1 && (value & 0x0F) != 0x0F) {
             memory[JBA.IF] |= 0x10; // Should produce an interruption
           }
