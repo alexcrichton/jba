@@ -191,3 +191,227 @@ test('ccf', function() {
   inst.ccf();
   equals(reg.get_flag(JBA.Reg.f_C), 1);
 });
+
+test('cp n', function() {
+  reg.set(JBA.Reg.A, 0x20);
+
+  // Comparing with other register
+  pc_change(1, function() {
+    reg.set(JBA.Reg.B, 0x19);
+    inst.cp_n(JBA.Reg.B);
+
+    equal(reg.get_flag(JBA.Reg.f_Z), 0);
+    equal(reg.get_flag(JBA.Reg.f_N), 1);
+    equal(reg.get_flag(JBA.Reg.f_H), 1);
+    equal(reg.get_flag(JBA.Reg.f_C), 0);
+  });
+
+  // Comparing with c_HL
+  pc_change(1, function() {
+    reg.set(JBA.Reg.HL, 0x8080);
+    mem.write(0x8080, 0x21);
+    inst.cp_n(JBA.Reg.c_HL);
+
+    equal(reg.get_flag(JBA.Reg.f_Z), 0);
+    equal(reg.get_flag(JBA.Reg.f_N), 1);
+    equal(reg.get_flag(JBA.Reg.f_H), 1);
+    equal(reg.get_flag(JBA.Reg.f_C), 1);
+  });
+
+  // Comparing with $
+  reg.program_counter = 0x807f;
+  pc_change(2, function() {
+    mem.write(0x8080, 0x20);
+    inst.cp_n(JBA.Reg.$);
+
+    equal(reg.get_flag(JBA.Reg.f_Z), 1);
+    equal(reg.get_flag(JBA.Reg.f_N), 1);
+    equal(reg.get_flag(JBA.Reg.f_H), 0);
+    equal(reg.get_flag(JBA.Reg.f_C), 0);
+  });
+});
+
+test('cpl', function() {
+  pc_change(1, function() {
+    reg.set(JBA.Reg.A, 0x77);
+    inst.cpl();
+
+    equal(reg.get(JBA.Reg.A), 0x88);
+    equal(reg.get_flag(JBA.Reg.f_N), 1);
+    equal(reg.get_flag(JBA.Reg.f_H), 1);
+  });
+
+  pc_change(1, function() {
+    reg.set(JBA.Reg.A, 0x34);
+    inst.cpl();
+
+    equal(reg.get(JBA.Reg.A), 0xcb);
+    equal(reg.get_flag(JBA.Reg.f_N), 1);
+    equal(reg.get_flag(JBA.Reg.f_H), 1);
+  });
+});
+
+test('ld n <- nn', function() {
+  mem.write(0x8001, 0xad);
+  mem.write(0x8002, 0xde);
+
+  reg.program_counter = 0x8000;
+  pc_change(3, function() {
+    inst.ld_n_nn(JBA.Reg.DE);
+
+    equals(reg.get(JBA.Reg.DE), 0xdead);
+  });
+
+  reg.program_counter = 0x8000;
+  pc_change(3, function() {
+    inst.ld_n_nn(JBA.Reg.SP);
+
+    equals(reg.get(JBA.Reg.DE), 0xdead);
+  });
+
+  raises(function(){ inst.ld_n_nn(JBA.Reg.A); });
+  raises(function(){ inst.ld_n_nn(JBA.Reg.AF); });
+});
+
+test('ld nn <- SP', function() {
+  mem.write(0x8001, 0x00);
+  mem.write(0x8002, 0x85);
+
+  reg.program_counter = 0x8000;
+  pc_change(3, function() {
+    reg.stack_pointer = 0x9067;
+    inst.ld_nn_SP();
+
+    equals(mem.read(0x8500), 0x67);
+    equals(mem.read(0x8501), 0x90);
+  });
+});
+
+test('jr', function() {
+  mem.write(0x8001, 0x33);
+  reg.program_counter = 0x8000;
+
+  pc_change(0x35, function(){ inst.jr(); });
+});
+
+test('jr cc n (conditional jump)', function() {
+  mem.write(0x8001, 0x33);
+  reg.set_flag(JBA.Reg.f_Z, 1);
+  reg.set_flag(JBA.Reg.f_N, 0);
+
+  reg.program_counter = 0x8000;
+  pc_change(0x35, function(){
+    inst.jr_CC_n(JBA.Reg.f_Z, 1);
+  });
+
+  reg.program_counter = 0x8000;
+  pc_change(2, function(){
+    inst.jr_CC_n(JBA.Reg.f_Z, 0);
+  });
+
+  reg.program_counter = 0x8000;
+  pc_change(0x35, function(){
+    inst.jr_CC_n(JBA.Reg.f_N, 0);
+  });
+
+  reg.program_counter = 0x8000;
+  pc_change(2, function(){
+    inst.jr_CC_n(JBA.Reg.f_N, 1);
+  });
+});
+
+test('call nn', function() {
+  reg.program_counter = 0x8000;
+  mem.write(0x8001, 0x89);
+  mem.write(0x8002, 0x90);
+  reg.stack_pointer = 0x8079;
+
+  inst.call_nn();
+
+  equals(reg.program_counter, 0x9089);
+  equals(mem.read(0x8078), 0x80);
+  equals(mem.read(0x8077), 0x03);
+});
+
+test('call cc nn (conditional call) making the jump', function() {
+  reg.program_counter = 0x8000;
+  mem.write(0x8001, 0x89);
+  mem.write(0x8002, 0x90);
+  reg.stack_pointer = 0x8079;
+
+  reg.set_flag(JBA.Reg.f_Z, 1);
+  inst.call_cc_nn(JBA.Reg.f_Z, 1);
+
+  equals(reg.program_counter, 0x9089);
+  equals(mem.read(0x8078), 0x80);
+  equals(mem.read(0x8077), 0x03);
+});
+
+test('call cc nn (conditional call) not making the jump', function() {
+  reg.program_counter = 0x8000;
+  mem.write(0x8001, 0x89);
+  mem.write(0x8002, 0x90);
+  reg.stack_pointer = 0x8079;
+
+  pc_change(3, function() {
+    reg.set_flag(JBA.Reg.f_Z, 1);
+    inst.call_cc_nn(JBA.Reg.f_Z, 0);
+  });
+});
+
+test('ldi_A_cHL', function() {
+  pc_change(1, function() {
+    reg.set(JBA.Reg.HL, 0x8002);
+    mem.write(0x8002, 0x92);
+
+    inst.ldi_A_cHL();
+
+    equals(reg.get(JBA.Reg.HL), 0x8003);
+    equals(reg.get(JBA.Reg.A), 0x92);
+  });
+});
+
+test('ldi_cHL_A', function() {
+  pc_change(1, function() {
+    reg.set(JBA.Reg.HL, 0x8002);
+    reg.set(JBA.Reg.A, 0x92);
+
+    inst.ldi_cHL_A();
+
+    equals(reg.get(JBA.Reg.HL), 0x8003);
+    equals(mem.read(0x8002), 0x92);
+  });
+});
+
+test('ldd_A_cHL', function() {
+  pc_change(1, function() {
+    reg.set(JBA.Reg.HL, 0x8002);
+    mem.write(0x8002, 0x92);
+
+    inst.ldd_A_cHL();
+
+    equals(reg.get(JBA.Reg.HL), 0x8001);
+    equals(reg.get(JBA.Reg.A), 0x92);
+  });
+});
+
+test('ldd_cHL_A', function() {
+  pc_change(1, function() {
+    reg.set(JBA.Reg.HL, 0x8002);
+    reg.set(JBA.Reg.A, 0x92);
+
+    inst.ldd_cHL_A();
+
+    equals(reg.get(JBA.Reg.HL), 0x8001);
+    equals(mem.read(0x8002), 0x92);
+  });
+});
+
+test('ld SP <- HL', function() {
+  pc_change(1, function() {
+    reg.set(JBA.Reg.HL, 0x8318);
+    inst.ld_SP_HL();
+
+    equals(reg.stack_pointer, 0x8318);
+  });
+});
