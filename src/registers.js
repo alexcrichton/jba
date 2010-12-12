@@ -1,4 +1,4 @@
-JBA.Registers = function(jba) {
+JBA.Registers = function() {
   this.registers = new Array(8);
   this.program_counter = 0;
   this.stack_pointer = 0;
