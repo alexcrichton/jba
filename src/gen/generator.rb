@@ -61,11 +61,12 @@ section 'Other loading commands' do
     ld_hlmn: function(r, m){ m.wb(#{hl}, m.rb(r.pc)); r.pc++; r.m = 3; },
     ld_abc: function(r, m){ r.a = m.rb(#{bc}); r.m = 2; },
     ld_ade: function(r, m){ r.a = m.rb(#{de}); r.m = 2; },
-    ld_ann: function(r, m){ r.a = m.rb(m.rw(r.pc)); r.pc += 2; r.m = 4; },
+    ld_an: function(r, m){ r.a = m.rb(m.rw(r.pc)); r.pc += 2; r.m = 4; },
 
     ld_bca: function(r, m){ m.wb(#{bc}, r.a); r.m = 2; },
     ld_dea: function(r, m){ m.wb(#{de}, r.a); r.m = 2; },
-    ld_nna: function(r, m){ m.wb(m.rw(r.pc), r.a); r.pc += 2; r.m = 4; },
+    ld_na: function(r, m){ m.wb(m.rw(r.pc), r.a); r.pc += 2; r.m = 4; },
+    ld_nsp: function(r, m){ m.ww(m.rw(r.pc), r.sp); r.pc += 2; r.m = 4; },
 
     ld_aIOn: function(r, m){ r.a = m.rb(0xff00 | m.rb(r.pc++)); r.m = 3; },
     ld_IOna: function(r, m){ m.wb(0xff00 | m.rb(r.pc++), r.a); r.m = 3; },
@@ -83,10 +84,10 @@ section '16 bit loading commands' do
   %w(bc de hl).each do |p|
     u = p.bytes.to_a[0].chr
     l = p.bytes.to_a[1].chr
-    @out.puts "ld_#{p}nn: function(r, m){ r.#{l} = m.rb(r.pc++); " + 
+    @out.puts "ld_#{p}n: function(r, m){ r.#{l} = m.rb(r.pc++); " + 
       "r.#{u} = m.rb(r.pc++); r.m = 3; },"
   end
-  @out.puts "ld_spnn: function(r, m){ r.sp = m.rw(r.pc); r.pc += 2; r.m = 3; },"
+  @out.puts "ld_spn: function(r, m){ r.sp = m.rw(r.pc); r.pc += 2; r.m = 3; },"
   @out.puts "ld_sphl: function(r, m){ r.sp = #{hl}; r.m = 2; },"
 
   %w(bc de hl af).each do |p|

@@ -1,14 +1,14 @@
-// An emulator for the Gameboy Z80 processor. Creates its own memory module
-// and uses that when processing instructions.
-var JBA = {};
-JBA.Z80 = function() {
-  this.r = {
-    a: 0, b: 0, c: 0
-  };
-};
-
-JBA.Z80.prototype = {
+// Instruction set for the Z80
+var Z80 = {
   ops: {
+    // Garbage instruction
+    xx: function() {},
+    map_cb: function(r, m) {
+      var fun = Z80.cbmap[m.rb(r.pc++)];
+      r.pc &= 0xffff;
+      fun();
+    },
+
     // 8 bit loading between registers
     ld_bb: function(r){ r.m = 1; },
     ld_bc: function(r){ r.b = r.c; r.m = 1; },
@@ -91,11 +91,12 @@ JBA.Z80.prototype = {
     ld_hlmn: function(r, m){ m.wb((r.h << 8) | r.l, m.rb(r.pc)); r.pc++; r.m = 3; },
     ld_abc: function(r, m){ r.a = m.rb((r.b << 8) | r.c); r.m = 2; },
     ld_ade: function(r, m){ r.a = m.rb((r.d << 8) | r.e); r.m = 2; },
-    ld_ann: function(r, m){ r.a = m.rb(m.rw(r.pc)); r.pc += 2; r.m = 4; },
+    ld_an: function(r, m){ r.a = m.rb(m.rw(r.pc)); r.pc += 2; r.m = 4; },
 
     ld_bca: function(r, m){ m.wb((r.b << 8) | r.c, r.a); r.m = 2; },
     ld_dea: function(r, m){ m.wb((r.d << 8) | r.e, r.a); r.m = 2; },
-    ld_nna: function(r, m){ m.wb(m.rw(r.pc), r.a); r.pc += 2; r.m = 4; },
+    ld_na: function(r, m){ m.wb(m.rw(r.pc), r.a); r.pc += 2; r.m = 4; },
+    ld_nsp: function(r, m){ m.ww(m.rw(r.pc), r.sp); r.pc += 2; r.m = 4; },
 
     ld_aIOn: function(r, m){ r.a = m.rb(0xff00 | m.rb(r.pc++)); r.m = 3; },
     ld_IOna: function(r, m){ m.wb(0xff00 | m.rb(r.pc++), r.a); r.m = 3; },
@@ -108,10 +109,10 @@ JBA.Z80.prototype = {
     ldd_ahlm: function(r, m){ r.a = m.rb((r.h << 8) | r.l); r.l = (r.l - 1) & 0xff; if (r.l == 0xff) r.h = (r.h - 1) & 0xff; r.m = 2; },
 
     // 16 bit loading commands
-    ld_bcnn: function(r, m){ r.c = m.rb(r.pc++); r.b = m.rb(r.pc++); r.m = 3; },
-    ld_denn: function(r, m){ r.e = m.rb(r.pc++); r.d = m.rb(r.pc++); r.m = 3; },
-    ld_hlnn: function(r, m){ r.l = m.rb(r.pc++); r.h = m.rb(r.pc++); r.m = 3; },
-    ld_spnn: function(r, m){ r.sp = m.rw(r.pc); r.pc += 2; r.m = 3; },
+    ld_bcn: function(r, m){ r.c = m.rb(r.pc++); r.b = m.rb(r.pc++); r.m = 3; },
+    ld_den: function(r, m){ r.e = m.rb(r.pc++); r.d = m.rb(r.pc++); r.m = 3; },
+    ld_hln: function(r, m){ r.l = m.rb(r.pc++); r.h = m.rb(r.pc++); r.m = 3; },
+    ld_spn: function(r, m){ r.sp = m.rw(r.pc); r.pc += 2; r.m = 3; },
     ld_sphl: function(r, m){ r.sp = (r.h << 8) | r.l; r.m = 2; },
     push_bc: function(r, m){ m.wb(--r.sp, r.b); m.wb(--r.sp, r.c); r.m = 4; },
     pop_bc: function(r, m){ r.c = m.rb(r.sp++); r.b = m.wb(r.sp++); r.m = 3; },
@@ -1484,4 +1485,90 @@ JBA.Z80.prototype = {
     rst_60: function(r, m){ r.save(); r.sp -= 2; m.ww(r.sp, r.pc); r.pc = 0x60; r.m = 4; }
 
   }
-};
+}
+
+Z80.map = [
+  // 0x00
+  Z80.ops.nop, Z80.ops.ld_bcn, Z80.ops.ld_bca, Z80.ops.inc_bc,
+  Z80.ops.inc_b, Z80.ops.dec_b, Z80.ops.ld_bn, Z80.ops.rlca,
+  Z80.ops.ld_nsp, Z80.ops.add_hlbc, Z80.ops.ld_abc, Z80.ops.dec_bc,
+  Z80.ops.inc_c, Z80.ops.dec_c, Z80.ops.ld_cn, Z80.ops.rrca,
+  // 0x10
+  Z80.ops.stop, Z80.ops.ld_den, Z80.ops.ld_dea, Z80.ops.inc_de,
+  Z80.ops.inc_d, Z80.ops.dec_d, Z80.ops.ld_dn, Z80.ops.rla,
+  Z80.ops.jr_n, Z80.ops.add_hlde, Z80.ops.ld_ade, Z80.ops.dec_de,
+  Z80.ops.inc_e, Z80.ops.dec_e, Z80.ops.ld_en, Z80.ops.rr_a,
+  // 0x20
+  Z80.ops.jr_nz_n, Z80.ops.ld_hln, Z80.ops.ld_hlma, Z80.ops.inc_hl,
+  Z80.ops.inc_h, Z80.ops.dec_h, Z80.ops.ld_hn, Z80.ops.daa,
+  Z80.ops.jr_z_n, Z80.ops.add_hlhl, Z80.ops.ldi_ahlm, Z80.ops.dec_hl,
+  Z80.ops.inc_l, Z80.ops.dec_l, Z80.ops.ld_ln, Z80.ops.cpl,
+  // 0x30
+  Z80.ops.jr_nc_n, Z80.ops.ld_spn, Z80.ops.ldd_hlma, Z80.ops.inc_sp,
+  Z80.ops.inc_hlm, Z80.ops.dec_hlm, Z80.ops.ld_hlmn, Z80.ops.scf,
+  Z80.ops.jr_c_n, Z80.ops.add_hlsp, Z80.ops.ldd_ahlm, Z80.ops.dec_sp,
+  Z80.ops.inc_a, Z80.ops.dec_a, Z80.ops.ld_an, Z80.ops.ccf,
+  // 0x40
+  Z80.ops.ld_bb, Z80.ops.ld_bc, Z80.ops.ld_bd, Z80.ops.ld_be,
+  Z80.ops.ld_bh, Z80.ops.ld_bl, Z80.ops.ld_bhlm, Z80.ops.ld_ba,
+  Z80.ops.ld_cb, Z80.ops.ld_cc, Z80.ops.ld_cd, Z80.ops.ld_ce,
+  Z80.ops.ld_ch, Z80.ops.ld_cl, Z80.ops.ld_chlm, Z80.ops.ld_ca,
+  // 0x50
+  Z80.ops.ld_db, Z80.ops.ld_dc, Z80.ops.ld_dd, Z80.ops.ld_de,
+  Z80.ops.ld_dh, Z80.ops.ld_dl, Z80.ops.ld_dhlm, Z80.ops.ld_da,
+  Z80.ops.ld_eb, Z80.ops.ld_ec, Z80.ops.ld_ed, Z80.ops.ld_ee,
+  Z80.ops.ld_eh, Z80.ops.ld_el, Z80.ops.ld_ehlm, Z80.ops.ld_ea,
+  // 0x60
+  Z80.ops.ld_hb, Z80.ops.ld_hc, Z80.ops.ld_hd, Z80.ops.ld_he,
+  Z80.ops.ld_hh, Z80.ops.ld_hl, Z80.ops.ld_hhlm, Z80.ops.ld_ha,
+  Z80.ops.ld_lb, Z80.ops.ld_lc, Z80.ops.ld_ld, Z80.ops.ld_le,
+  Z80.ops.ld_lh, Z80.ops.ld_ll, Z80.ops.ld_lhlm, Z80.ops.ld_la,
+  // 0x70
+  Z80.ops.ld_hlmb, Z80.ops.ld_hlmc, Z80.ops.ld_hlmd, Z80.ops.ld_hlme,
+  Z80.ops.ld_hlmh, Z80.ops.ld_hlml, Z80.ops.halt, Z80.ops.ld_hlma,
+  Z80.ops.ld_ab, Z80.ops.ld_ac, Z80.ops.ld_ad, Z80.ops.ld_ae,
+  Z80.ops.ld_ah, Z80.ops.ld_al, Z80.ops.ld_ahlm, Z80.ops.ld_aa,
+  // 0x80
+  Z80.ops.add_ab, Z80.ops.add_ac, Z80.ops.add_ad, Z80.ops.add_ae,
+  Z80.ops.add_ah, Z80.ops.add_al, Z80.ops.add_ahlm, Z80.ops.add_aa,
+  Z80.ops.adc_ab, Z80.ops.adc_ac, Z80.ops.adc_ad, Z80.ops.adc_ae,
+  Z80.ops.adc_ah, Z80.ops.adc_al, Z80.ops.adc_ahlm, Z80.ops.adc_aa,
+  // 0x90
+  Z80.ops.sub_ab, Z80.ops.sub_ac, Z80.ops.sub_ad, Z80.ops.sub_ae,
+  Z80.ops.sub_ah, Z80.ops.sub_al, Z80.ops.sub_ahlm, Z80.ops.sub_aa,
+  Z80.ops.sbc_ab, Z80.ops.sbc_ac, Z80.ops.sbc_ad, Z80.ops.sbc_ae,
+  Z80.ops.sbc_ah, Z80.ops.sbc_al, Z80.ops.sbc_ahlm, Z80.ops.sbc_aa,
+  // 0xa0
+  Z80.ops.and_ab, Z80.ops.and_ac, Z80.ops.and_ad, Z80.ops.and_ae,
+  Z80.ops.and_ah, Z80.ops.and_al, Z80.ops.and_ahlm, Z80.ops.and_aa,
+  Z80.ops.xor_ab, Z80.ops.xor_ac, Z80.ops.xor_ad, Z80.ops.xor_ae,
+  Z80.ops.xor_ah, Z80.ops.xor_al, Z80.ops.xor_ahlm, Z80.ops.xor_aa,
+  // 0xb0
+  Z80.ops.or_ab, Z80.ops.or_ac, Z80.ops.or_ad, Z80.ops.or_ae,
+  Z80.ops.or_ah, Z80.ops.or_al, Z80.ops.or_ahlm, Z80.ops.or_aa,
+  Z80.ops.cp_ab, Z80.ops.cp_ac, Z80.ops.cp_ad, Z80.ops.cp_ae,
+  Z80.ops.cp_ah, Z80.ops.cp_al, Z80.ops.cp_ahlm, Z80.ops.cp_aa,
+  // 0xc0
+  Z80.ops.ret_nz, Z80.ops.pop_bc, Z80.ops.jp_nz_n, Z80.ops.jp_n,
+  Z80.ops.call_nz_n, Z80.ops.push_bc, Z80.ops.add_an, Z80.ops.rst_00,
+  Z80.ops.ret_z, Z80.ops.ret, Z80.ops.jp_z_n, Z80.ops.map_cb,
+  Z80.ops.call_z_n, Z80.ops.call_n, Z80.ops.adc_an, Z80.ops.rst_08,
+  // 0xd0
+  Z80.ops.ret_nc, Z80.ops.pop_de, Z80.ops.jp_nc_n, Z80.ops.xx,
+  Z80.ops.call_nc_n, Z80.ops.push_de, Z80.ops.sub_an, Z80.ops.rst_10,
+  Z80.ops.ret_c, Z80.ops.reti, Z80.ops.jp_c_n, Z80.ops.xx,
+  Z80.ops.call_c_n, Z80.ops.xx, Z80.ops.sbc_an, Z80.ops.rst_18,
+  // 0xe0
+  Z80.ops.ld_IOna, Z80.ops.pop_hl, Z80.ops.ld_IOca, Z80.ops.xx,
+  Z80.ops.xx, Z80.ops.push_hl, Z80.ops.and_an, Z80.ops.rst_20,
+  Z80.ops.add_spn, Z80.ops.jp_hl, Z80.ops.ld_na, Z80.ops.xx,
+  Z80.ops.xx, Z80.ops.xx, Z80.ops.xor_an, Z80.ops.rst_28,
+  // 0xf0
+  Z80.ops.ld_aIOn, Z80.ops.pop_af, Z80.ops.ld_aIOc, Z80.ops.di,
+  Z80.ops.xx, Z80.ops.push_af, Z80.ops.or_an, Z80.ops.rst_30,
+  Z80.ops.ld_hlspn, Z80.ops.ld_sphl, Z80.ops.ld_an, Z80.ops.ei,
+  Z80.ops.xx, Z80.ops.xx, Z80.ops.cp_an, Z80.ops.rst_38
+];
+
+Z80.cbmap = [
+];
