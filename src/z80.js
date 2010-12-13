@@ -185,570 +185,570 @@ var Z80 = {
 
     // 8 bit addition
     add_ab: function(r, m) {
-      var i = r.a, j = r.b;
-      r.a += j;
-      r.f = r.a > 0xff ? 16 : 0;
-      r.a &= 0xff;
-      if (!r.a) { r.f |= 128; }
-      if ((r.a ^ j ^ i) & 0x10) { r.f |= 32; }
-      r.m = 1;
+      var i = r.a, j = r.b;
+      r.a += j;
+      r.f = r.a > 0xff ? 16 : 0;
+      r.a &= 0xff;
+      if (!r.a) { r.f |= 128; }
+      if ((r.a ^ j ^ i) & 0x10) { r.f |= 32; }
+      r.m = 1;
     },
     add_ac: function(r, m) {
-      var i = r.a, j = r.c;
-      r.a += j;
-      r.f = r.a > 0xff ? 16 : 0;
-      r.a &= 0xff;
-      if (!r.a) { r.f |= 128; }
-      if ((r.a ^ j ^ i) & 0x10) { r.f |= 32; }
-      r.m = 1;
+      var i = r.a, j = r.c;
+      r.a += j;
+      r.f = r.a > 0xff ? 16 : 0;
+      r.a &= 0xff;
+      if (!r.a) { r.f |= 128; }
+      if ((r.a ^ j ^ i) & 0x10) { r.f |= 32; }
+      r.m = 1;
     },
     add_ad: function(r, m) {
-      var i = r.a, j = r.d;
-      r.a += j;
-      r.f = r.a > 0xff ? 16 : 0;
-      r.a &= 0xff;
-      if (!r.a) { r.f |= 128; }
-      if ((r.a ^ j ^ i) & 0x10) { r.f |= 32; }
-      r.m = 1;
+      var i = r.a, j = r.d;
+      r.a += j;
+      r.f = r.a > 0xff ? 16 : 0;
+      r.a &= 0xff;
+      if (!r.a) { r.f |= 128; }
+      if ((r.a ^ j ^ i) & 0x10) { r.f |= 32; }
+      r.m = 1;
     },
     add_ae: function(r, m) {
-      var i = r.a, j = r.e;
-      r.a += j;
-      r.f = r.a > 0xff ? 16 : 0;
-      r.a &= 0xff;
-      if (!r.a) { r.f |= 128; }
-      if ((r.a ^ j ^ i) & 0x10) { r.f |= 32; }
-      r.m = 1;
+      var i = r.a, j = r.e;
+      r.a += j;
+      r.f = r.a > 0xff ? 16 : 0;
+      r.a &= 0xff;
+      if (!r.a) { r.f |= 128; }
+      if ((r.a ^ j ^ i) & 0x10) { r.f |= 32; }
+      r.m = 1;
     },
     add_ah: function(r, m) {
-      var i = r.a, j = r.h;
-      r.a += j;
-      r.f = r.a > 0xff ? 16 : 0;
-      r.a &= 0xff;
-      if (!r.a) { r.f |= 128; }
-      if ((r.a ^ j ^ i) & 0x10) { r.f |= 32; }
-      r.m = 1;
+      var i = r.a, j = r.h;
+      r.a += j;
+      r.f = r.a > 0xff ? 16 : 0;
+      r.a &= 0xff;
+      if (!r.a) { r.f |= 128; }
+      if ((r.a ^ j ^ i) & 0x10) { r.f |= 32; }
+      r.m = 1;
     },
     add_al: function(r, m) {
-      var i = r.a, j = r.l;
-      r.a += j;
-      r.f = r.a > 0xff ? 16 : 0;
-      r.a &= 0xff;
-      if (!r.a) { r.f |= 128; }
-      if ((r.a ^ j ^ i) & 0x10) { r.f |= 32; }
-      r.m = 1;
+      var i = r.a, j = r.l;
+      r.a += j;
+      r.f = r.a > 0xff ? 16 : 0;
+      r.a &= 0xff;
+      if (!r.a) { r.f |= 128; }
+      if ((r.a ^ j ^ i) & 0x10) { r.f |= 32; }
+      r.m = 1;
     },
     add_aa: function(r, m) {
-      var i = r.a, j = r.a;
-      r.a += j;
-      r.f = r.a > 0xff ? 16 : 0;
-      r.a &= 0xff;
-      if (!r.a) { r.f |= 128; }
-      if ((r.a ^ j ^ i) & 0x10) { r.f |= 32; }
-      r.m = 1;
+      var i = r.a, j = r.a;
+      r.a += j;
+      r.f = r.a > 0xff ? 16 : 0;
+      r.a &= 0xff;
+      if (!r.a) { r.f |= 128; }
+      if ((r.a ^ j ^ i) & 0x10) { r.f |= 32; }
+      r.m = 1;
     },
     add_ahlm: function(r, m) {
-      var i = r.a, j = m.rb((r.h << 8) | r.l);
-      r.a += j;
-      r.f = r.a > 0xff ? 16 : 0;
-      r.a &= 0xff;
-      if (!r.a) { r.f |= 128; }
-      if ((r.a ^ j ^ i) & 0x10) { r.f |= 32; }
-      r.m = 2;
+      var i = r.a, j = m.rb((r.h << 8) | r.l);
+      r.a += j;
+      r.f = r.a > 0xff ? 16 : 0;
+      r.a &= 0xff;
+      if (!r.a) { r.f |= 128; }
+      if ((r.a ^ j ^ i) & 0x10) { r.f |= 32; }
+      r.m = 2;
     },
     add_an: function(r, m) {
-      var i = r.a, j = m.rb(r.pc++);
-      r.a += j;
-      r.f = r.a > 0xff ? 16 : 0;
-      r.a &= 0xff;
-      if (!r.a) { r.f |= 128; }
-      if ((r.a ^ j ^ i) & 0x10) { r.f |= 32; }
-      r.m = 2;
+      var i = r.a, j = m.rb(r.pc++);
+      r.a += j;
+      r.f = r.a > 0xff ? 16 : 0;
+      r.a &= 0xff;
+      if (!r.a) { r.f |= 128; }
+      if ((r.a ^ j ^ i) & 0x10) { r.f |= 32; }
+      r.m = 2;
     },
     adc_ab: function(r, m){
-      var i = r.a, j = r.b;
-      r.a += j + ((r.f & 16) >> 4);
-      r.f = r.a > 0xff ? 16 : 0;
-      r.a &= 0xff;
-      if (!r.a) r.f |= 128;
-      if ((r.a ^ j ^ i) & 0x10) r.f |= 32;
-      r.m = 1;
+      var i = r.a, j = r.b;
+      r.a += j + ((r.f & 16) >> 4);
+      r.f = r.a > 0xff ? 16 : 0;
+      r.a &= 0xff;
+      if (!r.a) r.f |= 128;
+      if ((r.a ^ j ^ i) & 0x10) r.f |= 32;
+      r.m = 1;
     },
     adc_ac: function(r, m){
-      var i = r.a, j = r.c;
-      r.a += j + ((r.f & 16) >> 4);
-      r.f = r.a > 0xff ? 16 : 0;
-      r.a &= 0xff;
-      if (!r.a) r.f |= 128;
-      if ((r.a ^ j ^ i) & 0x10) r.f |= 32;
-      r.m = 1;
+      var i = r.a, j = r.c;
+      r.a += j + ((r.f & 16) >> 4);
+      r.f = r.a > 0xff ? 16 : 0;
+      r.a &= 0xff;
+      if (!r.a) r.f |= 128;
+      if ((r.a ^ j ^ i) & 0x10) r.f |= 32;
+      r.m = 1;
     },
     adc_ad: function(r, m){
-      var i = r.a, j = r.d;
-      r.a += j + ((r.f & 16) >> 4);
-      r.f = r.a > 0xff ? 16 : 0;
-      r.a &= 0xff;
-      if (!r.a) r.f |= 128;
-      if ((r.a ^ j ^ i) & 0x10) r.f |= 32;
-      r.m = 1;
+      var i = r.a, j = r.d;
+      r.a += j + ((r.f & 16) >> 4);
+      r.f = r.a > 0xff ? 16 : 0;
+      r.a &= 0xff;
+      if (!r.a) r.f |= 128;
+      if ((r.a ^ j ^ i) & 0x10) r.f |= 32;
+      r.m = 1;
     },
     adc_ae: function(r, m){
-      var i = r.a, j = r.e;
-      r.a += j + ((r.f & 16) >> 4);
-      r.f = r.a > 0xff ? 16 : 0;
-      r.a &= 0xff;
-      if (!r.a) r.f |= 128;
-      if ((r.a ^ j ^ i) & 0x10) r.f |= 32;
-      r.m = 1;
+      var i = r.a, j = r.e;
+      r.a += j + ((r.f & 16) >> 4);
+      r.f = r.a > 0xff ? 16 : 0;
+      r.a &= 0xff;
+      if (!r.a) r.f |= 128;
+      if ((r.a ^ j ^ i) & 0x10) r.f |= 32;
+      r.m = 1;
     },
     adc_ah: function(r, m){
-      var i = r.a, j = r.h;
-      r.a += j + ((r.f & 16) >> 4);
-      r.f = r.a > 0xff ? 16 : 0;
-      r.a &= 0xff;
-      if (!r.a) r.f |= 128;
-      if ((r.a ^ j ^ i) & 0x10) r.f |= 32;
-      r.m = 1;
+      var i = r.a, j = r.h;
+      r.a += j + ((r.f & 16) >> 4);
+      r.f = r.a > 0xff ? 16 : 0;
+      r.a &= 0xff;
+      if (!r.a) r.f |= 128;
+      if ((r.a ^ j ^ i) & 0x10) r.f |= 32;
+      r.m = 1;
     },
     adc_al: function(r, m){
-      var i = r.a, j = r.l;
-      r.a += j + ((r.f & 16) >> 4);
-      r.f = r.a > 0xff ? 16 : 0;
-      r.a &= 0xff;
-      if (!r.a) r.f |= 128;
-      if ((r.a ^ j ^ i) & 0x10) r.f |= 32;
-      r.m = 1;
+      var i = r.a, j = r.l;
+      r.a += j + ((r.f & 16) >> 4);
+      r.f = r.a > 0xff ? 16 : 0;
+      r.a &= 0xff;
+      if (!r.a) r.f |= 128;
+      if ((r.a ^ j ^ i) & 0x10) r.f |= 32;
+      r.m = 1;
     },
     adc_aa: function(r, m){
-      var i = r.a, j = r.a;
-      r.a += j + ((r.f & 16) >> 4);
-      r.f = r.a > 0xff ? 16 : 0;
-      r.a &= 0xff;
-      if (!r.a) r.f |= 128;
-      if ((r.a ^ j ^ i) & 0x10) r.f |= 32;
-      r.m = 1;
+      var i = r.a, j = r.a;
+      r.a += j + ((r.f & 16) >> 4);
+      r.f = r.a > 0xff ? 16 : 0;
+      r.a &= 0xff;
+      if (!r.a) r.f |= 128;
+      if ((r.a ^ j ^ i) & 0x10) r.f |= 32;
+      r.m = 1;
     },
     adc_ahlm: function(r, m){
-      var i = r.a, j = m.rb((r.h << 8) | r.l);
-      r.a += j + ((r.f & 16) >> 4);
-      r.f = r.a > 0xff ? 16 : 0;
-      r.a &= 0xff;
-      if (!r.a) r.f |= 128;
-      if ((r.a ^ j ^ i) & 0x10) r.f |= 32;
-      r.m = 2;
+      var i = r.a, j = m.rb((r.h << 8) | r.l);
+      r.a += j + ((r.f & 16) >> 4);
+      r.f = r.a > 0xff ? 16 : 0;
+      r.a &= 0xff;
+      if (!r.a) r.f |= 128;
+      if ((r.a ^ j ^ i) & 0x10) r.f |= 32;
+      r.m = 2;
     },
     adc_an: function(r, m){
-      var i = r.a, j = m.rb(r.pc++);
-      r.a += j + ((r.f & 16) >> 4);
-      r.f = r.a > 0xff ? 16 : 0;
-      r.a &= 0xff;
-      if (!r.a) r.f |= 128;
-      if ((r.a ^ j ^ i) & 0x10) r.f |= 32;
-      r.m = 2;
+      var i = r.a, j = m.rb(r.pc++);
+      r.a += j + ((r.f & 16) >> 4);
+      r.f = r.a > 0xff ? 16 : 0;
+      r.a &= 0xff;
+      if (!r.a) r.f |= 128;
+      if ((r.a ^ j ^ i) & 0x10) r.f |= 32;
+      r.m = 2;
     },
 
     // 8 bit subtraction
     sub_ab: function(r, m){
-      var a = r.a;
-      var b = r.b;
-      r.a -= b;
-      r.f = 64 | (r.a < 0 ? 16 : 0);
-      r.a &= 0xff;
-      if (!r.a) r.f |= 128;
-      if ((r.a ^ b ^ a) & 0x10) r.f |= 32;
-      r.m = 1;
+      var a = r.a;
+      var b = r.b;
+      r.a -= b;
+      r.f = 64 | (r.a < 0 ? 16 : 0);
+      r.a &= 0xff;
+      if (!r.a) r.f |= 128;
+      if ((r.a ^ b ^ a) & 0x10) r.f |= 32;
+      r.m = 1;
     },
     sub_ac: function(r, m){
-      var a = r.a;
-      var b = r.c;
-      r.a -= b;
-      r.f = 64 | (r.a < 0 ? 16 : 0);
-      r.a &= 0xff;
-      if (!r.a) r.f |= 128;
-      if ((r.a ^ b ^ a) & 0x10) r.f |= 32;
-      r.m = 1;
+      var a = r.a;
+      var b = r.c;
+      r.a -= b;
+      r.f = 64 | (r.a < 0 ? 16 : 0);
+      r.a &= 0xff;
+      if (!r.a) r.f |= 128;
+      if ((r.a ^ b ^ a) & 0x10) r.f |= 32;
+      r.m = 1;
     },
     sub_ad: function(r, m){
-      var a = r.a;
-      var b = r.d;
-      r.a -= b;
-      r.f = 64 | (r.a < 0 ? 16 : 0);
-      r.a &= 0xff;
-      if (!r.a) r.f |= 128;
-      if ((r.a ^ b ^ a) & 0x10) r.f |= 32;
-      r.m = 1;
+      var a = r.a;
+      var b = r.d;
+      r.a -= b;
+      r.f = 64 | (r.a < 0 ? 16 : 0);
+      r.a &= 0xff;
+      if (!r.a) r.f |= 128;
+      if ((r.a ^ b ^ a) & 0x10) r.f |= 32;
+      r.m = 1;
     },
     sub_ae: function(r, m){
-      var a = r.a;
-      var b = r.e;
-      r.a -= b;
-      r.f = 64 | (r.a < 0 ? 16 : 0);
-      r.a &= 0xff;
-      if (!r.a) r.f |= 128;
-      if ((r.a ^ b ^ a) & 0x10) r.f |= 32;
-      r.m = 1;
+      var a = r.a;
+      var b = r.e;
+      r.a -= b;
+      r.f = 64 | (r.a < 0 ? 16 : 0);
+      r.a &= 0xff;
+      if (!r.a) r.f |= 128;
+      if ((r.a ^ b ^ a) & 0x10) r.f |= 32;
+      r.m = 1;
     },
     sub_ah: function(r, m){
-      var a = r.a;
-      var b = r.h;
-      r.a -= b;
-      r.f = 64 | (r.a < 0 ? 16 : 0);
-      r.a &= 0xff;
-      if (!r.a) r.f |= 128;
-      if ((r.a ^ b ^ a) & 0x10) r.f |= 32;
-      r.m = 1;
+      var a = r.a;
+      var b = r.h;
+      r.a -= b;
+      r.f = 64 | (r.a < 0 ? 16 : 0);
+      r.a &= 0xff;
+      if (!r.a) r.f |= 128;
+      if ((r.a ^ b ^ a) & 0x10) r.f |= 32;
+      r.m = 1;
     },
     sub_al: function(r, m){
-      var a = r.a;
-      var b = r.l;
-      r.a -= b;
-      r.f = 64 | (r.a < 0 ? 16 : 0);
-      r.a &= 0xff;
-      if (!r.a) r.f |= 128;
-      if ((r.a ^ b ^ a) & 0x10) r.f |= 32;
-      r.m = 1;
+      var a = r.a;
+      var b = r.l;
+      r.a -= b;
+      r.f = 64 | (r.a < 0 ? 16 : 0);
+      r.a &= 0xff;
+      if (!r.a) r.f |= 128;
+      if ((r.a ^ b ^ a) & 0x10) r.f |= 32;
+      r.m = 1;
     },
     sub_aa: function(r, m){
-      var a = r.a;
-      var b = r.a;
-      r.a -= b;
-      r.f = 64 | (r.a < 0 ? 16 : 0);
-      r.a &= 0xff;
-      if (!r.a) r.f |= 128;
-      if ((r.a ^ b ^ a) & 0x10) r.f |= 32;
-      r.m = 1;
+      var a = r.a;
+      var b = r.a;
+      r.a -= b;
+      r.f = 64 | (r.a < 0 ? 16 : 0);
+      r.a &= 0xff;
+      if (!r.a) r.f |= 128;
+      if ((r.a ^ b ^ a) & 0x10) r.f |= 32;
+      r.m = 1;
     },
     sub_ahlm: function(r, m){
-      var a = r.a;
-      var b = m.rb((r.h << 8) | r.l);
-      r.a -= b;
-      r.f = 64 | (r.a < 0 ? 16 : 0);
-      r.a &= 0xff;
-      if (!r.a) r.f |= 128;
-      if ((r.a ^ b ^ a) & 0x10) r.f |= 32;
-      r.m = 2;
+      var a = r.a;
+      var b = m.rb((r.h << 8) | r.l);
+      r.a -= b;
+      r.f = 64 | (r.a < 0 ? 16 : 0);
+      r.a &= 0xff;
+      if (!r.a) r.f |= 128;
+      if ((r.a ^ b ^ a) & 0x10) r.f |= 32;
+      r.m = 2;
     },
     sub_an: function(r, m){
-      var a = r.a;
-      var b = m.rb(r.pc++);
-      r.a -= b;
-      r.f = 64 | (r.a < 0 ? 16 : 0);
-      r.a &= 0xff;
-      if (!r.a) r.f |= 128;
-      if ((r.a ^ b ^ a) & 0x10) r.f |= 32;
-      r.m = 2;
+      var a = r.a;
+      var b = m.rb(r.pc++);
+      r.a -= b;
+      r.f = 64 | (r.a < 0 ? 16 : 0);
+      r.a &= 0xff;
+      if (!r.a) r.f |= 128;
+      if ((r.a ^ b ^ a) & 0x10) r.f |= 32;
+      r.m = 2;
     },
     sbc_ab: function(r, m){
-      var a = r.a;
-      var b = r.b;
-      r.a -= b + ((r.f & 16) >> 4);
-      r.f = r.a > 0xff ? 16 : 0;
-      r.a &= 0xff;
-      if (!r.a) r.f |= 128;
-      if ((r.a ^ b ^ a) & 0x10) r.f |= 32;
-      r.m = 1;
+      var a = r.a;
+      var b = r.b;
+      r.a -= b + ((r.f & 16) >> 4);
+      r.f = r.a > 0xff ? 16 : 0;
+      r.a &= 0xff;
+      if (!r.a) r.f |= 128;
+      if ((r.a ^ b ^ a) & 0x10) r.f |= 32;
+      r.m = 1;
     },
     sbc_ac: function(r, m){
-      var a = r.a;
-      var b = r.c;
-      r.a -= b + ((r.f & 16) >> 4);
-      r.f = r.a > 0xff ? 16 : 0;
-      r.a &= 0xff;
-      if (!r.a) r.f |= 128;
-      if ((r.a ^ b ^ a) & 0x10) r.f |= 32;
-      r.m = 1;
+      var a = r.a;
+      var b = r.c;
+      r.a -= b + ((r.f & 16) >> 4);
+      r.f = r.a > 0xff ? 16 : 0;
+      r.a &= 0xff;
+      if (!r.a) r.f |= 128;
+      if ((r.a ^ b ^ a) & 0x10) r.f |= 32;
+      r.m = 1;
     },
     sbc_ad: function(r, m){
-      var a = r.a;
-      var b = r.d;
-      r.a -= b + ((r.f & 16) >> 4);
-      r.f = r.a > 0xff ? 16 : 0;
-      r.a &= 0xff;
-      if (!r.a) r.f |= 128;
-      if ((r.a ^ b ^ a) & 0x10) r.f |= 32;
-      r.m = 1;
+      var a = r.a;
+      var b = r.d;
+      r.a -= b + ((r.f & 16) >> 4);
+      r.f = r.a > 0xff ? 16 : 0;
+      r.a &= 0xff;
+      if (!r.a) r.f |= 128;
+      if ((r.a ^ b ^ a) & 0x10) r.f |= 32;
+      r.m = 1;
     },
     sbc_ae: function(r, m){
-      var a = r.a;
-      var b = r.e;
-      r.a -= b + ((r.f & 16) >> 4);
-      r.f = r.a > 0xff ? 16 : 0;
-      r.a &= 0xff;
-      if (!r.a) r.f |= 128;
-      if ((r.a ^ b ^ a) & 0x10) r.f |= 32;
-      r.m = 1;
+      var a = r.a;
+      var b = r.e;
+      r.a -= b + ((r.f & 16) >> 4);
+      r.f = r.a > 0xff ? 16 : 0;
+      r.a &= 0xff;
+      if (!r.a) r.f |= 128;
+      if ((r.a ^ b ^ a) & 0x10) r.f |= 32;
+      r.m = 1;
     },
     sbc_ah: function(r, m){
-      var a = r.a;
-      var b = r.h;
-      r.a -= b + ((r.f & 16) >> 4);
-      r.f = r.a > 0xff ? 16 : 0;
-      r.a &= 0xff;
-      if (!r.a) r.f |= 128;
-      if ((r.a ^ b ^ a) & 0x10) r.f |= 32;
-      r.m = 1;
+      var a = r.a;
+      var b = r.h;
+      r.a -= b + ((r.f & 16) >> 4);
+      r.f = r.a > 0xff ? 16 : 0;
+      r.a &= 0xff;
+      if (!r.a) r.f |= 128;
+      if ((r.a ^ b ^ a) & 0x10) r.f |= 32;
+      r.m = 1;
     },
     sbc_al: function(r, m){
-      var a = r.a;
-      var b = r.l;
-      r.a -= b + ((r.f & 16) >> 4);
-      r.f = r.a > 0xff ? 16 : 0;
-      r.a &= 0xff;
-      if (!r.a) r.f |= 128;
-      if ((r.a ^ b ^ a) & 0x10) r.f |= 32;
-      r.m = 1;
+      var a = r.a;
+      var b = r.l;
+      r.a -= b + ((r.f & 16) >> 4);
+      r.f = r.a > 0xff ? 16 : 0;
+      r.a &= 0xff;
+      if (!r.a) r.f |= 128;
+      if ((r.a ^ b ^ a) & 0x10) r.f |= 32;
+      r.m = 1;
     },
     sbc_aa: function(r, m){
-      var a = r.a;
-      var b = r.a;
-      r.a -= b + ((r.f & 16) >> 4);
-      r.f = r.a > 0xff ? 16 : 0;
-      r.a &= 0xff;
-      if (!r.a) r.f |= 128;
-      if ((r.a ^ b ^ a) & 0x10) r.f |= 32;
-      r.m = 1;
+      var a = r.a;
+      var b = r.a;
+      r.a -= b + ((r.f & 16) >> 4);
+      r.f = r.a > 0xff ? 16 : 0;
+      r.a &= 0xff;
+      if (!r.a) r.f |= 128;
+      if ((r.a ^ b ^ a) & 0x10) r.f |= 32;
+      r.m = 1;
     },
     sbc_ahlm: function(r, m){
-      var a = r.a;
-      var b = m.rb((r.h << 8) | r.l);
-      r.a -= b + ((r.f & 16) >> 4);
-      r.f = r.a > 0xff ? 16 : 0;
-      r.a &= 0xff;
-      if (!r.a) r.f |= 128;
-      if ((r.a ^ b ^ a) & 0x10) r.f |= 32;
-      r.m = 2;
+      var a = r.a;
+      var b = m.rb((r.h << 8) | r.l);
+      r.a -= b + ((r.f & 16) >> 4);
+      r.f = r.a > 0xff ? 16 : 0;
+      r.a &= 0xff;
+      if (!r.a) r.f |= 128;
+      if ((r.a ^ b ^ a) & 0x10) r.f |= 32;
+      r.m = 2;
     },
     sbc_an: function(r, m){
-      var a = r.a;
-      var b = m.rb(r.pc++);
-      r.a -= b + ((r.f & 16) >> 4);
-      r.f = r.a > 0xff ? 16 : 0;
-      r.a &= 0xff;
-      if (!r.a) r.f |= 128;
-      if ((r.a ^ b ^ a) & 0x10) r.f |= 32;
-      r.m = 2;
+      var a = r.a;
+      var b = m.rb(r.pc++);
+      r.a -= b + ((r.f & 16) >> 4);
+      r.f = r.a > 0xff ? 16 : 0;
+      r.a &= 0xff;
+      if (!r.a) r.f |= 128;
+      if ((r.a ^ b ^ a) & 0x10) r.f |= 32;
+      r.m = 2;
     },
 
     // 8 bit bit-ops
     and_ab: function(r, m){
-      r.a &= r.b;
-      r.f = (r.a ? 0 : 128) | 32;
-      r.m = 1;
+      r.a &= r.b;
+      r.f = (r.a ? 0 : 128) | 32;
+      r.m = 1;
     },
     and_ac: function(r, m){
-      r.a &= r.c;
-      r.f = (r.a ? 0 : 128) | 32;
-      r.m = 1;
+      r.a &= r.c;
+      r.f = (r.a ? 0 : 128) | 32;
+      r.m = 1;
     },
     and_ad: function(r, m){
-      r.a &= r.d;
-      r.f = (r.a ? 0 : 128) | 32;
-      r.m = 1;
+      r.a &= r.d;
+      r.f = (r.a ? 0 : 128) | 32;
+      r.m = 1;
     },
     and_ae: function(r, m){
-      r.a &= r.e;
-      r.f = (r.a ? 0 : 128) | 32;
-      r.m = 1;
+      r.a &= r.e;
+      r.f = (r.a ? 0 : 128) | 32;
+      r.m = 1;
     },
     and_ah: function(r, m){
-      r.a &= r.h;
-      r.f = (r.a ? 0 : 128) | 32;
-      r.m = 1;
+      r.a &= r.h;
+      r.f = (r.a ? 0 : 128) | 32;
+      r.m = 1;
     },
     and_al: function(r, m){
-      r.a &= r.l;
-      r.f = (r.a ? 0 : 128) | 32;
-      r.m = 1;
+      r.a &= r.l;
+      r.f = (r.a ? 0 : 128) | 32;
+      r.m = 1;
     },
     and_aa: function(r, m){
 
-      r.f = (r.a ? 0 : 128) | 32;
-      r.m = 1;
+      r.f = (r.a ? 0 : 128) | 32;
+      r.m = 1;
     },
     and_ahlm: function(r, m){
-      r.a &= m.rb((r.h << 8) | r.l);
-      r.f = (r.a ? 0 : 128) | 32;
-      r.m = 2;
+      r.a &= m.rb((r.h << 8) | r.l);
+      r.f = (r.a ? 0 : 128) | 32;
+      r.m = 2;
     },
     and_an: function(r, m){
-      r.a &= m.rb(r.pc++);
-      r.f = (r.a ? 0 : 128) | 32;
-      r.m = 2;
+      r.a &= m.rb(r.pc++);
+      r.f = (r.a ? 0 : 128) | 32;
+      r.m = 2;
     },
 
     xor_ab: function(r, m){
-      r.a ^= r.b; r.f = r.a ? 0 : 128;
-      r.m = 1;
+      r.a ^= r.b; r.f = r.a ? 0 : 128;
+      r.m = 1;
     },
     xor_ac: function(r, m){
-      r.a ^= r.c; r.f = r.a ? 0 : 128;
-      r.m = 1;
+      r.a ^= r.c; r.f = r.a ? 0 : 128;
+      r.m = 1;
     },
     xor_ad: function(r, m){
-      r.a ^= r.d; r.f = r.a ? 0 : 128;
-      r.m = 1;
+      r.a ^= r.d; r.f = r.a ? 0 : 128;
+      r.m = 1;
     },
     xor_ae: function(r, m){
-      r.a ^= r.e; r.f = r.a ? 0 : 128;
-      r.m = 1;
+      r.a ^= r.e; r.f = r.a ? 0 : 128;
+      r.m = 1;
     },
     xor_ah: function(r, m){
-      r.a ^= r.h; r.f = r.a ? 0 : 128;
-      r.m = 1;
+      r.a ^= r.h; r.f = r.a ? 0 : 128;
+      r.m = 1;
     },
     xor_al: function(r, m){
-      r.a ^= r.l; r.f = r.a ? 0 : 128;
-      r.m = 1;
+      r.a ^= r.l; r.f = r.a ? 0 : 128;
+      r.m = 1;
     },
     xor_aa: function(r, m){
-      r.a = 0; r.f = 128;
-      r.m = 1;
+      r.a = 0; r.f = 128;
+      r.m = 1;
     },
     xor_ahlm: function(r, m){
-      r.a ^= m.rb((r.h << 8) | r.l); r.f = r.a ? 0 : 128;
-      r.m = 2;
+      r.a ^= m.rb((r.h << 8) | r.l); r.f = r.a ? 0 : 128;
+      r.m = 2;
     },
     xor_an: function(r, m){
-      r.a ^= m.rb(r.pc++); r.f = r.a ? 0 : 128;
-      r.m = 2;
+      r.a ^= m.rb(r.pc++); r.f = r.a ? 0 : 128;
+      r.m = 2;
     },
 
     or_ab: function(r, m){
-      r.a |= r.b;
-      r.f = r.a ? 0 : 128;
-      r.m = 1;
+      r.a |= r.b;
+      r.f = r.a ? 0 : 128;
+      r.m = 1;
     },
     or_ac: function(r, m){
-      r.a |= r.c;
-      r.f = r.a ? 0 : 128;
-      r.m = 1;
+      r.a |= r.c;
+      r.f = r.a ? 0 : 128;
+      r.m = 1;
     },
     or_ad: function(r, m){
-      r.a |= r.d;
-      r.f = r.a ? 0 : 128;
-      r.m = 1;
+      r.a |= r.d;
+      r.f = r.a ? 0 : 128;
+      r.m = 1;
     },
     or_ae: function(r, m){
-      r.a |= r.e;
-      r.f = r.a ? 0 : 128;
-      r.m = 1;
+      r.a |= r.e;
+      r.f = r.a ? 0 : 128;
+      r.m = 1;
     },
     or_ah: function(r, m){
-      r.a |= r.h;
-      r.f = r.a ? 0 : 128;
-      r.m = 1;
+      r.a |= r.h;
+      r.f = r.a ? 0 : 128;
+      r.m = 1;
     },
     or_al: function(r, m){
-      r.a |= r.l;
-      r.f = r.a ? 0 : 128;
-      r.m = 1;
+      r.a |= r.l;
+      r.f = r.a ? 0 : 128;
+      r.m = 1;
     },
     or_aa: function(r, m){
 
-      r.f = r.a ? 0 : 128;
-      r.m = 1;
+      r.f = r.a ? 0 : 128;
+      r.m = 1;
     },
     or_ahlm: function(r, m){
-      r.a |= m.rb((r.h << 8) | r.l);
-      r.f = r.a ? 0 : 128;
-      r.m = 2;
+      r.a |= m.rb((r.h << 8) | r.l);
+      r.f = r.a ? 0 : 128;
+      r.m = 2;
     },
     or_an: function(r, m){
-      r.a |= m.rb(r.pc++);
-      r.f = r.a ? 0 : 128;
-      r.m = 2;
+      r.a |= m.rb(r.pc++);
+      r.f = r.a ? 0 : 128;
+      r.m = 2;
     },
 
     // 8 bit comparisons
     cp_ab: function(r, m){
-      var a = r.a;
-      var b = r.b;
-      var i = a - b;
-      r.f = 64 | (r.a < 0 ? 16 : 0);
-      i &= 0xff;
-      if (!i) r.f |= 128;
-      if ((a ^ b ^ i) & 0x10) r.f |= 32;
-      r.m = 1;
+      var a = r.a;
+      var b = r.b;
+      var i = a - b;
+      r.f = 64 | (r.a < 0 ? 16 : 0);
+      i &= 0xff;
+      if (!i) r.f |= 128;
+      if ((a ^ b ^ i) & 0x10) r.f |= 32;
+      r.m = 1;
     },
     cp_ac: function(r, m){
-      var a = r.a;
-      var b = r.c;
-      var i = a - b;
-      r.f = 64 | (r.a < 0 ? 16 : 0);
-      i &= 0xff;
-      if (!i) r.f |= 128;
-      if ((a ^ b ^ i) & 0x10) r.f |= 32;
-      r.m = 1;
+      var a = r.a;
+      var b = r.c;
+      var i = a - b;
+      r.f = 64 | (r.a < 0 ? 16 : 0);
+      i &= 0xff;
+      if (!i) r.f |= 128;
+      if ((a ^ b ^ i) & 0x10) r.f |= 32;
+      r.m = 1;
     },
     cp_ad: function(r, m){
-      var a = r.a;
-      var b = r.d;
-      var i = a - b;
-      r.f = 64 | (r.a < 0 ? 16 : 0);
-      i &= 0xff;
-      if (!i) r.f |= 128;
-      if ((a ^ b ^ i) & 0x10) r.f |= 32;
-      r.m = 1;
+      var a = r.a;
+      var b = r.d;
+      var i = a - b;
+      r.f = 64 | (r.a < 0 ? 16 : 0);
+      i &= 0xff;
+      if (!i) r.f |= 128;
+      if ((a ^ b ^ i) & 0x10) r.f |= 32;
+      r.m = 1;
     },
     cp_ae: function(r, m){
-      var a = r.a;
-      var b = r.e;
-      var i = a - b;
-      r.f = 64 | (r.a < 0 ? 16 : 0);
-      i &= 0xff;
-      if (!i) r.f |= 128;
-      if ((a ^ b ^ i) & 0x10) r.f |= 32;
-      r.m = 1;
+      var a = r.a;
+      var b = r.e;
+      var i = a - b;
+      r.f = 64 | (r.a < 0 ? 16 : 0);
+      i &= 0xff;
+      if (!i) r.f |= 128;
+      if ((a ^ b ^ i) & 0x10) r.f |= 32;
+      r.m = 1;
     },
     cp_ah: function(r, m){
-      var a = r.a;
-      var b = r.h;
-      var i = a - b;
-      r.f = 64 | (r.a < 0 ? 16 : 0);
-      i &= 0xff;
-      if (!i) r.f |= 128;
-      if ((a ^ b ^ i) & 0x10) r.f |= 32;
-      r.m = 1;
+      var a = r.a;
+      var b = r.h;
+      var i = a - b;
+      r.f = 64 | (r.a < 0 ? 16 : 0);
+      i &= 0xff;
+      if (!i) r.f |= 128;
+      if ((a ^ b ^ i) & 0x10) r.f |= 32;
+      r.m = 1;
     },
     cp_al: function(r, m){
-      var a = r.a;
-      var b = r.l;
-      var i = a - b;
-      r.f = 64 | (r.a < 0 ? 16 : 0);
-      i &= 0xff;
-      if (!i) r.f |= 128;
-      if ((a ^ b ^ i) & 0x10) r.f |= 32;
-      r.m = 1;
+      var a = r.a;
+      var b = r.l;
+      var i = a - b;
+      r.f = 64 | (r.a < 0 ? 16 : 0);
+      i &= 0xff;
+      if (!i) r.f |= 128;
+      if ((a ^ b ^ i) & 0x10) r.f |= 32;
+      r.m = 1;
     },
     cp_aa: function(r, m){
-      var a = r.a;
-      var b = r.a;
-      var i = a - b;
-      r.f = 64 | (r.a < 0 ? 16 : 0);
-      i &= 0xff;
-      if (!i) r.f |= 128;
-      if ((a ^ b ^ i) & 0x10) r.f |= 32;
-      r.m = 1;
+      var a = r.a;
+      var b = r.a;
+      var i = a - b;
+      r.f = 64 | (r.a < 0 ? 16 : 0);
+      i &= 0xff;
+      if (!i) r.f |= 128;
+      if ((a ^ b ^ i) & 0x10) r.f |= 32;
+      r.m = 1;
     },
     cp_ahlm: function(r, m){
-      var a = r.a;
-      var b = m.rb((r.h << 8) | r.l);
-      var i = a - b;
-      r.f = 64 | (r.a < 0 ? 16 : 0);
-      i &= 0xff;
-      if (!i) r.f |= 128;
-      if ((a ^ b ^ i) & 0x10) r.f |= 32;
-      r.m = 2;
+      var a = r.a;
+      var b = m.rb((r.h << 8) | r.l);
+      var i = a - b;
+      r.f = 64 | (r.a < 0 ? 16 : 0);
+      i &= 0xff;
+      if (!i) r.f |= 128;
+      if ((a ^ b ^ i) & 0x10) r.f |= 32;
+      r.m = 2;
     },
     cp_an: function(r, m){
-      var a = r.a;
-      var b = m.rb(r.pc++);
-      var i = a - b;
-      r.f = 64 | (r.a < 0 ? 16 : 0);
-      i &= 0xff;
-      if (!i) r.f |= 128;
-      if ((a ^ b ^ i) & 0x10) r.f |= 32;
-      r.m = 2;
+      var a = r.a;
+      var b = m.rb(r.pc++);
+      var i = a - b;
+      r.f = 64 | (r.a < 0 ? 16 : 0);
+      i &= 0xff;
+      if (!i) r.f |= 128;
+      if ((a ^ b ^ i) & 0x10) r.f |= 32;
+      r.m = 2;
     },
 
     // 8 bit increments/decrements
@@ -772,45 +772,45 @@ var Z80 = {
 
     // Miscellaneous 8 bit arithmetic
     daa: function(r, m) {
-      var a = r.a;
-      if ((r.f & 32) || ((r.a & 0xf) > 9)) r.a += 6;
-      r.f &= 0xef;
-      if ((r.f & 32) || (a > 0x99)) {
-        r.a += 0x60;
-        r.f |= 16;
-      }
-      r.m = 1;
+      var a = r.a;
+      if ((r.f & 32) || ((r.a & 0xf) > 9)) r.a += 6;
+      r.f &= 0xef;
+      if ((r.f & 32) || (a > 0x99)) {
+        r.a += 0x60;
+        r.f |= 16;
+      }
+      r.m = 1;
     },
     cpl: function(r){ r.a ^= 0xff; r.f = 64 | 16; r.m = 1; },
 
     // 16 bit arithmetic
     add_hlhl: function(r){
-      var hl = ((r.h << 8) | r.l) + ((r.h << 8) | r.l);
-      if (hl > 0xfff) r.f |= 16; else r.f &= 239;
-      r.l = hl & 0xff;
-      r.h = (hl >> 8) & 0xff;
-      r.m = 2;
+      var hl = ((r.h << 8) | r.l) + ((r.h << 8) | r.l);
+      if (hl > 0xfff) r.f |= 16; else r.f &= 239;
+      r.l = hl & 0xff;
+      r.h = (hl >> 8) & 0xff;
+      r.m = 2;
     },
     add_hlbc: function(r){
-      var hl = ((r.h << 8) | r.l) + ((r.b << 8) | r.c);
-      if (hl > 0xfff) r.f |= 16; else r.f &= 239;
-      r.l = hl & 0xff;
-      r.h = (hl >> 8) & 0xff;
-      r.m = 2;
+      var hl = ((r.h << 8) | r.l) + ((r.b << 8) | r.c);
+      if (hl > 0xfff) r.f |= 16; else r.f &= 239;
+      r.l = hl & 0xff;
+      r.h = (hl >> 8) & 0xff;
+      r.m = 2;
     },
     add_hlde: function(r){
-      var hl = ((r.h << 8) | r.l) + ((r.d << 8) | r.e);
-      if (hl > 0xfff) r.f |= 16; else r.f &= 239;
-      r.l = hl & 0xff;
-      r.h = (hl >> 8) & 0xff;
-      r.m = 2;
+      var hl = ((r.h << 8) | r.l) + ((r.d << 8) | r.e);
+      if (hl > 0xfff) r.f |= 16; else r.f &= 239;
+      r.l = hl & 0xff;
+      r.h = (hl >> 8) & 0xff;
+      r.m = 2;
     },
     add_hlsp: function(r){
-      var hl = ((r.h << 8) | r.l) + (r.sp);
-      if (hl > 0xfff) r.f |= 16; else r.f &= 239;
-      r.l = hl & 0xff;
-      r.h = (hl >> 8) & 0xff;
-      r.m = 2;
+      var hl = ((r.h << 8) | r.l) + (r.sp);
+      if (hl > 0xfff) r.f |= 16; else r.f &= 239;
+      r.l = hl & 0xff;
+      r.h = (hl >> 8) & 0xff;
+      r.m = 2;
     },
 
     inc_bc: function(r){ r.c = (r.c + 1) & 0xff; if (!r.c) r.b = (r.b + 1) & 0xff; r.m = 2; },
@@ -822,455 +822,455 @@ var Z80 = {
     inc_sp: function(r){ r.sp = (r.sp + 1) & 0xffff; r.m = 2; },
     dec_sp: function(r){ r.sp = (r.sp - 1) & 0xffff; r.m = 2; },
     add_spn: function(r, m) {
-      var i = m.rb(r.pc++);
-      if (i > 127) i = ~i + 1;
-      r.sp += i;
-      r.m = 4;
+      var i = m.rb(r.pc++);
+      if (i > 127) i = ~i + 1;
+      r.sp += i;
+      r.m = 4;
     },
 
     ld_hlspn: function(r, m) {
-      var i = m.rb(r.pc++);
-      if (i > 127) i = ~i + 1;
-      i += r.sp;
-      r.h = (i >> 8) & 0xff;
-      r.l = i & 0xff;
-      r.m = 3;
+      var i = m.rb(r.pc++);
+      if (i > 127) i = ~i + 1;
+      i += r.sp;
+      r.h = (i >> 8) & 0xff;
+      r.l = i & 0xff;
+      r.m = 3;
     },
 
     // Rotating left
     rlca: function(r, m) {
-      var ci = (r.a & 0x80) >> 7;
-      r.a = ((r.a << 1) | ci) & 0xff;
-      r.f = (r.a ? 0 : 128) | (ci << 4);
-      r.m = 1;
+      var ci = (r.a & 0x80) >> 7;
+      r.a = ((r.a << 1) | ci) & 0xff;
+      r.f = (r.a ? 0 : 128) | (ci << 4);
+      r.m = 1;
     },
     rla: function(r, m) {
-      var ci = (r.f & 0x10) >> 4;
-      var co = (r.a & 0x80) >> 3;
-      r.a = ((r.a << 1) | ci) & 0xff;
-      r.f = (r.a ? 0 : 128) | co;
-      r.m = 1;
+      var ci = (r.f & 0x10) >> 4;
+      var co = (r.a & 0x80) >> 3;
+      r.a = ((r.a << 1) | ci) & 0xff;
+      r.f = (r.a ? 0 : 128) | co;
+      r.m = 1;
     },
     rlc_b: function(r, m) {
-      var ci = (r.b & 0x80) >> 7;
-      r.b = ((r.b << 1) | ci) & 0xff;
-      r.f = (r.b ? 0 : 128) | (ci << 4);
-      r.m = 2;
+      var ci = (r.b & 0x80) >> 7;
+      r.b = ((r.b << 1) | ci) & 0xff;
+      r.f = (r.b ? 0 : 128) | (ci << 4);
+      r.m = 2;
     },
     rl_b: function(r, m) {
-      var ci = (r.f & 0x10) >> 4;
-      var co = (r.b & 0x80) >> 3;
-      r.b = ((r.b << 1) | ci) & 0xff;
-      r.f = (r.b ? 0 : 128) | co;
-      r.m = 2;
+      var ci = (r.f & 0x10) >> 4;
+      var co = (r.b & 0x80) >> 3;
+      r.b = ((r.b << 1) | ci) & 0xff;
+      r.f = (r.b ? 0 : 128) | co;
+      r.m = 2;
     },
     rlc_c: function(r, m) {
-      var ci = (r.c & 0x80) >> 7;
-      r.c = ((r.c << 1) | ci) & 0xff;
-      r.f = (r.c ? 0 : 128) | (ci << 4);
-      r.m = 2;
+      var ci = (r.c & 0x80) >> 7;
+      r.c = ((r.c << 1) | ci) & 0xff;
+      r.f = (r.c ? 0 : 128) | (ci << 4);
+      r.m = 2;
     },
     rl_c: function(r, m) {
-      var ci = (r.f & 0x10) >> 4;
-      var co = (r.c & 0x80) >> 3;
-      r.c = ((r.c << 1) | ci) & 0xff;
-      r.f = (r.c ? 0 : 128) | co;
-      r.m = 2;
+      var ci = (r.f & 0x10) >> 4;
+      var co = (r.c & 0x80) >> 3;
+      r.c = ((r.c << 1) | ci) & 0xff;
+      r.f = (r.c ? 0 : 128) | co;
+      r.m = 2;
     },
     rlc_d: function(r, m) {
-      var ci = (r.d & 0x80) >> 7;
-      r.d = ((r.d << 1) | ci) & 0xff;
-      r.f = (r.d ? 0 : 128) | (ci << 4);
-      r.m = 2;
+      var ci = (r.d & 0x80) >> 7;
+      r.d = ((r.d << 1) | ci) & 0xff;
+      r.f = (r.d ? 0 : 128) | (ci << 4);
+      r.m = 2;
     },
     rl_d: function(r, m) {
-      var ci = (r.f & 0x10) >> 4;
-      var co = (r.d & 0x80) >> 3;
-      r.d = ((r.d << 1) | ci) & 0xff;
-      r.f = (r.d ? 0 : 128) | co;
-      r.m = 2;
+      var ci = (r.f & 0x10) >> 4;
+      var co = (r.d & 0x80) >> 3;
+      r.d = ((r.d << 1) | ci) & 0xff;
+      r.f = (r.d ? 0 : 128) | co;
+      r.m = 2;
     },
     rlc_e: function(r, m) {
-      var ci = (r.e & 0x80) >> 7;
-      r.e = ((r.e << 1) | ci) & 0xff;
-      r.f = (r.e ? 0 : 128) | (ci << 4);
-      r.m = 2;
+      var ci = (r.e & 0x80) >> 7;
+      r.e = ((r.e << 1) | ci) & 0xff;
+      r.f = (r.e ? 0 : 128) | (ci << 4);
+      r.m = 2;
     },
     rl_e: function(r, m) {
-      var ci = (r.f & 0x10) >> 4;
-      var co = (r.e & 0x80) >> 3;
-      r.e = ((r.e << 1) | ci) & 0xff;
-      r.f = (r.e ? 0 : 128) | co;
-      r.m = 2;
+      var ci = (r.f & 0x10) >> 4;
+      var co = (r.e & 0x80) >> 3;
+      r.e = ((r.e << 1) | ci) & 0xff;
+      r.f = (r.e ? 0 : 128) | co;
+      r.m = 2;
     },
     rlc_h: function(r, m) {
-      var ci = (r.h & 0x80) >> 7;
-      r.h = ((r.h << 1) | ci) & 0xff;
-      r.f = (r.h ? 0 : 128) | (ci << 4);
-      r.m = 2;
+      var ci = (r.h & 0x80) >> 7;
+      r.h = ((r.h << 1) | ci) & 0xff;
+      r.f = (r.h ? 0 : 128) | (ci << 4);
+      r.m = 2;
     },
     rl_h: function(r, m) {
-      var ci = (r.f & 0x10) >> 4;
-      var co = (r.h & 0x80) >> 3;
-      r.h = ((r.h << 1) | ci) & 0xff;
-      r.f = (r.h ? 0 : 128) | co;
-      r.m = 2;
+      var ci = (r.f & 0x10) >> 4;
+      var co = (r.h & 0x80) >> 3;
+      r.h = ((r.h << 1) | ci) & 0xff;
+      r.f = (r.h ? 0 : 128) | co;
+      r.m = 2;
     },
     rlc_l: function(r, m) {
-      var ci = (r.l & 0x80) >> 7;
-      r.l = ((r.l << 1) | ci) & 0xff;
-      r.f = (r.l ? 0 : 128) | (ci << 4);
-      r.m = 2;
+      var ci = (r.l & 0x80) >> 7;
+      r.l = ((r.l << 1) | ci) & 0xff;
+      r.f = (r.l ? 0 : 128) | (ci << 4);
+      r.m = 2;
     },
     rl_l: function(r, m) {
-      var ci = (r.f & 0x10) >> 4;
-      var co = (r.l & 0x80) >> 3;
-      r.l = ((r.l << 1) | ci) & 0xff;
-      r.f = (r.l ? 0 : 128) | co;
-      r.m = 2;
+      var ci = (r.f & 0x10) >> 4;
+      var co = (r.l & 0x80) >> 3;
+      r.l = ((r.l << 1) | ci) & 0xff;
+      r.f = (r.l ? 0 : 128) | co;
+      r.m = 2;
     },
     rlc_a: function(r, m) {
-      var ci = (r.a & 0x80) >> 7;
-      r.a = ((r.a << 1) | ci) & 0xff;
-      r.f = (r.a ? 0 : 128) | (ci << 4);
-      r.m = 2;
+      var ci = (r.a & 0x80) >> 7;
+      r.a = ((r.a << 1) | ci) & 0xff;
+      r.f = (r.a ? 0 : 128) | (ci << 4);
+      r.m = 2;
     },
     rl_a: function(r, m) {
-      var ci = (r.f & 0x10) >> 4;
-      var co = (r.a & 0x80) >> 3;
-      r.a = ((r.a << 1) | ci) & 0xff;
-      r.f = (r.a ? 0 : 128) | co;
-      r.m = 2;
+      var ci = (r.f & 0x10) >> 4;
+      var co = (r.a & 0x80) >> 3;
+      r.a = ((r.a << 1) | ci) & 0xff;
+      r.f = (r.a ? 0 : 128) | co;
+      r.m = 2;
     },
     rlc_hlm: function(r, m) {
-      var hl = m.rb((r.h << 8) | r.l);
-      var ci = (hl & 0x80) >> 7;
-      hl = ((hl << 1) | ci) & 0xff;
-      m.wb((r.h << 8) | r.l, hl);
-      r.f = (hl ? 0 : 128) | (ci << 4);
-      r.m = 4;
+      var hl = m.rb((r.h << 8) | r.l);
+      var ci = (hl & 0x80) >> 7;
+      hl = ((hl << 1) | ci) & 0xff;
+      m.wb((r.h << 8) | r.l, hl);
+      r.f = (hl ? 0 : 128) | (ci << 4);
+      r.m = 4;
     },
     rl_hlm: function(r, m) {
-      var hl = m.rb((r.h << 8) | r.l);
-      var ci = (r.f & 0x10) >> 4;
-      var co = (hl & 0x80) >> 3;
-      hl = ((hl << 1) | ci) & 0xff;
-      m.wb((r.h << 8) | r.l, hl);
-      r.f = (hl ? 0 : 128) | co;
-      r.m = 4;
+      var hl = m.rb((r.h << 8) | r.l);
+      var ci = (r.f & 0x10) >> 4;
+      var co = (hl & 0x80) >> 3;
+      hl = ((hl << 1) | ci) & 0xff;
+      m.wb((r.h << 8) | r.l, hl);
+      r.f = (hl ? 0 : 128) | co;
+      r.m = 4;
     },
 
     // Rotating right
     rrca: function(r, m) {
-      var ci = (r.a & 1) << 7;
-      r.a = (r.a >> 1) | ci;
-      r.f = (r.a ? 0 : 128) | (ci >> 3);
-      r.m = 1;
+      var ci = (r.a & 1) << 7;
+      r.a = (r.a >> 1) | ci;
+      r.f = (r.a ? 0 : 128) | (ci >> 3);
+      r.m = 1;
     },
     rra: function(r, m) {
-      var ci = (r.f & 0x10) << 3;
-      var co = (r.a & 1) << 4;
-      r.a = (r.a >> 1) | ci;
-      r.f = (r.a ? 0 : 128) | co;
-      r.m = 1;
+      var ci = (r.f & 0x10) << 3;
+      var co = (r.a & 1) << 4;
+      r.a = (r.a >> 1) | ci;
+      r.f = (r.a ? 0 : 128) | co;
+      r.m = 1;
     },
     rrc_b: function(r, m) {
-      var ci = (r.b & 1) << 7;
-      r.b = (r.b >> 1) | ci;
-      r.f = (r.b ? 0 : 128) | (ci >> 3);
-      r.m = 2;
+      var ci = (r.b & 1) << 7;
+      r.b = (r.b >> 1) | ci;
+      r.f = (r.b ? 0 : 128) | (ci >> 3);
+      r.m = 2;
     },
     rr_b: function(r, m) {
-      var ci = (r.f & 0x10) << 3;
-      var co = (r.b & 1) << 4;
-      r.b = (r.b >> 1) | ci;
-      r.f = (r.b ? 0 : 128) | co;
-      r.m = 2;
+      var ci = (r.f & 0x10) << 3;
+      var co = (r.b & 1) << 4;
+      r.b = (r.b >> 1) | ci;
+      r.f = (r.b ? 0 : 128) | co;
+      r.m = 2;
     },
     rrc_c: function(r, m) {
-      var ci = (r.c & 1) << 7;
-      r.c = (r.c >> 1) | ci;
-      r.f = (r.c ? 0 : 128) | (ci >> 3);
-      r.m = 2;
+      var ci = (r.c & 1) << 7;
+      r.c = (r.c >> 1) | ci;
+      r.f = (r.c ? 0 : 128) | (ci >> 3);
+      r.m = 2;
     },
     rr_c: function(r, m) {
-      var ci = (r.f & 0x10) << 3;
-      var co = (r.c & 1) << 4;
-      r.c = (r.c >> 1) | ci;
-      r.f = (r.c ? 0 : 128) | co;
-      r.m = 2;
+      var ci = (r.f & 0x10) << 3;
+      var co = (r.c & 1) << 4;
+      r.c = (r.c >> 1) | ci;
+      r.f = (r.c ? 0 : 128) | co;
+      r.m = 2;
     },
     rrc_d: function(r, m) {
-      var ci = (r.d & 1) << 7;
-      r.d = (r.d >> 1) | ci;
-      r.f = (r.d ? 0 : 128) | (ci >> 3);
-      r.m = 2;
+      var ci = (r.d & 1) << 7;
+      r.d = (r.d >> 1) | ci;
+      r.f = (r.d ? 0 : 128) | (ci >> 3);
+      r.m = 2;
     },
     rr_d: function(r, m) {
-      var ci = (r.f & 0x10) << 3;
-      var co = (r.d & 1) << 4;
-      r.d = (r.d >> 1) | ci;
-      r.f = (r.d ? 0 : 128) | co;
-      r.m = 2;
+      var ci = (r.f & 0x10) << 3;
+      var co = (r.d & 1) << 4;
+      r.d = (r.d >> 1) | ci;
+      r.f = (r.d ? 0 : 128) | co;
+      r.m = 2;
     },
     rrc_e: function(r, m) {
-      var ci = (r.e & 1) << 7;
-      r.e = (r.e >> 1) | ci;
-      r.f = (r.e ? 0 : 128) | (ci >> 3);
-      r.m = 2;
+      var ci = (r.e & 1) << 7;
+      r.e = (r.e >> 1) | ci;
+      r.f = (r.e ? 0 : 128) | (ci >> 3);
+      r.m = 2;
     },
     rr_e: function(r, m) {
-      var ci = (r.f & 0x10) << 3;
-      var co = (r.e & 1) << 4;
-      r.e = (r.e >> 1) | ci;
-      r.f = (r.e ? 0 : 128) | co;
-      r.m = 2;
+      var ci = (r.f & 0x10) << 3;
+      var co = (r.e & 1) << 4;
+      r.e = (r.e >> 1) | ci;
+      r.f = (r.e ? 0 : 128) | co;
+      r.m = 2;
     },
     rrc_h: function(r, m) {
-      var ci = (r.h & 1) << 7;
-      r.h = (r.h >> 1) | ci;
-      r.f = (r.h ? 0 : 128) | (ci >> 3);
-      r.m = 2;
+      var ci = (r.h & 1) << 7;
+      r.h = (r.h >> 1) | ci;
+      r.f = (r.h ? 0 : 128) | (ci >> 3);
+      r.m = 2;
     },
     rr_h: function(r, m) {
-      var ci = (r.f & 0x10) << 3;
-      var co = (r.h & 1) << 4;
-      r.h = (r.h >> 1) | ci;
-      r.f = (r.h ? 0 : 128) | co;
-      r.m = 2;
+      var ci = (r.f & 0x10) << 3;
+      var co = (r.h & 1) << 4;
+      r.h = (r.h >> 1) | ci;
+      r.f = (r.h ? 0 : 128) | co;
+      r.m = 2;
     },
     rrc_l: function(r, m) {
-      var ci = (r.l & 1) << 7;
-      r.l = (r.l >> 1) | ci;
-      r.f = (r.l ? 0 : 128) | (ci >> 3);
-      r.m = 2;
+      var ci = (r.l & 1) << 7;
+      r.l = (r.l >> 1) | ci;
+      r.f = (r.l ? 0 : 128) | (ci >> 3);
+      r.m = 2;
     },
     rr_l: function(r, m) {
-      var ci = (r.f & 0x10) << 3;
-      var co = (r.l & 1) << 4;
-      r.l = (r.l >> 1) | ci;
-      r.f = (r.l ? 0 : 128) | co;
-      r.m = 2;
+      var ci = (r.f & 0x10) << 3;
+      var co = (r.l & 1) << 4;
+      r.l = (r.l >> 1) | ci;
+      r.f = (r.l ? 0 : 128) | co;
+      r.m = 2;
     },
     rrc_a: function(r, m) {
-      var ci = (r.a & 1) << 7;
-      r.a = (r.a >> 1) | ci;
-      r.f = (r.a ? 0 : 128) | (ci >> 3);
-      r.m = 2;
+      var ci = (r.a & 1) << 7;
+      r.a = (r.a >> 1) | ci;
+      r.f = (r.a ? 0 : 128) | (ci >> 3);
+      r.m = 2;
     },
     rr_a: function(r, m) {
-      var ci = (r.f & 0x10) << 3;
-      var co = (r.a & 1) << 4;
-      r.a = (r.a >> 1) | ci;
-      r.f = (r.a ? 0 : 128) | co;
-      r.m = 2;
+      var ci = (r.f & 0x10) << 3;
+      var co = (r.a & 1) << 4;
+      r.a = (r.a >> 1) | ci;
+      r.f = (r.a ? 0 : 128) | co;
+      r.m = 2;
     },
     rrc_hlm: function(r, m) {
-      var hl = m.rb((r.h << 8) | r.l);
-      var ci = (hl & 1) << 7;
-      hl = (hl >> 1) | ci;
-      m.wb((r.h << 8) | r.l, hl);
-      r.f = (hl ? 0 : 128) | (ci >> 3);
-      r.m = 4;
+      var hl = m.rb((r.h << 8) | r.l);
+      var ci = (hl & 1) << 7;
+      hl = (hl >> 1) | ci;
+      m.wb((r.h << 8) | r.l, hl);
+      r.f = (hl ? 0 : 128) | (ci >> 3);
+      r.m = 4;
     },
     rr_hlm: function(r, m) {
-      var hl = m.rb((r.h << 8) | r.l);
-      var ci = (r.f & 0x10) << 3;
-      var co = (hl & 0x80) << 4;
-      hl = (hl >> 1) | ci;
-      m.wb((r.h << 8) | r.l, hl);
-      r.f = (hl ? 0 : 128) | co;
-      r.m = 4;
+      var hl = m.rb((r.h << 8) | r.l);
+      var ci = (r.f & 0x10) << 3;
+      var co = (hl & 0x80) << 4;
+      hl = (hl >> 1) | ci;
+      m.wb((r.h << 8) | r.l, hl);
+      r.f = (hl ? 0 : 128) | co;
+      r.m = 4;
     },
 
     // Shifting arithmetically left
     sla_b: function(r) {
-      var co = (r.b & 0x80) >> 7;
-      r.b = (r.b << 1) & 0xff;
-      r.f = (r.b ? 0 : 128) | co;
-      r.m = 2;
+      var co = (r.b & 0x80) >> 7;
+      r.b = (r.b << 1) & 0xff;
+      r.f = (r.b ? 0 : 128) | co;
+      r.m = 2;
     },
     sla_c: function(r) {
-      var co = (r.c & 0x80) >> 7;
-      r.c = (r.c << 1) & 0xff;
-      r.f = (r.c ? 0 : 128) | co;
-      r.m = 2;
+      var co = (r.c & 0x80) >> 7;
+      r.c = (r.c << 1) & 0xff;
+      r.f = (r.c ? 0 : 128) | co;
+      r.m = 2;
     },
     sla_d: function(r) {
-      var co = (r.d & 0x80) >> 7;
-      r.d = (r.d << 1) & 0xff;
-      r.f = (r.d ? 0 : 128) | co;
-      r.m = 2;
+      var co = (r.d & 0x80) >> 7;
+      r.d = (r.d << 1) & 0xff;
+      r.f = (r.d ? 0 : 128) | co;
+      r.m = 2;
     },
     sla_e: function(r) {
-      var co = (r.e & 0x80) >> 7;
-      r.e = (r.e << 1) & 0xff;
-      r.f = (r.e ? 0 : 128) | co;
-      r.m = 2;
+      var co = (r.e & 0x80) >> 7;
+      r.e = (r.e << 1) & 0xff;
+      r.f = (r.e ? 0 : 128) | co;
+      r.m = 2;
     },
     sla_h: function(r) {
-      var co = (r.h & 0x80) >> 7;
-      r.h = (r.h << 1) & 0xff;
-      r.f = (r.h ? 0 : 128) | co;
-      r.m = 2;
+      var co = (r.h & 0x80) >> 7;
+      r.h = (r.h << 1) & 0xff;
+      r.f = (r.h ? 0 : 128) | co;
+      r.m = 2;
     },
     sla_l: function(r) {
-      var co = (r.l & 0x80) >> 7;
-      r.l = (r.l << 1) & 0xff;
-      r.f = (r.l ? 0 : 128) | co;
-      r.m = 2;
+      var co = (r.l & 0x80) >> 7;
+      r.l = (r.l << 1) & 0xff;
+      r.f = (r.l ? 0 : 128) | co;
+      r.m = 2;
     },
     sla_a: function(r) {
-      var co = (r.a & 0x80) >> 7;
-      r.a = (r.a << 1) & 0xff;
-      r.f = (r.a ? 0 : 128) | co;
-      r.m = 2;
+      var co = (r.a & 0x80) >> 7;
+      r.a = (r.a << 1) & 0xff;
+      r.f = (r.a ? 0 : 128) | co;
+      r.m = 2;
     },
     sla_hlm: function(r, m) {
-      var hl = m.rb((r.h << 8) | r.l);
-      var co = (hl & 0x80) >> 7;
-      hl = (hl << 1) & 0xff;
-      m.wb((r.h << 8) | r.l, hl);
-      r.f = (hl ? 0 : 128) | co;
-      r.m = 4;
+      var hl = m.rb((r.h << 8) | r.l);
+      var co = (hl & 0x80) >> 7;
+      hl = (hl << 1) & 0xff;
+      m.wb((r.h << 8) | r.l, hl);
+      r.f = (hl ? 0 : 128) | co;
+      r.m = 4;
     },
 
     // Swapping
     swap_b: function(r){
-      var t = r.b; r.b = ((t & 0xf) << 4) | ((t & 0xf0) >> 4);
-      r.f = t ? 0 : 128; r.m = 2;
+      var t = r.b; r.b = ((t & 0xf) << 4) | ((t & 0xf0) >> 4);
+      r.f = t ? 0 : 128; r.m = 2;
     },
     swap_c: function(r){
-      var t = r.c; r.c = ((t & 0xf) << 4) | ((t & 0xf0) >> 4);
-      r.f = t ? 0 : 128; r.m = 2;
+      var t = r.c; r.c = ((t & 0xf) << 4) | ((t & 0xf0) >> 4);
+      r.f = t ? 0 : 128; r.m = 2;
     },
     swap_d: function(r){
-      var t = r.d; r.d = ((t & 0xf) << 4) | ((t & 0xf0) >> 4);
-      r.f = t ? 0 : 128; r.m = 2;
+      var t = r.d; r.d = ((t & 0xf) << 4) | ((t & 0xf0) >> 4);
+      r.f = t ? 0 : 128; r.m = 2;
     },
     swap_e: function(r){
-      var t = r.e; r.e = ((t & 0xf) << 4) | ((t & 0xf0) >> 4);
-      r.f = t ? 0 : 128; r.m = 2;
+      var t = r.e; r.e = ((t & 0xf) << 4) | ((t & 0xf0) >> 4);
+      r.f = t ? 0 : 128; r.m = 2;
     },
     swap_h: function(r){
-      var t = r.h; r.h = ((t & 0xf) << 4) | ((t & 0xf0) >> 4);
-      r.f = t ? 0 : 128; r.m = 2;
+      var t = r.h; r.h = ((t & 0xf) << 4) | ((t & 0xf0) >> 4);
+      r.f = t ? 0 : 128; r.m = 2;
     },
     swap_l: function(r){
-      var t = r.l; r.l = ((t & 0xf) << 4) | ((t & 0xf0) >> 4);
-      r.f = t ? 0 : 128; r.m = 2;
+      var t = r.l; r.l = ((t & 0xf) << 4) | ((t & 0xf0) >> 4);
+      r.f = t ? 0 : 128; r.m = 2;
     },
     swap_a: function(r){
-      var t = r.a; r.a = ((t & 0xf) << 4) | ((t & 0xf0) >> 4);
-      r.f = t ? 0 : 128; r.m = 2;
+      var t = r.a; r.a = ((t & 0xf) << 4) | ((t & 0xf0) >> 4);
+      r.f = t ? 0 : 128; r.m = 2;
     },
     swap_hlm: function(r, m){
-      var t = m.rb((r.h << 8) | r.l); m.wb((r.h << 8) | r.l, ((t & 0xf) << 4) | ((t & 0xf0) >> 4));
-      r.f = t ? 0 : 128; r.m = 4;
+      var t = m.rb((r.h << 8) | r.l); m.wb((r.h << 8) | r.l, ((t & 0xf) << 4) | ((t & 0xf0) >> 4));
+      r.f = t ? 0 : 128; r.m = 4;
     },
 
     // Shifting arithmetically right
     sra_b: function(r) {
-      var co = (r.b & 1) << 3;
-      r.b = (r.b >> 1) | (r.b & 0x80);
-      r.f = (r.b ? 0 : 128) | co;
-      r.m = 2;
+      var co = (r.b & 1) << 3;
+      r.b = (r.b >> 1) | (r.b & 0x80);
+      r.f = (r.b ? 0 : 128) | co;
+      r.m = 2;
     },
     sra_c: function(r) {
-      var co = (r.c & 1) << 3;
-      r.c = (r.c >> 1) | (r.c & 0x80);
-      r.f = (r.c ? 0 : 128) | co;
-      r.m = 2;
+      var co = (r.c & 1) << 3;
+      r.c = (r.c >> 1) | (r.c & 0x80);
+      r.f = (r.c ? 0 : 128) | co;
+      r.m = 2;
     },
     sra_d: function(r) {
-      var co = (r.d & 1) << 3;
-      r.d = (r.d >> 1) | (r.d & 0x80);
-      r.f = (r.d ? 0 : 128) | co;
-      r.m = 2;
+      var co = (r.d & 1) << 3;
+      r.d = (r.d >> 1) | (r.d & 0x80);
+      r.f = (r.d ? 0 : 128) | co;
+      r.m = 2;
     },
     sra_e: function(r) {
-      var co = (r.e & 1) << 3;
-      r.e = (r.e >> 1) | (r.e & 0x80);
-      r.f = (r.e ? 0 : 128) | co;
-      r.m = 2;
+      var co = (r.e & 1) << 3;
+      r.e = (r.e >> 1) | (r.e & 0x80);
+      r.f = (r.e ? 0 : 128) | co;
+      r.m = 2;
     },
     sra_h: function(r) {
-      var co = (r.h & 1) << 3;
-      r.h = (r.h >> 1) | (r.h & 0x80);
-      r.f = (r.h ? 0 : 128) | co;
-      r.m = 2;
+      var co = (r.h & 1) << 3;
+      r.h = (r.h >> 1) | (r.h & 0x80);
+      r.f = (r.h ? 0 : 128) | co;
+      r.m = 2;
     },
     sra_l: function(r) {
-      var co = (r.l & 1) << 3;
-      r.l = (r.l >> 1) | (r.l & 0x80);
-      r.f = (r.l ? 0 : 128) | co;
-      r.m = 2;
+      var co = (r.l & 1) << 3;
+      r.l = (r.l >> 1) | (r.l & 0x80);
+      r.f = (r.l ? 0 : 128) | co;
+      r.m = 2;
     },
     sra_a: function(r) {
-      var co = (r.a & 1) << 3;
-      r.a = (r.a >> 1) | (r.a & 0x80);
-      r.f = (r.a ? 0 : 128) | co;
-      r.m = 2;
+      var co = (r.a & 1) << 3;
+      r.a = (r.a >> 1) | (r.a & 0x80);
+      r.f = (r.a ? 0 : 128) | co;
+      r.m = 2;
     },
     sra_hlm: function(r, m) {
-      var hl = m.rb((r.h << 8) | r.l);
-      var co = (hl & 1) << 3;
-      hl = (hl >> 1) | (hl & 0x80);
-      m.wb((r.h << 8) | r.l, hl);
-      r.f = (hl ? 0 : 128) | co;
-      r.m = 4;
+      var hl = m.rb((r.h << 8) | r.l);
+      var co = (hl & 1) << 3;
+      hl = (hl >> 1) | (hl & 0x80);
+      m.wb((r.h << 8) | r.l, hl);
+      r.f = (hl ? 0 : 128) | co;
+      r.m = 4;
     },
 
     // Shifting logically right
     srl_b: function(r) {
-      var co = (r.b & 1) << 3;
-      r.b >>= 1;
-      r.f = (r.b ? 0 : 128) | co;
-      r.m = 2;
+      var co = (r.b & 1) << 3;
+      r.b >>= 1;
+      r.f = (r.b ? 0 : 128) | co;
+      r.m = 2;
     },
     srl_c: function(r) {
-      var co = (r.c & 1) << 3;
-      r.c >>= 1;
-      r.f = (r.c ? 0 : 128) | co;
-      r.m = 2;
+      var co = (r.c & 1) << 3;
+      r.c >>= 1;
+      r.f = (r.c ? 0 : 128) | co;
+      r.m = 2;
     },
     srl_d: function(r) {
-      var co = (r.d & 1) << 3;
-      r.d >>= 1;
-      r.f = (r.d ? 0 : 128) | co;
-      r.m = 2;
+      var co = (r.d & 1) << 3;
+      r.d >>= 1;
+      r.f = (r.d ? 0 : 128) | co;
+      r.m = 2;
     },
     srl_e: function(r) {
-      var co = (r.e & 1) << 3;
-      r.e >>= 1;
-      r.f = (r.e ? 0 : 128) | co;
-      r.m = 2;
+      var co = (r.e & 1) << 3;
+      r.e >>= 1;
+      r.f = (r.e ? 0 : 128) | co;
+      r.m = 2;
     },
     srl_h: function(r) {
-      var co = (r.h & 1) << 3;
-      r.h >>= 1;
-      r.f = (r.h ? 0 : 128) | co;
-      r.m = 2;
+      var co = (r.h & 1) << 3;
+      r.h >>= 1;
+      r.f = (r.h ? 0 : 128) | co;
+      r.m = 2;
     },
     srl_l: function(r) {
-      var co = (r.l & 1) << 3;
-      r.l >>= 1;
-      r.f = (r.l ? 0 : 128) | co;
-      r.m = 2;
+      var co = (r.l & 1) << 3;
+      r.l >>= 1;
+      r.f = (r.l ? 0 : 128) | co;
+      r.m = 2;
     },
     srl_a: function(r) {
-      var co = (r.a & 1) << 3;
-      r.a >>= 1;
-      r.f = (r.a ? 0 : 128) | co;
-      r.m = 2;
+      var co = (r.a & 1) << 3;
+      r.a >>= 1;
+      r.f = (r.a ? 0 : 128) | co;
+      r.m = 2;
     },
     srl_hlm: function(r, m) {
-      var hl = m.rb((r.h << 8) | r.l);
-      var co = (hl & 1) << 3;
-      hl >>= 1;
-      m.wb((r.h << 8) | r.l, hl);
-      r.f = (hl ? 0 : 128) | co;
-      r.m = 2;
+      var hl = m.rb((r.h << 8) | r.l);
+      var co = (hl & 1) << 3;
+      hl >>= 1;
+      m.wb((r.h << 8) | r.l, hl);
+      r.f = (hl ? 0 : 128) | co;
+      r.m = 2;
     },
 
     // Bit checking
@@ -1354,7 +1354,7 @@ var Z80 = {
     set_0h: function(r){ r.h |= 0x1; r.m = 2; },
     set_0l: function(r){ r.l |= 0x1; r.m = 2; },
     set_0a: function(r){ r.a |= 0x1; r.m = 2; },
-    set_0hlm: function(r, m){ m.wb((r.h << 8) | r.l, m.rb((r.h << 8) | r.l) |  0x1); r.m = 4; },
+    set_0hlm: function(r, m){ m.wb((r.h << 8) | r.l, m.rb((r.h << 8) | r.l) |  0x1); r.m = 4; },
 
     set_1b: function(r){ r.b |= 0x2; r.m = 2; },
     set_1c: function(r){ r.c |= 0x2; r.m = 2; },
@@ -1363,7 +1363,7 @@ var Z80 = {
     set_1h: function(r){ r.h |= 0x2; r.m = 2; },
     set_1l: function(r){ r.l |= 0x2; r.m = 2; },
     set_1a: function(r){ r.a |= 0x2; r.m = 2; },
-    set_1hlm: function(r, m){ m.wb((r.h << 8) | r.l, m.rb((r.h << 8) | r.l) |  0x2); r.m = 4; },
+    set_1hlm: function(r, m){ m.wb((r.h << 8) | r.l, m.rb((r.h << 8) | r.l) |  0x2); r.m = 4; },
 
     set_2b: function(r){ r.b |= 0x4; r.m = 2; },
     set_2c: function(r){ r.c |= 0x4; r.m = 2; },
@@ -1372,7 +1372,7 @@ var Z80 = {
     set_2h: function(r){ r.h |= 0x4; r.m = 2; },
     set_2l: function(r){ r.l |= 0x4; r.m = 2; },
     set_2a: function(r){ r.a |= 0x4; r.m = 2; },
-    set_2hlm: function(r, m){ m.wb((r.h << 8) | r.l, m.rb((r.h << 8) | r.l) |  0x4); r.m = 4; },
+    set_2hlm: function(r, m){ m.wb((r.h << 8) | r.l, m.rb((r.h << 8) | r.l) |  0x4); r.m = 4; },
 
     set_3b: function(r){ r.b |= 0x8; r.m = 2; },
     set_3c: function(r){ r.c |= 0x8; r.m = 2; },
@@ -1381,7 +1381,7 @@ var Z80 = {
     set_3h: function(r){ r.h |= 0x8; r.m = 2; },
     set_3l: function(r){ r.l |= 0x8; r.m = 2; },
     set_3a: function(r){ r.a |= 0x8; r.m = 2; },
-    set_3hlm: function(r, m){ m.wb((r.h << 8) | r.l, m.rb((r.h << 8) | r.l) |  0x8); r.m = 4; },
+    set_3hlm: function(r, m){ m.wb((r.h << 8) | r.l, m.rb((r.h << 8) | r.l) |  0x8); r.m = 4; },
 
     set_4b: function(r){ r.b |= 0x10; r.m = 2; },
     set_4c: function(r){ r.c |= 0x10; r.m = 2; },
@@ -1390,7 +1390,7 @@ var Z80 = {
     set_4h: function(r){ r.h |= 0x10; r.m = 2; },
     set_4l: function(r){ r.l |= 0x10; r.m = 2; },
     set_4a: function(r){ r.a |= 0x10; r.m = 2; },
-    set_4hlm: function(r, m){ m.wb((r.h << 8) | r.l, m.rb((r.h << 8) | r.l) |  0x10); r.m = 4; },
+    set_4hlm: function(r, m){ m.wb((r.h << 8) | r.l, m.rb((r.h << 8) | r.l) |  0x10); r.m = 4; },
 
     set_5b: function(r){ r.b |= 0x20; r.m = 2; },
     set_5c: function(r){ r.c |= 0x20; r.m = 2; },
@@ -1399,7 +1399,7 @@ var Z80 = {
     set_5h: function(r){ r.h |= 0x20; r.m = 2; },
     set_5l: function(r){ r.l |= 0x20; r.m = 2; },
     set_5a: function(r){ r.a |= 0x20; r.m = 2; },
-    set_5hlm: function(r, m){ m.wb((r.h << 8) | r.l, m.rb((r.h << 8) | r.l) |  0x20); r.m = 4; },
+    set_5hlm: function(r, m){ m.wb((r.h << 8) | r.l, m.rb((r.h << 8) | r.l) |  0x20); r.m = 4; },
 
     set_6b: function(r){ r.b |= 0x40; r.m = 2; },
     set_6c: function(r){ r.c |= 0x40; r.m = 2; },
@@ -1408,7 +1408,7 @@ var Z80 = {
     set_6h: function(r){ r.h |= 0x40; r.m = 2; },
     set_6l: function(r){ r.l |= 0x40; r.m = 2; },
     set_6a: function(r){ r.a |= 0x40; r.m = 2; },
-    set_6hlm: function(r, m){ m.wb((r.h << 8) | r.l, m.rb((r.h << 8) | r.l) |  0x40); r.m = 4; },
+    set_6hlm: function(r, m){ m.wb((r.h << 8) | r.l, m.rb((r.h << 8) | r.l) |  0x40); r.m = 4; },
 
     set_7b: function(r){ r.b |= 0x80; r.m = 2; },
     set_7c: function(r){ r.c |= 0x80; r.m = 2; },
@@ -1417,7 +1417,7 @@ var Z80 = {
     set_7h: function(r){ r.h |= 0x80; r.m = 2; },
     set_7l: function(r){ r.l |= 0x80; r.m = 2; },
     set_7a: function(r){ r.a |= 0x80; r.m = 2; },
-    set_7hlm: function(r, m){ m.wb((r.h << 8) | r.l, m.rb((r.h << 8) | r.l) |  0x80); r.m = 4; },
+    set_7hlm: function(r, m){ m.wb((r.h << 8) | r.l, m.rb((r.h << 8) | r.l) |  0x80); r.m = 4; },
 
     res_0b: function(r){ r.b &= 0xfe; r.m = 2; },
     res_0c: function(r){ r.c &= 0xfe; r.m = 2; },
@@ -1545,7 +1545,7 @@ var Z80 = {
     rst_60: function(r, m){ r.save(); r.sp -= 2; m.ww(r.sp, r.pc); r.pc = 0x60; r.m = 4; }
 
   }
-}
+};
 
 Z80.map = [
   // 0x00
