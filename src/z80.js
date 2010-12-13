@@ -47,6 +47,10 @@
  *                                    //          happened or should
  *                                    // * stop - flag as to whether a stop has
  *                                    //          happened or should
+ *                                    // * save - a function which saves the
+ *                                    //          state of the registers
+ *                                    // * restore - restores the registers from
+ *                                    //             their last save state
  *    var fun = Z80.map[memory.rb(registers.pc++)];
  *    registers.pc &= 0xffff;
  *    fun(registers, memory);
