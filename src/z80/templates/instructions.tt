@@ -1,0 +1,13 @@
+Z80.ops = {
+  // Garbage instruction
+  xx: function() {},
+
+  // Read next byte and execute from CB table
+  map_cb: function(r, m) {
+    var fun = Z80.cbmap[m.rb(r.pc++)];
+    r.pc &= 0xffff;
+    fun(r, m);
+  },
+
+  <%= @instructions.gsub(/,\s+\Z/, '') %>
+};
