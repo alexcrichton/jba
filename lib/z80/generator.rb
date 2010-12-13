@@ -237,7 +237,8 @@ module Z80
       section '8 bit increments/decrements' do
         regs.each{ |i|
           @out.puts "inc_#{i}: function(r){ r.#{i} = (r.#{i} + 1) & 0xff; " +
-            "r.f = r.#{i} ? 0 : #{Z}; r.m = 1; },"
+            "r.f = r.f & 0x1f | (r.#{i} ? 0 : #{Z}) | " +
+              "((!(r.#{i} & 0xf)) << 5); r.m = 1; },"
         }
         @out.puts "inc_hlm: function(r, m){ var hl = #{hl}, k = (m.rb(hl) + 1) & 0xff;" +
           " m.wb(hl, k); r.f = k ? 0 : #{Z}; r.m = 3; },"
@@ -245,7 +246,8 @@ module Z80
 
         regs.each{ |i|
           @out.puts "dec_#{i}: function(r){ r.#{i} = (r.#{i} - 1) & 0xff; " +
-            "r.f = (r.#{i} ? 0 : #{Z}) | #{N}; r.m = 1; },"
+            "r.f = r.f & 0x1f | #{N} | (r.#{i} ? 0 : #{Z}) | " +
+              "(((r.#{i} & 0xf) == 0xf) << 5); r.m = 1; },"
         }
         @out.puts "dec_hlm: function(r, m){ var hl = #{hl}, k = (m.rb(hl) - 1) & 0xff;" +
           " m.wb(hl, k); r.f = (k ? 0 : #{Z}) | #{N}; r.m = 3; },"
@@ -273,8 +275,9 @@ module Z80
         def add_hl name, add_in, hl
           @out.puts <<-JS.strip_heredoc
             add_hl#{name}: function(r){
-              var hl = (#{hl}) + (#{add_in});
+              var a = #{hl}, b = #{add_in}, hl = a + b;
               if (hl > 0xfff) r.f |= #{C}; else r.f &= #{~C & 0xff};
+              if ((a & 0xf) + (b & 0xf) > 0xf) r.f |= #{H};
               r.l = hl & 0xff;
               r.h = (hl >> 8) & 0xff;
               r.m = 2;
