@@ -494,7 +494,7 @@ end
 section 'Shifting logically right' do
   regs.each do |reg|
     @out.puts <<-JS.strip_heredoc
-      slr_#{reg}: function(r) {
+      srl_#{reg}: function(r) {
         var co = (r.#{reg} & 1) << 3;
         r.#{reg} >>= 1;
         r.f = (r.#{reg} ? 0 : #{Z}) | co;
@@ -504,7 +504,7 @@ section 'Shifting logically right' do
   end
 
   @out.puts <<-JS.strip_heredoc
-    slr_hlm: function(r, m) {
+    srl_hlm: function(r, m) {
       var hl = m.rb(#{hl});
       var co = (hl & 1) << 3;
       hl >>= 1;

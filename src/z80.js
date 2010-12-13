@@ -1162,49 +1162,49 @@ var Z80 = {
     },
 
     // Shifting logically right
-    slr_b: function(r) {
+    srl_b: function(r) {
       var co = (r.b & 1) << 3;
       r.b >>= 1;
       r.f = (r.b ? 0 : 128) | co;
       r.m = 2;
     },
-    slr_c: function(r) {
+    srl_c: function(r) {
       var co = (r.c & 1) << 3;
       r.c >>= 1;
       r.f = (r.c ? 0 : 128) | co;
       r.m = 2;
     },
-    slr_d: function(r) {
+    srl_d: function(r) {
       var co = (r.d & 1) << 3;
       r.d >>= 1;
       r.f = (r.d ? 0 : 128) | co;
       r.m = 2;
     },
-    slr_e: function(r) {
+    srl_e: function(r) {
       var co = (r.e & 1) << 3;
       r.e >>= 1;
       r.f = (r.e ? 0 : 128) | co;
       r.m = 2;
     },
-    slr_h: function(r) {
+    srl_h: function(r) {
       var co = (r.h & 1) << 3;
       r.h >>= 1;
       r.f = (r.h ? 0 : 128) | co;
       r.m = 2;
     },
-    slr_l: function(r) {
+    srl_l: function(r) {
       var co = (r.l & 1) << 3;
       r.l >>= 1;
       r.f = (r.l ? 0 : 128) | co;
       r.m = 2;
     },
-    slr_a: function(r) {
+    srl_a: function(r) {
       var co = (r.a & 1) << 3;
       r.a >>= 1;
       r.f = (r.a ? 0 : 128) | co;
       r.m = 2;
     },
-    slr_hlm: function(r, m) {
+    srl_hlm: function(r, m) {
       var hl = m.rb((r.h << 8) | r.l);
       var co = (hl & 1) << 3;
       hl >>= 1;
@@ -1571,4 +1571,84 @@ Z80.map = [
 ];
 
 Z80.cbmap = [
+  // 0x00
+  Z80.ops.rlc_b, Z80.ops.rlc_c, Z80.ops.rlc_d, Z80.ops.rlc_e,
+  Z80.ops.rlc_h, Z80.ops.rlc_l, Z80.ops.rlc_hlm, Z80.ops.rlc_a,
+  Z80.ops.rrc_b, Z80.ops.rrc_c, Z80.ops.rrc_d, Z80.ops.rrc_e,
+  Z80.ops.rrc_h, Z80.ops.rrc_l, Z80.ops.rrc_hlm, Z80.ops.rrc_a,
+  // 0x10
+  Z80.ops.rl_b, Z80.ops.rl_c, Z80.ops.rl_d, Z80.ops.rl_e,
+  Z80.ops.rl_h, Z80.ops.rl_l, Z80.ops.rl_hlm, Z80.ops.rl_a,
+  Z80.ops.rr_b, Z80.ops.rr_c, Z80.ops.rr_d, Z80.ops.rr_e,
+  Z80.ops.rr_h, Z80.ops.rr_l, Z80.ops.rr_hlm, Z80.ops.rr_a,
+  // 0x20
+  Z80.ops.sla_b, Z80.ops.sla_c, Z80.ops.sla_d, Z80.ops.sla_e,
+  Z80.ops.sla_h, Z80.ops.sla_l, Z80.ops.sla_hlm, Z80.ops.sla_a,
+  Z80.ops.sra_b, Z80.ops.sra_c, Z80.ops.sra_d, Z80.ops.sra_e,
+  Z80.ops.sra_h, Z80.ops.sra_l, Z80.ops.sra_hlm, Z80.ops.sra_a,
+  // 0x30
+  Z80.ops.swap_b, Z80.ops.swap_c, Z80.ops.swap_d, Z80.ops.swap_e,
+  Z80.ops.swap_h, Z80.ops.swap_l, Z80.ops.swap_hlm, Z80.ops.swap_a,
+  Z80.ops.srl_b, Z80.ops.srl_c, Z80.ops.srl_d, Z80.ops.srl_e,
+  Z80.ops.srl_h, Z80.ops.srl_l, Z80.ops.srl_hlm, Z80.ops.srl_a,
+  // 0x40
+  Z80.ops.bit_0b, Z80.ops.bit_0c, Z80.ops.bit_0d, Z80.ops.bit_0e,
+  Z80.ops.bit_0h, Z80.ops.bit_0l, Z80.ops.bit_0hlm, Z80.ops.bit_0a,
+  Z80.ops.bit_1b, Z80.ops.bit_1c, Z80.ops.bit_1d, Z80.ops.bit_1e,
+  Z80.ops.bit_1h, Z80.ops.bit_1l, Z80.ops.bit_1hlm, Z80.ops.bit_1a,
+  // 0x50
+  Z80.ops.bit_2b, Z80.ops.bit_2c, Z80.ops.bit_2d, Z80.ops.bit_2e,
+  Z80.ops.bit_2h, Z80.ops.bit_2l, Z80.ops.bit_2hlm, Z80.ops.bit_2a,
+  Z80.ops.bit_3b, Z80.ops.bit_3c, Z80.ops.bit_3d, Z80.ops.bit_3e,
+  Z80.ops.bit_3h, Z80.ops.bit_3l, Z80.ops.bit_3hlm, Z80.ops.bit_3a,
+  // 0x60
+  Z80.ops.bit_4b, Z80.ops.bit_4c, Z80.ops.bit_4d, Z80.ops.bit_4e,
+  Z80.ops.bit_4h, Z80.ops.bit_4l, Z80.ops.bit_4hlm, Z80.ops.bit_4a,
+  Z80.ops.bit_5b, Z80.ops.bit_5c, Z80.ops.bit_5d, Z80.ops.bit_5e,
+  Z80.ops.bit_5h, Z80.ops.bit_5l, Z80.ops.bit_5hlm, Z80.ops.bit_5a,
+  // 0x70
+  Z80.ops.bit_6b, Z80.ops.bit_6c, Z80.ops.bit_6d, Z80.ops.bit_6e,
+  Z80.ops.bit_6h, Z80.ops.bit_6l, Z80.ops.bit_6hlm, Z80.ops.bit_6a,
+  Z80.ops.bit_7b, Z80.ops.bit_7c, Z80.ops.bit_7d, Z80.ops.bit_7e,
+  Z80.ops.bit_7h, Z80.ops.bit_7l, Z80.ops.bit_7hlm, Z80.ops.bit_7a,
+  // 0x80
+  Z80.ops.res_0b, Z80.ops.res_0c, Z80.ops.res_0d, Z80.ops.res_0e,
+  Z80.ops.res_0h, Z80.ops.res_0l, Z80.ops.res_0hlm, Z80.ops.res_0a,
+  Z80.ops.res_1b, Z80.ops.res_1c, Z80.ops.res_1d, Z80.ops.res_1e,
+  Z80.ops.res_1h, Z80.ops.res_1l, Z80.ops.res_1hlm, Z80.ops.res_1a,
+  // 0x90
+  Z80.ops.res_2b, Z80.ops.res_2c, Z80.ops.res_2d, Z80.ops.res_2e,
+  Z80.ops.res_2h, Z80.ops.res_2l, Z80.ops.res_2hlm, Z80.ops.res_2a,
+  Z80.ops.res_3b, Z80.ops.res_3c, Z80.ops.res_3d, Z80.ops.res_3e,
+  Z80.ops.res_3h, Z80.ops.res_3l, Z80.ops.res_3hlm, Z80.ops.res_3a,
+  // 0xa0
+  Z80.ops.res_4b, Z80.ops.res_4c, Z80.ops.res_4d, Z80.ops.res_4e,
+  Z80.ops.res_4h, Z80.ops.res_4l, Z80.ops.res_4hlm, Z80.ops.res_4a,
+  Z80.ops.res_5b, Z80.ops.res_5c, Z80.ops.res_5d, Z80.ops.res_5e,
+  Z80.ops.res_5h, Z80.ops.res_5l, Z80.ops.res_5hlm, Z80.ops.res_5a,
+  // 0xb0
+  Z80.ops.res_6b, Z80.ops.res_6c, Z80.ops.res_6d, Z80.ops.res_6e,
+  Z80.ops.res_6h, Z80.ops.res_6l, Z80.ops.res_6hlm, Z80.ops.res_6a,
+  Z80.ops.res_7b, Z80.ops.res_7c, Z80.ops.res_7d, Z80.ops.res_7e,
+  Z80.ops.res_7h, Z80.ops.res_7l, Z80.ops.res_7hlm, Z80.ops.res_7a,
+  // 0xc0
+  Z80.ops.set_0b, Z80.ops.set_0c, Z80.ops.set_0d, Z80.ops.set_0e,
+  Z80.ops.set_0h, Z80.ops.set_0l, Z80.ops.set_0hlm, Z80.ops.set_0a,
+  Z80.ops.set_1b, Z80.ops.set_1c, Z80.ops.set_1d, Z80.ops.set_1e,
+  Z80.ops.set_1h, Z80.ops.set_1l, Z80.ops.set_1hlm, Z80.ops.set_1a,
+  // 0xd0
+  Z80.ops.set_2b, Z80.ops.set_2c, Z80.ops.set_2d, Z80.ops.set_2e,
+  Z80.ops.set_2h, Z80.ops.set_2l, Z80.ops.set_2hlm, Z80.ops.set_2a,
+  Z80.ops.set_3b, Z80.ops.set_3c, Z80.ops.set_3d, Z80.ops.set_3e,
+  Z80.ops.set_3h, Z80.ops.set_3l, Z80.ops.set_3hlm, Z80.ops.set_3a,
+  // 0xe0
+  Z80.ops.set_4b, Z80.ops.set_4c, Z80.ops.set_4d, Z80.ops.set_4e,
+  Z80.ops.set_4h, Z80.ops.set_4l, Z80.ops.set_4hlm, Z80.ops.set_4a,
+  Z80.ops.set_5b, Z80.ops.set_5c, Z80.ops.set_5d, Z80.ops.set_5e,
+  Z80.ops.set_5h, Z80.ops.set_5l, Z80.ops.set_5hlm, Z80.ops.set_5a,
+  // 0xf0
+  Z80.ops.set_6b, Z80.ops.set_6c, Z80.ops.set_6d, Z80.ops.set_6e,
+  Z80.ops.set_6h, Z80.ops.set_6l, Z80.ops.set_6hlm, Z80.ops.set_6a,
+  Z80.ops.set_7b, Z80.ops.set_7c, Z80.ops.set_7d, Z80.ops.set_7e,
+  Z80.ops.set_7h, Z80.ops.set_7l, Z80.ops.set_7hlm, Z80.ops.set_7a
 ];
