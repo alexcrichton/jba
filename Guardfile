@@ -6,7 +6,5 @@ end
 guard 'livereload', :apply_js_live => false do
   watch('test/index.html')
   watch('test/.+\.js$')
-  watch('lib/z80/generator.rb')
   watch('src/.+\.js$')
-  watch('src/.+\.tt$')
 end
