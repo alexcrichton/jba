@@ -1,4 +1,60 @@
-// Instruction set for the Z80
+/**
+ * Instruction set for the Z80 gameboy processor (apparently not the actual z80
+ * but slightly modified.)
+ *
+ * I apologize in advance for the size of this file, but the methodology used
+ * here is that every cpu instruction is implemented as a function and is
+ * located in a table. The opcodes themselves can then be used as an index into
+ * the table for when the function is executed.
+ *
+ * This means that we need a lot of functions because the z80 has 256
+ * instructions and the GBC adds another 256 I think.
+ *
+ * Most of the functions are very similar, however, so the vast majority of
+ * contents in Z80.ops is generated via the ruby file in src/gen. That file
+ * should be modified if updating a cpu instruction here. The tables at the
+ * bottom and the first few functions in Z80.ops, however, are not generated
+ * and should be modified right here.
+ *
+ * Hopefully the very large list of functions won't lose too much over just
+ * a massive switch or else this could get a lot uglier...
+ *
+ * === Syntax for Calling ===
+ *
+ * When using this processor, this class should be used inside another CPU
+ * object or something or other with a function like:
+ *
+ *  exec: function() {
+ *
+ *    // ... setup things
+ *
+ *    var memory = this.memory; // This responds to rb, wb, rw, ww. These are
+ *                              // read byte, write byte, read word, write word.
+ *
+ *    var registers = this.registers; // This is a hash with keys: a, b, c, d, e
+ *                                    // f, h, l, pc, sp, m, ime, halt, stop.
+ *                                    //
+ *                                    // * a-l - are registers
+ *                                    // * pc  - the program counter
+ *                                    // * sp  - the stack pointer,
+ *                                    // * m   - the variable where the number
+ *                                    //         of cycles the current
+ *                                    //         instruction takes will be
+ *                                    //         stored
+ *                                    // * ime  - flag for whether interrupts
+ *                                                are tunred on or not
+ *                                    // * halt - flag as to whether a halt has
+ *                                    //          happened or should
+ *                                    // * stop - flag as to whether a stop has
+ *                                    //          happened or should
+ *    var fun = Z80.map[memory.rb(registers.pc++)];
+ *    registers.pc &= 0xffff;
+ *    fun(registers, memory);
+ *
+ *    // ... other things
+ *
+ *  }
+ */
 var Z80 = {
   ops: {
     // Garbage instruction
@@ -6,7 +62,7 @@ var Z80 = {
     map_cb: function(r, m) {
       var fun = Z80.cbmap[m.rb(r.pc++)];
       r.pc &= 0xffff;
-      fun();
+      fun(r, m);
     },
 
     // 8 bit loading between registers
