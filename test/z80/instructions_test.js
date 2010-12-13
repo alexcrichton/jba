@@ -19,13 +19,13 @@ module('Z80 - Instructions', {
   }
 });
 
-function opcode_test(opcode, pc_change, cycles, callback) {
+function opcode_test(opcode, pc_diff, cycles, callback) {
   var prev = reg.pc;
   mem.wb(reg.pc, opcode);
   Z80.map[mem.rb(reg.pc++)](reg, mem);
   callback();
-  equals(pc_change, reg.pc - prev, "Program counter changed by " + pc_change);
-  equals(cycles, reg.m, "Cycles taken by instruction: " + cycles);
+  equals(reg.pc - prev, pc_diff, "Program counter changed by " + pc_diff);
+  equals(reg.m, cycles, "Cycles taken by instruction: " + cycles);
 }
 
 function stub_next_word(val) {
@@ -251,6 +251,37 @@ test('rrca', function() {
 /******************************************************************************/
 /**   0x10                                                                    */
 /******************************************************************************/
+test('stop', function() {
+  opcode_test(0x10, 1, 1, function() { equals(reg.stop, 1); });
+});
+
+test('ld DE, nn', function() {
+  stub_next_word(0x8739);
+  opcode_test(0x11, 3, 3, function() {
+    equals(reg.d, 0x87);
+    equals(reg.e, 0x39);
+  });
+});
+
+test('ld (DE), A', function() {
+  reg.a = 0x22;
+  reg.d = 0x39;
+  reg.e = 0x88;
+  opcode_test(0x12, 1, 2, function() {
+    equals(mem.rb(0x3988), 0x22);
+  });
+});
+
+// test('inc DE', function() { });
+
+// test('inc D', function() { });
+
+// test('dec D', function() { });
+
+// test('ld D, n', function() { });
+
+// test('rla', function() { });
+
 test('rla', function() {
   reg.a = 0x01;
   reg.f = 0x10;
