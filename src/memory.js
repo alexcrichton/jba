@@ -27,6 +27,8 @@ JBA.Memory.MBC = {
 
 JBA.Memory.prototype = {
   reset: function() {
+    this.rtc = new JBA.RTC();
+
     /** @type {JBA.Memory.MBC} */
     this.mbc = JBA.Memory.MBC.UNKNOWN;
 
@@ -111,6 +113,7 @@ JBA.Memory.prototype = {
       case 0x3:
         // Always mapped in as first bytes of cartridge
         return this.rom.charCodeAt(addr);
+
       case 0x4:
       case 0x5:
       case 0x6:
@@ -126,7 +129,11 @@ JBA.Memory.prototype = {
       case 0xb:
       // Swappable banks of RAM
         if (this.ramon) {
-          return this.ram[(this.rambank << 13) | (addr & 0x1fff)];
+          if (this.rtc.current & 0x8) {
+            return this.rtc.regs[this.rtc.current & 0x7];
+          } else {
+            return this.ram[(this.rambank << 13) | (addr & 0x1fff)];
+          }
         } else {
           return 0xff;
         }
@@ -152,7 +159,9 @@ JBA.Memory.prototype = {
       case 0x1:
         switch (this.mbc) {
           case JBA.Memory.MBC.MBC1:
+          case JBA.Memory.MBC.MBC3:
             this.ramon = (value & 0xf) == 0xa ? 1 : 0; break;
+
           case JBA.Memory.MBC.MBC2:
             if (!(addr & 0x100)) this.ramon = 1 ^ this.ramon; break;
         }
@@ -165,8 +174,13 @@ JBA.Memory.prototype = {
             this.rombank = (this.rombank & 0x60) | (value & 0x1f);
             if (this.rombank == 0) this.rombank = 1;
             break;
+
           case JBA.Memory.MBC.MBC2:
             if (addr & 0x100) this.rombank = value & 0xf; break;
+
+          case JBA.Memory.MBC.MBC3:
+            value &= 0x7f;
+            this.rombank = value + (!value); break;
         }
         break;
 
@@ -180,6 +194,11 @@ JBA.Memory.prototype = {
               this.rambank = value & 0x3;
             }
             break;
+
+          case JBA.Memory.MBC.MBC3:
+            this.rtc.current = value & 0xf;
+            this.rambank     = value & 3;
+            break;
         }
         break;
 
@@ -189,6 +208,9 @@ JBA.Memory.prototype = {
           case JBA.Memory.MBC.MBC1:
             this.mode = value & 0x1;
             break;
+
+          case JBA.Memory.MBC.MBC3:
+            this.rtc.latch(value); break;
         }
         break;
 
@@ -201,8 +223,12 @@ JBA.Memory.prototype = {
       case 0xb:
         // Swappable banks of RAM
         if (this.ramon) {
-          if (this.mbc == JBA.Memory.MBC.MBC2) value &= 0xf;
-          this.ram[(this.rambank << 13) | (addr & 0x1fff)] = value;
+          if (this.rtc.current & 0x8) {
+            this.rtc.wb(value);
+          } else {
+            if (this.mbc == JBA.Memory.MBC.MBC2) value &= 0xf;
+            this.ram[(this.rambank << 13) | (addr & 0x1fff)] = value;
+          }
         }
         break;
 
