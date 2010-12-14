@@ -35,6 +35,7 @@ JBA.Memory.prototype = {
     this.rom = '';
     this.ram = [];
     this.wram = []; // Special 'Work' ram
+    this.hiram = []; // 256 bytes of ram at the end of the address space
     this.rombank = 1; // The number of the rom bank currently swapped in
     this.rambank = 0; // The number of the ram bank currently swapped in
     this.wrambank = 1; // The number of the wram bank currently swapped in
@@ -44,6 +45,10 @@ JBA.Memory.prototype = {
     for (var i = 0; i < 0xffff; i++) {
       this.ram[i] = 0;
       this.wram[i] = 0;
+    }
+
+    for (i = 0; i < 0xff; i++) {
+      this.hiram[i] = 0;
     }
   },
 
@@ -149,7 +154,18 @@ JBA.Memory.prototype = {
         return this.wram[(this.wrambank << 12) | (addr & 0xfff)];
 
       case 0xf:
-        // FIGURE OUT WHAT GOES HERE
+        if (addr < 0xfe00) {
+          return this.wram[addr & 0xfff];
+        } else if (addr < 0xfea0) {
+          // READ OAM HERE
+        } else if (addr < 0xff00) {
+          // unusable ram
+        } else if (addr < 0xff80) {
+          // HANDLE IO HERE
+        } else if (addr < 0xffff) {
+          return this.hiram[addr & 0xff];
+        }
+        break;
     }
 
     return 0xff; // Should not get here
@@ -248,7 +264,18 @@ JBA.Memory.prototype = {
         this.wram[(this.wrambank << 12) | (addr & 0xfff)] = value; break;
 
       case 0xf:
-        // FIGURE OUT WHAT GOES HERE
+        if (addr < 0xfe00) {
+          this.wram[addr & 0xfff] = value;
+        } else if (addr < 0xfea0) {
+          // READ OAM HERE
+        } else if (addr < 0xff00) {
+          // unusable ram
+        } else if (addr < 0xff80) {
+          // HANDLE IO HERE
+        } else if (addr < 0xffff) {
+          this.hiram[addr & 0xff] = value;
+        }
+        break;
     }
   }
 };
