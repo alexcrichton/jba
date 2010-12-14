@@ -4,6 +4,9 @@
  * This houses the logic for reading/writing to memory and managing the
  * Memory Bank Controller (MBC) logic.
  *
+ * For more information about how these work, see this url:
+ *    http://nocash.emubase.de/pandocs.htm#memorybankcontrollers
+ *
  * @constructor
  */
 JBA.Memory = function(data) {
@@ -15,6 +18,7 @@ JBA.Memory = function(data) {
  * @enum
  */
 JBA.Memory.MBC = {
+  UNKNOWN: -1,
   NONE: 0,
   MBC1: 1,
   MBC2: 2,
@@ -23,8 +27,10 @@ JBA.Memory.MBC = {
 
 JBA.Memory.prototype = {
   reset: function() {
+    /** @type {JBA.Memory.MBC} */
+    this.mbc = JBA.Memory.MBC.UNKNOWN;
+
     this.rom = '';
-    this.mbc = -1;
     this.ram = [];
     this.rombank = 1; // The number of the rom bank currently swapped in
     this.rambank = 0; // The number of the ram bank currently swapped in
@@ -147,6 +153,8 @@ JBA.Memory.prototype = {
         switch (this.mbc) {
           case JBA.Memory.MBC.MBC1:
             this.ramon = (value & 0xf) == 0xa ? 1 : 0; break;
+          case JBA.Memory.MBC.MBC2:
+            if (!(addr & 0x100)) this.ramon = 1 ^ this.ramon; break;
         }
         break;
 
@@ -157,6 +165,8 @@ JBA.Memory.prototype = {
             this.rombank = (this.rombank & 0x60) | (value & 0x1f);
             if (this.rombank == 0) this.rombank = 1;
             break;
+          case JBA.Memory.MBC.MBC2:
+            if (addr & 0x100) this.rombank = value & 0xf; break;
         }
         break;
 
@@ -191,6 +201,7 @@ JBA.Memory.prototype = {
       case 0xb:
         // Swappable banks of RAM
         if (this.ramon) {
+          if (this.mbc == JBA.Memory.MBC.MBC2) value &= 0xf;
           this.ram[(this.rambank << 13) | (addr & 0x1fff)] = value;
         }
         break;
