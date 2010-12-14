@@ -142,12 +142,12 @@ JBA.Memory.prototype = {
         }
 
       case 0xc:
+      case 0xe:
         return this.wram[addr & 0xfff];
 
       case 0xd:
         return this.wram[(this.wrambank << 12) | (addr & 0xfff)];
 
-      case 0xe:
       case 0xf:
         // FIGURE OUT WHAT GOES HERE
     }
@@ -241,12 +241,12 @@ JBA.Memory.prototype = {
         break;
 
       case 0xc:
+      case 0xe:
         this.wram[addr & 0xfff] = value; break;
 
       case 0xd:
         this.wram[(this.wrambank << 12) | (addr & 0xfff)] = value; break;
 
-      case 0xe:
       case 0xf:
         // FIGURE OUT WHAT GOES HERE
     }
