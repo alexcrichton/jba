@@ -18,6 +18,7 @@ class JBA < Thor
   def check
     js = [
       'src/jba.js',
+      'src/rtc.js',
       'src/z80.js',
       'src/z80/instructions.js',
       'src/memory.js',
