@@ -563,6 +563,7 @@ module Z80
       end
 
       @funs.each_pair do |name, body|
+        @out.print '/** @param {Z80.Registers} r ; @param {JBA.Memory} m */ '
         @out.print name
         @out.print ': function(r, m){ '
         @out.print body.gsub("\n", '')
