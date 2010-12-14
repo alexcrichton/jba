@@ -126,7 +126,7 @@ JBA.Memory.prototype = {
 
       case 0x8:
       case 0x9:
-        // FIGURE OUT WHAT GOES HERE
+        // GPU (VRAM) goes here eventually
 
       case 0xa:
       case 0xb:
@@ -224,7 +224,7 @@ JBA.Memory.prototype = {
 
       case 0x8:
       case 0x9:
-        // FIGURE OUT WHAT GOES HERE
+        // GPU (VRAM) goes here eventually
         break;
 
       case 0xa:
