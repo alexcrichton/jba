@@ -139,6 +139,7 @@ JBA.Memory.prototype = {
         }
 
       case 0xc:
+      case 0xd:
       case 0xe:
       case 0xf:
         // FIGURE OUT WHAT GOES HERE
@@ -233,6 +234,7 @@ JBA.Memory.prototype = {
         break;
 
       case 0xc:
+      case 0xd:
       case 0xe:
       case 0xf:
         // FIGURE OUT WHAT GOES HERE
