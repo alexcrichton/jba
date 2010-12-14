@@ -11,10 +11,20 @@
  * how to generate this file
  */
 Z80.ops = {
-  // Garbage instruction
-  xx: function() {},
+  /**
+   * Garbage instruction
+   *
+   * @param {Z80.Registers} r the registers to modify
+   * @param {JBA.Memory} m the memory to read/write to
+   */
+  xx: function(r, m) {},
 
-  // Read next byte and execute from CB table
+  /**
+   * Read next byte and execute from CB table
+   *
+   * @param {Z80.Registers} r the registers to modify
+   * @param {JBA.Memory} m the memory to read/write to
+   */
   map_cb: function(r, m) {
     var fun = Z80.cbmap[m.rb(r.pc++)];
     r.pc &= 0xffff;
