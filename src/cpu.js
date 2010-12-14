@@ -1,3 +1,8 @@
+/**
+ * Contains logic for the CPU of the GB.
+ *
+ * @constructor
+ */
 JBA.CPU = function() {
   this.registers = new Z80.Registers();
 

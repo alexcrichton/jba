@@ -2,12 +2,18 @@
  * Represents the Memory Management Unit (MMU) for the GB
  *
  * This houses the logic for reading/writing to memory and managing the
- * Memory Bank Controller (MBC) logic. T
+ * Memory Bank Controller (MBC) logic.
+ *
+ * @constructor
  */
 JBA.Memory = function(data) {
   this.reset();
 };
 
+/**
+ * Different MBCs supported
+ * @enum
+ */
 JBA.Memory.MBC = {
   NONE: 0,
   MBC1: 1,
@@ -30,6 +36,12 @@ JBA.Memory.prototype = {
     }
   },
 
+  /**
+   * Loads a string of data as a cartridge into this memory. The data provided
+   * will be used as ROM.
+   *
+   * @param {string} data the data of the cartridge
+   */
   load_cartridge: function(data) {
     switch (data.charCodeAt(0x0147)) {
       case 0x00:            // rom only
@@ -63,9 +75,28 @@ JBA.Memory.prototype = {
     this.rom = data;
   },
 
+  /**
+   * Reads a word at the given address (2 bytes)
+   *
+   * @param {number} addr the 16 bit address in memory to read
+   * @return {number} the 16 bit value at this address
+   */
   rw: function(addr) { return this.rb(addr) | (this.rb(addr + 1) << 8); },
+
+  /**
+   * Writes a word at the given address (2 bytes)
+   *
+   * @param {number} addr the 16 bit address in memory to read
+   * @param {number} v the 16 bit value to write to memory
+   */
   ww: function(addr, v) { this.wb(addr, v & 0xff); this.wb(addr + 1, v >> 8); },
 
+  /**
+   * Reads a byte at the given address
+   *
+   * @param {number} addr the 16 bit address in memory to read
+   * @return {number} the 8 bit value at this address
+   */
   rb: function(addr) {
     switch (addr >> 12) {
       case 0x0:
@@ -103,6 +134,12 @@ JBA.Memory.prototype = {
     return 0xff; // Should not get here
   },
 
+  /**
+   * Writes a byte at the given address (2 bytes)
+   *
+   * @param {number} addr the 16 bit address in memory to read
+   * @param {number} value the 8 bit value to write to memory
+   */
   wb: function(addr, value) {
     switch (addr >> 12) {
       case 0x0:

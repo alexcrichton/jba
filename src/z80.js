@@ -20,30 +20,32 @@
  *
  *  }
  */
-var Z80 = {
-  /**
-   * This class represents the registers of the Z80 GB cpu.
-   *
-   * This is a hash with keys: a, b, c, d, e, f, h, l, pc, sp, m, ime, halt,
-   * stop.
-   *
-   *  - a-l : are registers
-   *  - pc  : the program counter
-   *  - sp  : the stack pointer,
-   *  - m   : the variable where the number of cycles the current
-   *          instruction takes will be stored
-   *  - ime  : flag for whether interrupts are tunred on or not
-   *  - halt : flag as to whether a halt has happened or should
-   *  - stop : flag as to whether a stop has happened or should
-   */
-  Registers: function() {
-    this._saved = {
-      a: 0, b: 0, c: 0, d: 0, e: 0, f: 0, h: 0, l: 0,
-      sp: 0, pc: 0, m: 0, ime: 0, halt: 0, stop: 0
-    };
+var Z80 = {};
 
-    this.reset();
-  }
+/**
+ * This class represents the registers of the Z80 GB cpu.
+ *
+ * This is a hash with keys: a, b, c, d, e, f, h, l, pc, sp, m, ime, halt,
+ * stop.
+ *
+ *  - a-l : are registers
+ *  - pc  : the program counter
+ *  - sp  : the stack pointer,
+ *  - m   : the variable where the number of cycles the current
+ *          instruction takes will be stored
+ *  - ime  : flag for whether interrupts are tunred on or not
+ *  - halt : flag as to whether a halt has happened or should
+ *  - stop : flag as to whether a stop has happened or should
+ *
+ * @constructor
+ */
+Z80.Registers = function() {
+  this._saved = {
+    a: 0, b: 0, c: 0, d: 0, e: 0, f: 0, h: 0, l: 0,
+    sp: 0, pc: 0, m: 0, ime: 0, halt: 0, stop: 0
+  };
+
+  this.reset();
 };
 
 Z80.Registers.prototype = {
