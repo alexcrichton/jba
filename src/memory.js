@@ -34,13 +34,16 @@ JBA.Memory.prototype = {
 
     this.rom = '';
     this.ram = [];
+    this.wram = []; // Special 'Work' ram
     this.rombank = 1; // The number of the rom bank currently swapped in
     this.rambank = 0; // The number of the ram bank currently swapped in
+    this.wrambank = 1; // The number of the wram bank currently swapped in
     this.ramon = 0; // A flag whether ram is enabled or not.
     this.mode  = 0; // Flag whether in ROM banking mode (0) or RAM banking mode
 
     for (var i = 0; i < 0xffff; i++) {
       this.ram[i] = 0;
+      this.wram[i] = 0;
     }
   },
 
@@ -139,7 +142,11 @@ JBA.Memory.prototype = {
         }
 
       case 0xc:
+        return this.wram[addr & 0xfff];
+
       case 0xd:
+        return this.wram[(this.wrambank << 12) | (addr & 0xfff)];
+
       case 0xe:
       case 0xf:
         // FIGURE OUT WHAT GOES HERE
@@ -234,7 +241,11 @@ JBA.Memory.prototype = {
         break;
 
       case 0xc:
+        this.wram[addr & 0xfff] = value; break;
+
       case 0xd:
+        this.wram[(this.wrambank << 12) | (addr & 0xfff)] = value; break;
+
       case 0xe:
       case 0xf:
         // FIGURE OUT WHAT GOES HERE
