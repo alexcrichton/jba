@@ -29,3 +29,11 @@ test('high RAM is accessible', function() {
   mem.wb(0xfff3, 0x83);
   equals(mem.rb(0xfff3), 0x83);
 });
+
+test('reading/writing VRAM', function() {
+  mem.wb(0xc089, 0x78);
+  equals(mem.rb(0xc089), 0x78);
+
+  mem.wb(0xd5f3, 0x83);
+  equals(mem.rb(0xd5f3), 0x83);
+});
