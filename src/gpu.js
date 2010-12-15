@@ -11,10 +11,26 @@ JBA.GPU = function(mem) {
   this.reset();
 };
 
+/**
+ * Current mode the GPU is in
+ * @enum
+ */
+JBA.GPU.Mode = {
+  HBLANK: 0,
+  VBLANK: 1,
+  RDOAM:  2,
+  RDVRAM: 3
+};
+
 JBA.GPU.prototype = {
   vram: null,
   oam: null,
+  canvas: null,
+  image: null,
 
+  clock: 0,
+
+  /**** Registers used by the GPU ******/
   // 0xff40 - LCD control (LCDC) - in order from most to least significant bit
   lcdon: 0,     // LCD monitor turned on or off?
   winmap: 0,    // Window Tile Map Display Select (0=9800-9BFF, 1=9C00-9FFF)
@@ -23,7 +39,7 @@ JBA.GPU.prototype = {
   bgmap: 0,     // BG Tile Map Display Select     (0=9800-9BFF, 1=9C00-9FFF)
   objsize: 0,   // OBJ (Sprite) Size              (0=8x8, 1=8x16)
   objon: 0,     // OBJ (Sprite) Display Enable    (0=Off, 1=On)
-  bgon: 0,      // BG Display (for CGB see below) (0=Off, 1=On)
+  bgon: 0,      // BG Display                     (0=Off, 1=On)
 
   // 0xff41 - STAT - LCDC Status - starts with bit 6
   lycly: 0,     // LYC=LY Coincidence Interrupt (1=Enable)
@@ -31,7 +47,8 @@ JBA.GPU.prototype = {
   mode1int: 0,  // Mode 1 V-Blank Interrupt     (1=Enable)
   mode0int: 0,  // Mode 0 H-Blank Interrupt     (1=Enable)
   coinc: 0,     // Coincidence Flag  (0:LYC<>LY, 1:LYC=LY)
-  mode: 0,      // bits 0,1 - Mode Flag
+  /** @type {JBA.GPU.Mode} */
+  mode: JBA.GPU.HBLANK,      // bits 0,1 - Mode Flag
 
   // 0xff42 - SCY - Scroll Y
   scy: 0,
@@ -58,6 +75,76 @@ JBA.GPU.prototype = {
     this.oam  = [];
     for (var i = 0; i < (8 << 10); i++) this.vram[i] = 0;
     for (i = 0; i < 0xa0; i++) this.oam[i] = 0;
+
+    this.canvas = document.getElementById('gb').getContext('2d');
+    this.image = this.canvas.createImageData(160, 144);
+  },
+
+  white_canvas: function() {
+    for (var i = 0; i < this.image.data.length; i++)
+      this.image.data[i] = 0xff;
+    this.canvas.putImageData(this.image, 0, 0);
+  },
+
+  step: function(clocks) {
+    // Timings located here:
+    //    http://imrannazar.com/GameBoy-Emulation-in-JavaScript:-GPU-Timings
+
+    this.clock += clocks;
+
+    switch (this.mode) {
+      case JBA.GPU.Mode.HBLANK: // 51 CPU cycles here
+        if (this.clock >= 51) {
+          if (this.ly == 143) {
+            this.mode = JBA.GPU.Mode.VBLANK;
+            this.canvas.putImageData(this.image, 0, 0);
+          } else {
+            this.mode = JBA.GPU.Mode.RDOAM;
+          }
+          this.ly++;
+          this.clock = 0;
+        }
+        break;
+
+      case JBA.GPU.Mode.VBLANK: // 114 CPU cycles per line, 10 more lines
+        if (this.clock >= 114) {
+          this.ly++;
+          this.clock = 0;
+
+          if (this.ly > 153) {
+            this.mode   = JBA.GPU.Mode.RDOAM;
+            this.ly = 0;
+          }
+        }
+        break;
+
+      case JBA.GPU.Mode.RDOAM: // 20 cycles here
+        if (this.clock >= 20) {
+          this.mode  = JBA.GPU.Mode.RDVRAM;
+          this.clock = 0;
+        }
+        break;
+
+      case JBA.GPU.Mode.RDVRAM: // 43 cycles here
+        if (this.clock >= 43) {
+          this.mode = JBA.GPU.Mode.HBLANK;
+          this.clock = 0;
+          this.render_line();
+        }
+        break;
+    }
+  },
+
+  /** @private */
+  render_line: function() {
+    if (!this.lcdon) return;
+    if (this.bgon) {
+
+    }
+
+    if (this.objon) {
+
+    }
   },
 
   rb: function(addr) {

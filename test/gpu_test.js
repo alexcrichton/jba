@@ -101,3 +101,32 @@ test('DMA transfers', function() {
 
   equals(gpu.oam[0x87], 0x32);
 });
+
+test('clocking between modes', function() {
+  gpu.render_line = function(){};
+
+  gpu.mode = JBA.GPU.Mode.RDOAM;
+  gpu.step(1); // Don't change the mode
+  equals(gpu.mode, JBA.GPU.Mode.RDOAM);
+
+  gpu.step(19); // Change the mode now
+  equals(gpu.mode, JBA.GPU.Mode.RDVRAM);
+
+  gpu.step(42);
+  equals(gpu.mode, JBA.GPU.Mode.RDVRAM);
+
+  gpu.step(1);
+  equals(gpu.mode, JBA.GPU.Mode.HBLANK);
+
+  gpu.step(51);
+  equals(gpu.mode, JBA.GPU.Mode.RDOAM);
+
+  gpu.mode   = JBA.GPU.Mode.HBLANK;
+  gpu.atline = 143;
+  gpu.step(51);
+  equals(gpu.mode, JBA.GPU.Mode.VBLANK);
+
+  for (var i = 0; i < 10; i++) gpu.step(114);
+
+  equals(gpu.mode, JBA.GPU.Mode.RDOAM);
+});
