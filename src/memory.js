@@ -28,7 +28,7 @@ JBA.Memory.MBC = {
 JBA.Memory.prototype = {
   reset: function() {
     this.rtc = new JBA.RTC();
-    this.gpu = new JBA.GPU();
+    this.gpu = new JBA.GPU(this);
 
     /** @type {JBA.Memory.MBC} */
     this.mbc = JBA.Memory.MBC.UNKNOWN;
@@ -162,13 +162,24 @@ JBA.Memory.prototype = {
         } else if (addr < 0xff00) {
           // unusable ram
         } else if (addr < 0xff80) {
-          // HANDLE IO HERE
+          return this.ioreg_rb(addr);
         } else if (addr < 0xffff) {
           return this.hiram[addr & 0xff];
         }
     }
 
     return 0xff; // Should not get here
+  },
+
+  /**
+   * Reads a value from a known IO type register
+   */
+  ioreg_rb: function(addr) {
+    switch ((addr >> 4) & 0xf) {
+      case 0x4: case 0x5: case 0x6: case 0x7:
+        return this.gpu.rb(addr);
+      default: throw "Not implemented reading that address!";
+    }
   },
 
   /**
@@ -271,11 +282,22 @@ JBA.Memory.prototype = {
         } else if (addr < 0xff00) {
           // unusable ram
         } else if (addr < 0xff80) {
-          // HANDLE IO HERE
+          this.ioreg_wb(addr, value);
         } else if (addr < 0xffff) {
           this.hiram[addr & 0xff] = value;
         }
         break;
+    }
+  },
+
+  /**
+   * Writes a value into a known IO type register
+   */
+  ioreg_wb: function(addr, value) {
+    switch ((addr >> 4) & 0xf) {
+      case 0x4: case 0x5: case 0x6: case 0x7:
+        this.gpu.wb(addr, value);
+      default: throw "Not implemented reading that address!";
     }
   }
 };
