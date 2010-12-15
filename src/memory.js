@@ -28,6 +28,7 @@ JBA.Memory.MBC = {
 JBA.Memory.prototype = {
   reset: function() {
     this.rtc = new JBA.RTC();
+    this.gpu = new JBA.GPU();
 
     /** @type {JBA.Memory.MBC} */
     this.mbc = JBA.Memory.MBC.UNKNOWN;
@@ -119,7 +120,7 @@ JBA.Memory.prototype = {
       case 0x1:
       case 0x2:
       case 0x3:
-        // Always mapped in as first bytes of cartridge
+        // Always mapped in as first bank of cartridge
         return this.rom.charCodeAt(addr);
 
       case 0x4:
@@ -131,7 +132,7 @@ JBA.Memory.prototype = {
 
       case 0x8:
       case 0x9:
-        // GPU (VRAM) goes here eventually
+        return this.gpu.vram[addr & 0x1fff];
 
       case 0xa:
       case 0xb:
@@ -240,7 +241,7 @@ JBA.Memory.prototype = {
 
       case 0x8:
       case 0x9:
-        // GPU (VRAM) goes here eventually
+        this.gpu.vram[addr & 0x1fff] = value;
         break;
 
       case 0xa:
