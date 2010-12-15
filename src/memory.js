@@ -158,7 +158,7 @@ JBA.Memory.prototype = {
         if (addr < 0xfe00) {
           return this.rb(addr & 0xdfff); // mirrored RAM
         } else if (addr < 0xfea0) {
-          // READ OAM HERE
+          return this.gpu.oam[addr & 0xff];
         } else if (addr < 0xff00) {
           // unusable ram
         } else if (addr < 0xff80) {
@@ -267,7 +267,7 @@ JBA.Memory.prototype = {
         if (addr < 0xfe00) {
           this.wb(addr & 0xdfff, value); // mirrored RAM
         } else if (addr < 0xfea0) {
-          // READ OAM HERE
+          this.gpu.oam[addr & 0xff] = value;
         } else if (addr < 0xff00) {
           // unusable ram
         } else if (addr < 0xff80) {

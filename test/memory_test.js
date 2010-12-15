@@ -37,3 +37,11 @@ test('reading/writing VRAM', function() {
   mem.wb(0xd5f3, 0x83);
   equals(mem.rb(0xd5f3), 0x83);
 });
+
+test('reading/writing to OAM', function() {
+  mem.wb(0xfe03, 0x32);
+  equals(mem.rb(0xfe03), 0x32);
+
+  mem.wb(0xfe9f, 0x33);
+  equals(mem.rb(0xfe9f), 0x33);
+});
