@@ -4,7 +4,7 @@ guard 'shell' do
 end
 
 guard 'livereload', :apply_js_live => false do
-  watch('test/index.html')
+  watch('test/runtests.html')
   watch('test/.+\.js$')
   watch('src/.+\.js$')
 end
