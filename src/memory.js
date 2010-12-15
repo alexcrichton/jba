@@ -166,7 +166,6 @@ JBA.Memory.prototype = {
         } else if (addr < 0xffff) {
           return this.hiram[addr & 0xff];
         }
-        break;
     }
 
     return 0xff; // Should not get here
