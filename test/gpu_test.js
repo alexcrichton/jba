@@ -121,8 +121,8 @@ test('clocking between modes', function() {
   gpu.step(51);
   equals(gpu.mode, JBA.GPU.Mode.RDOAM);
 
-  gpu.mode   = JBA.GPU.Mode.HBLANK;
-  gpu.atline = 143;
+  gpu.mode = JBA.GPU.Mode.HBLANK;
+  gpu.ly   = 143;
   gpu.step(51);
   equals(gpu.mode, JBA.GPU.Mode.VBLANK);
 
