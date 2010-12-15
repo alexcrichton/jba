@@ -156,7 +156,7 @@ JBA.Memory.prototype = {
 
       case 0xf:
         if (addr < 0xfe00) {
-          return this.wram[addr & 0xfff];
+          return this.rb(addr & 0xdfff); // mirrored RAM
         } else if (addr < 0xfea0) {
           // READ OAM HERE
         } else if (addr < 0xff00) {
@@ -266,7 +266,7 @@ JBA.Memory.prototype = {
 
       case 0xf:
         if (addr < 0xfe00) {
-          this.wram[addr & 0xfff] = value;
+          this.wb(addr & 0xdfff, value); // mirrored RAM
         } else if (addr < 0xfea0) {
           // READ OAM HERE
         } else if (addr < 0xff00) {
