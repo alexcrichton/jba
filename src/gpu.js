@@ -1,3 +1,8 @@
+/**
+ * Emulates the functionality of the GPU of the GB
+ *
+ * @constructor
+ */
 JBA.GPU = function() {
   this.reset();
 };

@@ -19,6 +19,7 @@ class JBA < Thor
     js = [
       'src/jba.js',
       'src/rtc.js',
+      'src/gpu.js',
       'src/z80.js',
       'src/z80/instructions.js',
       'src/memory.js',
