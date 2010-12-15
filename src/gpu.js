@@ -112,8 +112,8 @@ JBA.GPU.prototype = {
           this.clock = 0;
 
           if (this.ly > 153) {
-            this.mode   = JBA.GPU.Mode.RDOAM;
-            this.ly = 0;
+            this.mode = JBA.GPU.Mode.RDOAM;
+            this.ly   = 0;
           }
         }
         break;
