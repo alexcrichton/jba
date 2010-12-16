@@ -3,11 +3,9 @@
  *
  * For more information, see: http://nocash.emubase.de/pandocs.htm#videodisplay
  *
- * @param {JBA.Memory} mem the memory this GPU is attached to
  * @constructor
  */
-JBA.GPU = function(mem) {
-  this.mem = mem;
+JBA.GPU = function() {
   this.reset();
 };
 
@@ -23,6 +21,9 @@ JBA.GPU.Mode = {
 };
 
 JBA.GPU.prototype = {
+  /** @type {JBA.Memory} */
+  mem: null,
+
   vram: null,
   oam: null,
   canvas: null,
@@ -138,13 +139,13 @@ JBA.GPU.prototype = {
   /** @private */
   render_line: function() {
     if (!this.lcdon) return;
-    if (this.bgon) {
-
-    }
-
-    if (this.objon) {
-
-    }
+    // if (this.bgon) {
+    //
+    // }
+    //
+    // if (this.objon) {
+    //
+    // }
   },
 
   rb: function(addr) {

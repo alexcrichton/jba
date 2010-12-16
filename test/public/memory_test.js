@@ -1,6 +1,7 @@
 module('Memory', {
   setup: function() {
     window.mem = new JBA.Memory();
+    mem.gpu = new JBA.GPU();
   },
 
   teardown: function() {

@@ -1,8 +1,10 @@
 require File.expand_path('../lib/z80/generator', __FILE__)
+require File.expand_path('../lib/js/utils', __FILE__)
 
 class JBA < Thor
   include Thor::Actions
   include Z80::Generator
+  include JS::Utils
 
   def self.source_root
     File.expand_path('../src/z80/templates', __FILE__)
@@ -16,15 +18,7 @@ class JBA < Thor
 
   desc 'check', 'Check the js with Google closure compiler'
   def check
-    js = [
-      'src/jba.js',
-      'src/rtc.js',
-      'src/gpu.js',
-      'src/z80.js',
-      'src/z80/instructions.js',
-      'src/memory.js',
-      'src/cpu.js'
-    ]
+    js = js_files.map{ |s| 'src/' + s }
     args = '--warning_level VERBOSE ' + js.map{ |s| "--js #{s}" }.join(' ')
     args << ' --js_output_file /dev/null'
 

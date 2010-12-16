@@ -9,7 +9,7 @@
  *
  * @constructor
  */
-JBA.Memory = function(data) {
+JBA.Memory = function() {
   this.reset();
 };
 
@@ -26,9 +26,11 @@ JBA.Memory.MBC = {
 };
 
 JBA.Memory.prototype = {
+  /** @type {JBA.GPU} */
+  gpu: null,
+
   reset: function() {
     this.rtc = new JBA.RTC();
-    this.gpu = new JBA.GPU(this);
 
     /** @type {JBA.Memory.MBC} */
     this.mbc = JBA.Memory.MBC.UNKNOWN;

@@ -25,7 +25,11 @@ GEM
       launchy (~> 0.3.5)
     rack (1.2.1)
     rake (0.8.7)
+    sinatra (1.1.0)
+      rack (~> 1.1)
+      tilt (~> 1.1)
     thor (0.14.6)
+    tilt (1.1)
 
 PLATFORMS
   ruby
@@ -36,4 +40,5 @@ DEPENDENCIES
   guard-livereload
   guard-shell
   rack
+  sinatra
   thor
