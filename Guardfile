@@ -1,3 +1,9 @@
+$LOAD_PATH << File.expand_path('../lib', __FILE__)
+
+guard 'sinatra' do
+  watch('test/server.rb')
+end
+
 guard 'shell' do
   watch('src/z80/templates/instructions.tt') { `thor jba:gen_z80` }
   watch('lib/z80/generator.rb')              { `thor jba:gen_z80` }
