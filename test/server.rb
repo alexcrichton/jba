@@ -1,12 +1,13 @@
 require 'sinatra/base'
+require 'active_support/json'
+require 'active_support/ordered_hash'
 require 'erb'
 
 require File.expand_path('../../lib/js/utils', __FILE__)
 
-Rack::Mime::MIME_TYPES['.gb'] = 'application/octet-stream'
-
 class JBAApp < Sinatra::Base
   set :public, File.dirname(__FILE__) + '/public'
+  mime_type :gb, 'application/octet-stream'
 
   get '/' do
     erb :runtests
@@ -14,6 +15,14 @@ class JBAApp < Sinatra::Base
 
   get '/roms' do
     erb :roms
+  end
+
+  get '/roms2/:rom' do
+    content_type :json
+    data = nil
+    file = File.join(settings.public + '/roms', params[:rom])
+    File.open(file, 'rb'){ |f| data = f.read }
+    ActiveSupport::JSON.encode(:file => data)
   end
 
   helpers do

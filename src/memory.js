@@ -123,14 +123,14 @@ JBA.Memory.prototype = {
       case 0x2:
       case 0x3:
         // Always mapped in as first bank of cartridge
-        return this.rom.charCodeAt(addr);
+        return this.rom.charCodeAt(addr) & 0xff;
 
       case 0x4:
       case 0x5:
       case 0x6:
       case 0x7:
         // Swappable banks of ROM
-        return this.rom.charCodeAt((this.rombank << 14) | (addr & 0x3fff));
+        return this.rom.charCodeAt((this.rombank << 14) | (addr & 0x3fff)) & 0xff;
 
       case 0x8:
       case 0x9:

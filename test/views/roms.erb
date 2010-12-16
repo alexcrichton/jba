@@ -14,10 +14,11 @@
   <script type='text/javascript'>
     $(function() {
       var gb = new JBA();
-      $.get('/roms/opus5.gb', function(data) {
-        gb.memory.load_cartridge(data);
+      $.get('/roms2/opus5.gb', function(data) {
+        gb.memory.load_cartridge(data.file);
         gb.run();
       });
+      window.gb = gb;
     });
   </script>
   <style type="text/css">
