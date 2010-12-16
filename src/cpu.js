@@ -18,7 +18,7 @@ JBA.CPU.prototype = {
   exec: function() {
     var fun = Z80.map[this.memory.rb(this.registers.pc++)];
     this.registers.pc &= 0xffff;
-    fun(this.memory, this.registers);
+    fun(this.registers, this.memory);
 
     return this.registers.m;
   }
