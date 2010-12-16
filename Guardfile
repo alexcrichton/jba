@@ -1,6 +1,6 @@
 $LOAD_PATH << File.expand_path('../lib', __FILE__)
 
-guard 'sinatra' do
+guard 'sinatra', :dir => 'test', :file => 'test/server.rb' do
   watch('test/server.rb')
 end
 

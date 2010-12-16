@@ -1,11 +1,20 @@
 require 'guard'
 require 'guard/guard'
-require File.expand_path('../../../test/server.rb', __FILE__)
 
 module Guard
   class Sinatra < Guard
+    def initialize *args
+      super
+      @file = File.expand_path(options[:file])
+    end
+
     def start
-      @pid = fork{ JBAApp.run! :host => 'localhost', :port => 3000 }
+      @pid = fork{
+        require @file
+        Dir.chdir options[:dir] if options[:dir]
+        p Dir.pwd
+        JBAApp.run! :host => 'localhost', :port => 3000
+      }
     end
 
     def stop
