@@ -12,7 +12,6 @@ module Guard
       @pid = fork{
         require @file
         Dir.chdir options[:dir] if options[:dir]
-        p Dir.pwd
         JBAApp.run! :host => 'localhost', :port => 3000
       }
     end
