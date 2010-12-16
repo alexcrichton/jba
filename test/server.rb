@@ -20,12 +20,20 @@ class JBAApp < Sinatra::Base
     def jba_js_include
       javascript_include_tag js_files.map{ |s| 'src/' + s }
     end
+
+    def js_test_includes
+      js = Dir[File.expand_path('../public', __FILE__) + '/**/*.js']
+      js = js.select{ |s| s !~ /\/src\// }
+      js = js.map{ |s| s.gsub(/^.+?public\//, '') }
+      javascript_include_tag js
+    end
+
+    def javascript_include_tag *sources
+      sources.flatten.map{ |s|
+        s += '.js' unless s.end_with?('.js')
+        "<script type='text/javascript' src='/#{s}'></script>"
+      }.join("\n")
+    end
   end
 
-  def javascript_include_tag *sources
-    sources.flatten.map{ |s|
-      s += '.js' unless s.end_with?('.js')
-      "<script type='text/javascript' src='/#{s}'></script>"
-    }.join("\n")
-  end
 end
