@@ -3,6 +3,8 @@ require 'erb'
 
 require File.expand_path('../../lib/js/utils', __FILE__)
 
+Rack::Mime::MIME_TYPES['.gb'] = 'application/octet-stream'
+
 class JBAApp < Sinatra::Base
   set :public, File.dirname(__FILE__) + '/public'
 
