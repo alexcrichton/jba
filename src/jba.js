@@ -6,6 +6,7 @@ var JBA = function() {
   this.memory = new JBA.Memory();
   this.gpu    = new JBA.GPU();
 
+  this.cpu.memory = this.memory;
   this.gpu.mem = this.memory;
   this.memory.gpu = this.gpu;
 };

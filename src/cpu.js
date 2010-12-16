@@ -10,6 +10,9 @@ JBA.CPU = function() {
 };
 
 JBA.CPU.prototype = {
+  /** @type {JBA.Memory} */
+
+  memory: null,
   reset: function() {},
 
   exec: function() {
