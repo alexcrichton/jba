@@ -18,10 +18,20 @@ class JBA < Thor
 
   desc 'check', 'Check the js with Google closure compiler'
   def check
-    js = js_files.map{ |s| 'src/' + s }
-    args = '--warning_level VERBOSE ' + js.map{ |s| "--js #{s}" }.join(' ')
+    args = '--warning_level VERBOSE ' + js_args.join(' ')
     args << ' --js_output_file /dev/null'
 
     system 'closure ' + args
+  end
+
+  desc 'minify', 'Minify all of the JS into one file'
+  def minify
+    system "closure #{js_args.join(" ")} --js_output_file jba.min.js"
+  end
+
+  protected
+
+  def js_args
+    js_files.map{ |s| '--js src/' + s }
   end
 end
