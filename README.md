@@ -16,11 +16,15 @@ Then, run `bundle` in the checked out directory
 
 ### Running Tests
 
-Open the `test/index.html` file in a web browser to run all of the tests. Before you run the tests, make sure that you regenerate generated files (see below).
+Run the `guard` command and then visit `http://localhost:3000` in a web browser to run all of the tests
+
+Before you run the tests, make sure that you regenerate generated files (see below).
+
+If you have the [livereload](https://github.com/mockko/livereload) extension, you can connect to the livereload server (run through `guard`) and the page will be automatically refreshed whenever a file changes
 
 ### Regenerating files
 
-To optimize slightly, the z80 instruction set is a generate javascript file. To change this, modify one of:
+To optimize slightly, the z80 instruction set is a generated javascript file. To change this, modify one of:
 
   * `src/z80/templates/instructions.tt`
   * `lib/z80/generator.rb`
