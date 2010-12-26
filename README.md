@@ -38,3 +38,9 @@ Or, if you would like the file automatically regenerated when the above files ar
 <pre>guard</pre>
 
 in the root directory
+
+### Generating `jba.min.js`
+
+To generate the minified form of the javascript (for the main reason of having all of the javascript in one file), run
+
+<pre>thor jba:minify</pre>
