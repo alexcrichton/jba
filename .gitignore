@@ -2,3 +2,4 @@ examples
 Gemfile.lock
 src/z80/instructions.js
 jba.min.js
+_site
