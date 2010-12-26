@@ -11,6 +11,8 @@ You need:
 
   * ruby
   * the `bundler` gem
+  * a `closure` command for the google closure compiler
+    * If on a mac using [homebrew](https://github.com/mxcl/homebrew), you can install via `brew install closure-compiler`
 
 Then, run `bundle` in the checked out directory
 
