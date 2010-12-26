@@ -2,8 +2,30 @@
 <html>
   <head>
     <title>Testing</title>
+    <script type='text/javascript' src='http://code.jquery.com/jquery.min.js'></script>
+    <script type='text/javascript' src='/js/jba.min.js'></script>
+
+    <script type='text/javascript'>
+      $(function() {
+        var gb = new JBA();
+        $.get('/roms/opus5.gb', function(data) {
+          gb.memory.load_cartridge(data);
+          gb.run();
+        });
+        window.gb = gb;
+      });
+    </script>
+
+    <style type="text/css">
+      #gb {
+        border: 1px solid black;
+        display: block;
+        margin: auto;
+        margin-top: 200px;
+      }
+    </style>
   </head>
   <body>
-    Testing by putting something here
+    <canvas id='gb' height='144' width='160'></canvas>
   </body>
 </html>
