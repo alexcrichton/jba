@@ -29,6 +29,14 @@ class JBA < Thor
     system "closure #{js_args.join(" ")} --js_output_file jba.min.js"
   end
 
+  desc 'server', 'Run the testing server and the "guard" command'
+  def server
+    pids = []
+    pids << fork { exec 'guard' }
+    pids << fork { exec 'shotgun test/server.rb' }
+    pids.each{ |p| Process.waitpid p }
+  end
+
   protected
 
   def js_args
