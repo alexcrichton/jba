@@ -6,25 +6,33 @@
   <%= jba_js_include %>
 
   <script type='text/javascript'>
+    window.gb = new JBA();
+
     $(function() {
-      var gb = new JBA();
-      $.get('/roms2/opus5.gb', function(data) {
-        gb.memory.load_cartridge(data.file);
-        gb.run();
+      gb.gpu.set_canvas($('#gb')[0]);
+
+      $('a.opus5').click(function() {
+        gb.load_rom('/roms/opus5.gb', function() { gb.run(); });
+        return false;
       });
-      window.gb = gb;
     });
   </script>
+
   <style type="text/css">
     #gb {
       border: 1px solid black;
       display: block;
       margin: auto;
-      margin-top: 200px;
+      margin-top: 10px;
     }
+
+    a { float: left }
   </style>
 </head>
+
 <body>
+  <a href='#' class='opus5'>opus5</a>
   <canvas id='gb' height='144' width='160'></canvas>
 </body>
+
 </html>

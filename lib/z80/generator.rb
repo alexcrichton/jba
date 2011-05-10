@@ -24,6 +24,10 @@ module Z80
       hlpp = "r.l = (r.l + 1) & 0xff; if (!r.l) r.h = (r.h + 1) & 0xff"
       hlmm = "r.l = (r.l - 1) & 0xff; if (r.l == 0xff) r.h = (r.h - 1) & 0xff"
 
+      def sign_fix var
+        "(#{var} > 127 ? -((~(#{var}) + 1) & 255) : #{var})"
+      end
+
       @funs = {}
 
       section '8 bit loading between registers' do
@@ -54,17 +58,17 @@ module Z80
         @funs['ld_hlmn'] = "m.wb(#{hl}, m.rb(r.pc++)); r.m = 3;"
         @funs['ld_abc'] = "r.a = m.rb(#{bc}); r.m = 2;"
         @funs['ld_ade'] = "r.a = m.rb(#{de}); r.m = 2;"
-        @funs['ld_an'] = "r.a = m.rb(m.rw(r.pc)); r.pc += 2; r.m = 4;"
+        @funs['ld_ann'] = "r.a = m.rb(m.rw(r.pc)); r.pc += 2; r.m = 4;"
 
         @funs['ld_bca'] = "m.wb(#{bc}, r.a); r.m = 2;"
         @funs['ld_dea'] = "m.wb(#{de}, r.a); r.m = 2;"
-        @funs['ld_na'] = "m.wb(m.rw(r.pc), r.a); r.pc += 2; r.m = 4;"
-        @funs['ld_nsp'] = "m.ww(m.rw(r.pc), r.sp); r.pc += 2; r.m = 4;"
+        @funs['ld_nna'] = "m.wb(m.rw(r.pc), r.a); r.pc += 2; r.m = 4;"
+        @funs['ld_nnsp'] = "m.ww(m.rw(r.pc), r.sp); r.pc += 2; r.m = 4;"
 
         @funs['ld_aIOn'] = "r.a = m.rb(0xff00 | m.rb(r.pc++)); r.m = 3;"
-        @funs['ld_IOna'] = "m.wb(0xff00 | m.rb(r.pc++), r.a); r.m = 3;"
-        @funs['ld_aIOc'] = "r.a = m.rb(0xff00 | r.c); r.m = 3;"
-        @funs['ld_IOca'] = "m.wb(0xff00 | r.c, r.a); r.m = 3;"
+        @funs['ld_IOan'] = "m.wb(0xff00 | m.rb(r.pc++), r.a); r.m = 3;"
+        @funs['ld_aIOc'] = "r.a = m.rb(0xff00 | r.c); r.m = 2;"
+        @funs['ld_IOca'] = "m.wb(0xff00 | r.c, r.a); r.m = 2;"
 
         @funs['ldi_hlma'] = "m.wb(#{hl}, r.a); #{hlpp}; r.m = 2;"
         @funs['ldi_ahlm'] = "r.a = m.rb(#{hl}); #{hlpp}; r.m = 2;"
@@ -76,19 +80,19 @@ module Z80
         %w(bc de hl).each do |p|
           u = p.bytes.to_a[0].chr
           l = p.bytes.to_a[1].chr
-          @funs["ld_#{p}n"] = "r.#{l} = m.rb(r.pc++); " +
+          @funs["ld_#{p}nn"] = "r.#{l} = m.rb(r.pc++); " \
             "r.#{u} = m.rb(r.pc++); r.m = 3;"
         end
-        @funs['ld_spn'] = "r.sp = m.rw(r.pc); r.pc += 2; r.m = 3;"
+        @funs['ld_spnn'] = "r.sp = m.rw(r.pc); r.pc += 2; r.m = 3;"
         @funs['ld_sphl'] = "r.sp = #{hl}; r.m = 2;"
 
         %w(bc de hl af).each do |p|
           u = p.bytes.to_a[0].chr
           l = p.bytes.to_a[1].chr
-          @funs["push_#{p}"] = "m.wb(--r.sp, r.#{u}); " +
+          @funs["push_#{p}"] = "m.wb(--r.sp, r.#{u}); " \
             "m.wb(--r.sp, r.#{l}); r.m = 4;"
-          @funs["pop_#{p}"] = "r.#{l} = m.rb(r.sp++); " +
-            "r.#{u} = m.wb(r.sp++); r.m = 3;"
+          @funs["pop_#{p}"] = "r.#{l} = m.rb(r.sp++); " \
+            "r.#{u} = m.rb(r.sp++); r.m = 3;"
         end
       end
 
@@ -111,7 +115,7 @@ module Z80
         def adc var, name, cycles
           @funs["adc_a#{name}"] = <<-JS.strip_heredoc
             var i = r.a, j = #{var};
-            r.a += j + ((r.f & #{C}) >> 4);
+            r.a += j + ((r.f & #{C}) ? 1 : 0);
             r.f = r.a > 0xff ? #{C} : 0;
             r.a &= 0xff;
             if (!r.a) r.f |= #{Z};
@@ -212,21 +216,22 @@ module Z80
         cp 'm.rb(r.pc++)', 'n', 2
       end
 
+      # TODO: check these, not sure about flags...
       section '8 bit increments/decrements' do
         regs.each{ |i|
-          @funs["inc_#{i}"] = "r.#{i} = (r.#{i} + 1) & 0xff; " +
-            "r.f = r.f & 0x1f | (r.#{i} ? 0 : #{Z}) | " +
-              "((!(r.#{i} & 0xf)) << 5); r.m = 1;"
+          @funs["inc_#{i}"] = "r.#{i} = (r.#{i} + 1) & 0xff; " \
+            "r.f = (r.#{i} ? 0 : #{Z}); r.m = 1;"
+            # "; r.m = 1;"
         }
-        @funs['inc_hlm'] = "var hl = #{hl}, k = (m.rb(hl) + 1) & 0xff;" +
+        @funs['inc_hlm'] = "var hl = #{hl}, k = (m.rb(hl) + 1) & 0xff;" \
           " m.wb(hl, k); r.f = k ? 0 : #{Z}; r.m = 3;"
 
         regs.each{ |i|
-          @funs["dec_#{i}"] = "r.#{i} = (r.#{i} - 1) & 0xff; " +
-            "r.f = r.f & 0x1f | #{N} | (r.#{i} ? 0 : #{Z}) | " +
+          @funs["dec_#{i}"] = "r.#{i} = (r.#{i} - 1) & 0xff; " \
+            "r.f = r.f & 0x1f | #{N} | (r.#{i} ? 0 : #{Z}) | " \
               "(((r.#{i} & 0xf) == 0xf) << 5); r.m = 1;"
         }
-        @funs['dec_hlm'] = "var hl = #{hl}, k = (m.rb(hl) - 1) & 0xff;" +
+        @funs['dec_hlm'] = "var hl = #{hl}, k = (m.rb(hl) - 1) & 0xff;" \
           " m.wb(hl, k); r.f = (k ? 0 : #{Z}) | #{N}; r.m = 3;"
       end
 
@@ -246,6 +251,7 @@ module Z80
         @funs['cpl'] = "r.a ^= 0xff; r.f = #{N} | #{C}; r.m = 1;"
       end
 
+      # TODO: start checking here
       section '16 bit arithmetic' do
         def add_hl name, add_in, hl
           @funs["add_hl#{name}"] = <<-JS.strip_heredoc
@@ -263,24 +269,26 @@ module Z80
         %w(bc de hl).each{ |p|
           u, l = p.split('')
 
-          @funs["inc_#{p}"] = "r.#{l} = (r.#{l} + 1) & 0xff; " +
+          @funs["inc_#{p}"] = "r.#{l} = (r.#{l} + 1) & 0xff; " \
             "if (!r.#{l}) r.#{u} = (r.#{u} + 1) & 0xff; r.m = 2;"
-          @funs["dec_#{p}"] = "r.#{l} = (r.#{l} - 1) & 0xff; " +
+          @funs["dec_#{p}"] = "r.#{l} = (r.#{l} - 1) & 0xff; " \
             "if (r.#{l} == 0xff) r.#{u} = (r.#{u} - 1) & 0xff; r.m = 2;"
         }
         @funs['inc_sp'] = "r.sp = (r.sp + 1) & 0xffff; r.m = 2;"
         @funs['dec_sp'] = 'r.sp = (r.sp - 1) & 0xffff; r.m = 2;'
 
+        # TODO: test this
         @funs['add_spn'] = <<-JS.strip_heredoc
           var i = m.rb(r.pc++);
-          if (i > 127) i = ~i + 1;
-          r.sp += i;
+          i = #{sign_fix 'i'};
+          r.sp = (r.sp + i) & 0xffff;
           r.m = 4;
         JS
 
+        # TODO: test this
         @funs['ld_hlspn'] = <<-JS.strip_heredoc
           var i = m.rb(r.pc++);
-          if (i > 127) i = ~i + 1;
+          i = #{sign_fix 'i'};
           i += r.sp;
           r.h = (i >> 8) & 0xff;
           r.l = i & 0xff;
@@ -291,19 +299,19 @@ module Z80
       section 'Rotating left' do
         def rlc name, var, cy
           @funs["rlc#{name}"] = <<-JS.strip_heredoc
-            var ci = (#{var} & 0x80) >> 7;
+            var ci = (#{var} & 0x80) ? 1 : 0;
             #{var} = ((#{var} << 1) | ci) & 0xff;
-            r.f = (#{var} ? 0 : #{Z}) | (ci << 4);
+            r.f = (#{var} ? 0 : #{Z}) | (ci ? #{C} : 0);
             r.m = #{cy};
           JS
         end
 
         def rl name, var, cy
           @funs["rl#{name}"] = <<-JS.strip_heredoc
-            var ci = (r.f & 0x10) >> 4;
-            var co = (#{var} & 0x80) >> 3;
+            var ci = (r.f & #{C}) ? 1 : 0;
+            var co = #{var} & 0x80;
             #{var} = ((#{var} << 1) | ci) & 0xff;
-            r.f = (#{var} ? 0 : #{Z}) | co;
+            r.f = (#{var} ? 0 : #{Z}) | (co ? #{C} : 0);
             r.m = #{cy};
           JS
         end
@@ -382,9 +390,9 @@ module Z80
       section 'Shifting arithmetically left' do
         regs.each do |reg|
           @funs["sla_#{reg}"] = <<-JS.strip_heredoc
-            var co = (r.#{reg} & 0x80) >> 7;
+            var co = r.#{reg} >> 7;
             r.#{reg} = (r.#{reg} << 1) & 0xff;
-            r.f = (r.#{reg} ? 0 : #{Z}) | co;
+            r.f = (r.#{reg} ? 0 : #{Z}) | (co ? #{C} : 0);
             r.m = 2;
           JS
         end
@@ -394,7 +402,7 @@ module Z80
           var co = (hl & 0x80) >> 7;
           hl = (hl << 1) & 0xff;
           m.wb(#{hl}, hl);
-          r.f = (hl ? 0 : #{Z}) | co;
+          r.f = (hl ? 0 : #{Z}) | (co ? #{C} : 0);
           r.m = 4;
         JS
       end
@@ -414,50 +422,57 @@ module Z80
       end
 
       section 'Shifting arithmetically right' do
+        # shift right arithmetic (b7=b7)
         regs.each do |reg|
           @funs["sra_#{reg}"] = <<-JS.strip_heredoc
-            var co = (r.#{reg} & 1) << 3;
-            r.#{reg} = (r.#{reg} >> 1) | (r.#{reg} & 0x80);
-            r.f = (r.#{reg} ? 0 : #{Z}) | co;
+            var a = r.#{reg};
+            var co = a & 1;
+            a = (a >> 1) | (a & 0x80);
+            r.f = (a ? 0 : #{Z}) | (co ? #{C} : 0);
+            r.#{reg} = a;
             r.m = 2;
           JS
         end
 
         @funs['sra_hlm'] = <<-JS.strip_heredoc
-          var hl = m.rb(#{hl});
-          var co = (hl & 1) << 3;
-          hl = (hl >> 1) | (hl & 0x80);
-          m.wb(#{hl}, hl);
-          r.f = (hl ? 0 : #{Z}) | co;
+          var a = m.rb(#{hl});
+          var co = a & 1;
+          a = (a >> 1) | (a & 0x80);
+          r.f = (a ? 0 : #{Z}) | (co ? #{C} : 0);
+          m.wb(#{hl}, a);
           r.m = 4;
         JS
       end
 
       section 'Shifting logically right' do
+        # shift right logical (b7=0)
         regs.each do |reg|
           @funs["srl_#{reg}"] = <<-JS.strip_heredoc
-            var co = (r.#{reg} & 1) << 3;
-            r.#{reg} >>= 1;
-            r.f = (r.#{reg} ? 0 : #{Z}) | co;
+            var a = r.#{reg};
+            var co = (a & 1) ? #{C} : 0;
+            a = (a >> 1) & 0x7f;
+            r.f = (a ? 0 : #{Z}) | co;
+            r.#{reg} = a;
             r.m = 2;
           JS
         end
 
         @funs['srl_hlm'] = <<-JS.strip_heredoc
-          var hl = m.rb(#{hl});
-          var co = (hl & 1) << 3;
-          hl >>= 1;
-          m.wb(#{hl}, hl);
-          r.f = (hl ? 0 : #{Z}) | co;
-          r.m = 2;
+          var a = m.rb(#{hl});
+          var co = (a & 1) ? #{C} : 0;
+          a = (a >> 1) & 0x7f;
+          r.f = (a ? 0 : #{Z}) | co;
+          m.wb(#{hl}, a);
+          r.m = 4;
         JS
       end
 
       section 'Bit checking' do
         def bitcmp pos, name, reader, cy
-          @funs["bit_#{pos}#{name}"] = "r.f = (r.f & 0x1f) | #{H} " +
-          "| ((#{reader} & 0x#{(1 << pos).to_s(16)})" +
-          "#{pos == 7 ? '' : " << #{7 - pos}"}); r.m = #{cy};"
+          @funs["bit_#{pos}#{name}"] = \
+            "var b = #{reader} & 0x#{(1 << pos).to_s(16)}; " \
+            "r.f = (r.f & #{C}) | #{H} " \
+            "| (b ? 0 : #{Z}); r.m = #{cy};"
         end
 
         (0..7).each do |pos|
@@ -472,7 +487,7 @@ module Z80
           regs.each{ |reg|
             @funs["set_#{pos}#{reg}"] = "r.#{reg} |= #{mask}; r.m = 2;"
           }
-          @funs["set_#{pos}hlm"] = "m.wb(#{hl}, m.rb(#{hl}) | " +
+          @funs["set_#{pos}hlm"] = "m.wb(#{hl}, m.rb(#{hl}) | " \
             " #{mask}); r.m = 4;"
         end
 
@@ -481,14 +496,14 @@ module Z80
           regs.each{ |reg|
             @funs["res_#{pos}#{reg}"] = "r.#{reg} &= #{mask}; r.m = 2;"
           }
-          @funs["res_#{pos}hlm"] = "m.wb(#{hl}, m.rb(#{hl}) &" +
+          @funs["res_#{pos}hlm"] = "m.wb(#{hl}, m.rb(#{hl}) &" \
             " #{mask}); r.m = 4;"
         end
       end
 
       section 'CPU control commands' do
-        @funs['ccf'] = "r.f = r.f & 0x8f & ((r.f & #{C}) ^ #{C}); r.m = 1;"
-        @funs['scf'] = "r.f = (r.f & 0x8f) | #{C}; r.m = 1;"
+        @funs['ccf'] = "r.f = (r.f & #{Z}) | ((r.f & #{C}) ^ #{C}); r.m = 1;"
+        @funs['scf'] = "r.f = (r.f & #{Z}) | #{C}; r.m = 1;"
         @funs['nop'] = "r.m = 1;"
         @funs['halt'] = "r.halt = 1; r.m = 1;"
         @funs['stop'] = "r.stop = 1; r.m = 1;"
@@ -497,12 +512,12 @@ module Z80
       end
 
       section 'Jump commands' do
-        @funs['jp_n'] = "r.pc = m.rw(r.pc); r.m = 4;"
+        @funs['jp_nn'] = "r.pc = m.rw(r.pc); r.m = 4;"
         @funs['jp_hl'] = "r.pc = #{hl}; r.m = 1;"
 
         def jp_n name, cond
-          @funs["jp_#{name}_n"] =
-            "if (#{cond}) { r.pc = m.rw(r.pc); r.m = 4; } " +
+          @funs["jp_#{name}_nn"] =
+            "if (#{cond}) { r.pc = m.rw(r.pc); r.m = 4; } " \
             "else { r.pc += 2; r.m = 3; }"
         end
 
@@ -511,7 +526,8 @@ module Z80
         jp_n 'nc', "!(r.f & #{C})"
         jp_n 'c', "r.f & #{C}"
 
-        @do_jr = 'var i = m.rb(r.pc++); if (i > 127) i = ~i + 1; r.pc += i; r.m = 3;'
+        # TODO: test this
+        @do_jr = "var i = m.rb(r.pc++); i = #{sign_fix 'i'}; r.pc += i; r.pc &= 0xffff; r.m = 3;"
         @funs['jr_n'] = @do_jr
 
         def jr_n name, cond
@@ -527,10 +543,10 @@ module Z80
 
       section 'Call/return commands' do
         @do_call = "r.sp -= 2; m.ww(r.sp, r.pc + 2); r.pc = m.rw(r.pc); r.m = 6;"
-        @funs['call_n'] = @do_call
+        @funs['call_nn'] = @do_call
 
         def call_f_n name, cond
-          @funs["call_#{name}_n"] = "if (#{cond}) { #{@do_call} } " +
+          @funs["call_#{name}_nn"] = "if (#{cond}) { #{@do_call} } " \
             "else { r.m = 3; r.pc += 2; }"
         end
 

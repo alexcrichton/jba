@@ -35,15 +35,15 @@ JBA.Memory.prototype = {
     /** @type {JBA.Memory.MBC} */
     this.mbc = JBA.Memory.MBC.UNKNOWN;
 
-    this.rom = '';
-    this.ram = [];
-    this.wram = []; // Special 'Work' ram
-    this.hiram = []; // 256 bytes of ram at the end of the address space
-    this.rombank = 1; // The number of the rom bank currently swapped in
-    this.rambank = 0; // The number of the ram bank currently swapped in
+    this.rom      = '';
+    this.ram      = [];
+    this.wram     = []; // Special 'Work' ram
+    this.hiram    = []; // 256 bytes of ram at the end of the address space
+    this.rombank  = 1; // The number of the rom bank currently swapped in
+    this.rambank  = 0; // The number of the ram bank currently swapped in
     this.wrambank = 1; // The number of the wram bank currently swapped in
-    this.ramon = 0; // A flag whether ram is enabled or not.
-    this.mode  = 0; // Flag whether in ROM banking mode (0) or RAM banking mode
+    this.ramon    = 0; // A flag whether ram is enabled or not.
+    this.mode     = 0; // Flag whether in ROM banking (0) or RAM banking mode
 
     for (var i = 0; i < 0xffff; i++) {
       this.ram[i] = 0;
@@ -53,6 +53,41 @@ JBA.Memory.prototype = {
     for (i = 0; i < 0xff; i++) {
       this.hiram[i] = 0;
     }
+  },
+
+  powerOn: function() {
+    // See http://nocash.emubase.de/pandocs.htm#powerupsequence
+    this.wb(0xff05, 0x00); // TIMA
+    this.wb(0xff06, 0x00); // TMA
+    this.wb(0xff07, 0x00); // TAC
+    this.wb(0xff10, 0x80); // NR10
+    this.wb(0xff11, 0xbf); // NR11
+    this.wb(0xff12, 0xf3); // NR12
+    this.wb(0xff14, 0xbf); // NR14
+    this.wb(0xff16, 0x3f); // NR21
+    this.wb(0xff17, 0x00); // NR22
+    this.wb(0xff19, 0xbf); // NR24
+    this.wb(0xff1a, 0x7f); // NR30
+    this.wb(0xff1b, 0xff); // NR31
+    this.wb(0xff1c, 0x9F); // NR32
+    this.wb(0xff1e, 0xbf); // NR33
+    this.wb(0xff20, 0xff); // NR41
+    this.wb(0xff21, 0x00); // NR42
+    this.wb(0xff22, 0x00); // NR43
+    this.wb(0xff23, 0xbf); // NR30
+    this.wb(0xff24, 0x77); // NR50
+    this.wb(0xff25, 0xf3); // NR51
+    this.wb(0xff26, 0xf1); // NR52
+    this.wb(0xff40, 0x91); // LCDC
+    this.wb(0xff42, 0x00); // SCY
+    this.wb(0xff43, 0x00); // SCX
+    this.wb(0xff45, 0x00); // LYC
+    this.wb(0xff47, 0xfc); // BGP
+    this.wb(0xff48, 0xff); // OBP0
+    this.wb(0xff49, 0xff); // OBP1
+    this.wb(0xff4a, 0x00); // WY
+    this.wb(0xff4b, 0x00); // WX
+    this.wb(0xffff, 0x00); // IE
   },
 
   /**
@@ -117,6 +152,10 @@ JBA.Memory.prototype = {
    * @return {number} the 8 bit value at this address
    */
   rb: function(addr) {
+    JBA.assert((addr & 0xffff) == addr, addr + ' is not 16 bits (mem.js)!');
+
+    /* More information about mappings can be found online at
+       http://nocash.emubase.de/pandocs.htm#memorymap */
     switch (addr >> 12) {
       case 0x0:
       case 0x1:
@@ -157,16 +196,20 @@ JBA.Memory.prototype = {
         return this.wram[(this.wrambank << 12) | (addr & 0xfff)];
 
       case 0xf:
-        if (addr < 0xfe00) {
-          return this.rb(addr & 0xdfff); // mirrored RAM
-        } else if (addr < 0xfea0) {
+        if (addr < 0xfe00) { // mirrored RAM
+          return this.rb(addr & 0xdfff);
+        } else if (addr < 0xfea0) { // sprite attribute table (oam)
           return this.gpu.oam[addr & 0xff];
-        } else if (addr < 0xff00) {
-          // unusable ram
-        } else if (addr < 0xff80) {
+        } else if (addr < 0xff00) { // unusable ram
+          return 0xff;
+        } else if (addr < 0xff80) { // I/O ports
           return this.ioreg_rb(addr);
-        } else if (addr < 0xffff) {
+        } else if (addr < 0xffff) { // High RAM
           return this.hiram[addr & 0xff];
+        } else {
+          // TODO: interrupt enable register here
+          //      http://nocash.emubase.de/pandocs.htm#interrupts
+          throw "Interrupt enable register not implemented";
         }
     }
 
@@ -177,8 +220,30 @@ JBA.Memory.prototype = {
    * Reads a value from a known IO type register
    */
   ioreg_rb: function(addr) {
+    JBA.assert(0xff00 <= addr && addr < 0xff80);
     switch ((addr >> 4) & 0xf) {
-      case 0x4: case 0x5: case 0x6: case 0x7:
+      case 0x0:
+        // TODO: joypad data, http://nocash.emubase.de/pandocs.htm#joypadinput
+        // TODO: serial data transfer
+        //      http://nocash.emubase.de/pandocs.htm#serialdatatransferlinkcable
+        // TODO: timer/divider regisers
+        //       http://nocash.emubase.de/pandocs.htm#timeranddividerregisters
+        // TODO: interrupt flag not finished
+        //      http://nocash.emubase.de/pandocs.htm#interrupts
+        return 0xff;
+
+      /* Sound info: http://nocash.emubase.de/pandocs.htm#soundcontroller */
+      case 0x1:
+      case 0x2:
+      case 0x3:
+        // TODO: sound registers
+        //       http://nocash.emubase.de/pandocs.htm#soundcontroller
+        return 0xff;
+
+      case 0x4:
+      case 0x5:
+      case 0x6:
+      case 0x7:
         return this.gpu.rb(addr);
       default: throw "Not implemented reading that address!";
     }
@@ -191,6 +256,11 @@ JBA.Memory.prototype = {
    * @param {number} value the 8 bit value to write to memory
    */
   wb: function(addr, value) {
+    JBA.assert((addr & 0xffff) == addr, addr + ' is not 16 bits (mem.js)!');
+    JBA.assert((value & 0xff) == value, value + ' is not a byte! (mem.js)');
+
+    /* More information about mappings can be found online at
+       http://nocash.emubase.de/pandocs.htm#memorymap */
     switch (addr >> 12) {
       case 0x0:
       case 0x1:
@@ -296,10 +366,35 @@ JBA.Memory.prototype = {
    * Writes a value into a known IO type register
    */
   ioreg_wb: function(addr, value) {
+    JBA.assert(0xff00 <= addr && addr < 0xff80);
+
     switch ((addr >> 4) & 0xf) {
-      case 0x4: case 0x5: case 0x6: case 0x7:
+      case 0x0:
+        // TODO: joypad data, http://nocash.emubase.de/pandocs.htm#joypadinput
+        // TODO: serial data transfer
+        //      http://nocash.emubase.de/pandocs.htm#serialdatatransferlinkcable
+        // TODO: timer/divider regisers
+        //       http://nocash.emubase.de/pandocs.htm#timeranddividerregisters
+        // TODO: interrupt flag not finished
+        //      http://nocash.emubase.de/pandocs.htm#interrupts
+        break;
+
+      /* Sound info: http://nocash.emubase.de/pandocs.htm#soundcontroller */
+      case 0x1:
+      case 0x2:
+      case 0x3:
+        // TODO: sound registers
+        //       http://nocash.emubase.de/pandocs.htm#soundcontroller
+        break;
+
+      case 0x4:
+      case 0x5:
+      case 0x6:
+      case 0x7:
         this.gpu.wb(addr, value);
-      default: throw "Not implemented reading that address!";
+        break;
+      default:
+        throw "Not implemented writing that address!";
     }
   }
 };

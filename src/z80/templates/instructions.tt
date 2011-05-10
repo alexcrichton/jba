@@ -17,7 +17,7 @@ Z80.ops = {
    * @param {Z80.Registers} r the registers to modify
    * @param {JBA.Memory} m the memory to read/write to
    */
-  xx: function(r, m) {},
+  xx: function(r, m) {throw "garbage instruction!";},
 
   /**
    * Read next byte and execute from CB table
@@ -36,22 +36,22 @@ Z80.ops = {
 
 Z80.map = [
   // 0x00
-  Z80.ops.nop, Z80.ops.ld_bcn, Z80.ops.ld_bca, Z80.ops.inc_bc,
+  Z80.ops.nop, Z80.ops.ld_bcnn, Z80.ops.ld_bca, Z80.ops.inc_bc,
   Z80.ops.inc_b, Z80.ops.dec_b, Z80.ops.ld_bn, Z80.ops.rlca,
-  Z80.ops.ld_nsp, Z80.ops.add_hlbc, Z80.ops.ld_abc, Z80.ops.dec_bc,
+  Z80.ops.ld_nnsp, Z80.ops.add_hlbc, Z80.ops.ld_abc, Z80.ops.dec_bc,
   Z80.ops.inc_c, Z80.ops.dec_c, Z80.ops.ld_cn, Z80.ops.rrca,
   // 0x10
-  Z80.ops.stop, Z80.ops.ld_den, Z80.ops.ld_dea, Z80.ops.inc_de,
+  Z80.ops.stop, Z80.ops.ld_denn, Z80.ops.ld_dea, Z80.ops.inc_de,
   Z80.ops.inc_d, Z80.ops.dec_d, Z80.ops.ld_dn, Z80.ops.rla,
   Z80.ops.jr_n, Z80.ops.add_hlde, Z80.ops.ld_ade, Z80.ops.dec_de,
   Z80.ops.inc_e, Z80.ops.dec_e, Z80.ops.ld_en, Z80.ops.rr_a,
   // 0x20
-  Z80.ops.jr_nz_n, Z80.ops.ld_hln, Z80.ops.ld_hlma, Z80.ops.inc_hl,
+  Z80.ops.jr_nz_n, Z80.ops.ld_hlnn, Z80.ops.ldi_hlma, Z80.ops.inc_hl,
   Z80.ops.inc_h, Z80.ops.dec_h, Z80.ops.ld_hn, Z80.ops.daa,
   Z80.ops.jr_z_n, Z80.ops.add_hlhl, Z80.ops.ldi_ahlm, Z80.ops.dec_hl,
   Z80.ops.inc_l, Z80.ops.dec_l, Z80.ops.ld_ln, Z80.ops.cpl,
   // 0x30
-  Z80.ops.jr_nc_n, Z80.ops.ld_spn, Z80.ops.ldd_hlma, Z80.ops.inc_sp,
+  Z80.ops.jr_nc_n, Z80.ops.ld_spnn, Z80.ops.ldd_hlma, Z80.ops.inc_sp,
   Z80.ops.inc_hlm, Z80.ops.dec_hlm, Z80.ops.ld_hlmn, Z80.ops.scf,
   Z80.ops.jr_c_n, Z80.ops.add_hlsp, Z80.ops.ldd_ahlm, Z80.ops.dec_sp,
   Z80.ops.inc_a, Z80.ops.dec_a, Z80.ops.ld_an, Z80.ops.ccf,
@@ -96,24 +96,24 @@ Z80.map = [
   Z80.ops.cp_ab, Z80.ops.cp_ac, Z80.ops.cp_ad, Z80.ops.cp_ae,
   Z80.ops.cp_ah, Z80.ops.cp_al, Z80.ops.cp_ahlm, Z80.ops.cp_aa,
   // 0xc0
-  Z80.ops.ret_nz, Z80.ops.pop_bc, Z80.ops.jp_nz_n, Z80.ops.jp_n,
-  Z80.ops.call_nz_n, Z80.ops.push_bc, Z80.ops.add_an, Z80.ops.rst_00,
-  Z80.ops.ret_z, Z80.ops.ret, Z80.ops.jp_z_n, Z80.ops.map_cb,
-  Z80.ops.call_z_n, Z80.ops.call_n, Z80.ops.adc_an, Z80.ops.rst_08,
+  Z80.ops.ret_nz, Z80.ops.pop_bc, Z80.ops.jp_nz_nn, Z80.ops.jp_nn,
+  Z80.ops.call_nz_nn, Z80.ops.push_bc, Z80.ops.add_an, Z80.ops.rst_00,
+  Z80.ops.ret_z, Z80.ops.ret, Z80.ops.jp_z_nn, Z80.ops.map_cb,
+  Z80.ops.call_z_nn, Z80.ops.call_nn, Z80.ops.adc_an, Z80.ops.rst_08,
   // 0xd0
-  Z80.ops.ret_nc, Z80.ops.pop_de, Z80.ops.jp_nc_n, Z80.ops.xx,
-  Z80.ops.call_nc_n, Z80.ops.push_de, Z80.ops.sub_an, Z80.ops.rst_10,
-  Z80.ops.ret_c, Z80.ops.reti, Z80.ops.jp_c_n, Z80.ops.xx,
-  Z80.ops.call_c_n, Z80.ops.xx, Z80.ops.sbc_an, Z80.ops.rst_18,
+  Z80.ops.ret_nc, Z80.ops.pop_de, Z80.ops.jp_nc_nn, Z80.ops.xx,
+  Z80.ops.call_nc_nn, Z80.ops.push_de, Z80.ops.sub_an, Z80.ops.rst_10,
+  Z80.ops.ret_c, Z80.ops.reti, Z80.ops.jp_c_nn, Z80.ops.xx,
+  Z80.ops.call_c_nn, Z80.ops.xx, Z80.ops.sbc_an, Z80.ops.rst_18,
   // 0xe0
-  Z80.ops.ld_IOna, Z80.ops.pop_hl, Z80.ops.ld_IOca, Z80.ops.xx,
+  Z80.ops.ld_IOan, Z80.ops.pop_hl, Z80.ops.ld_IOca, Z80.ops.xx,
   Z80.ops.xx, Z80.ops.push_hl, Z80.ops.and_an, Z80.ops.rst_20,
-  Z80.ops.add_spn, Z80.ops.jp_hl, Z80.ops.ld_na, Z80.ops.xx,
+  Z80.ops.add_spn, Z80.ops.jp_hl, Z80.ops.ld_nna, Z80.ops.xx,
   Z80.ops.xx, Z80.ops.xx, Z80.ops.xor_an, Z80.ops.rst_28,
   // 0xf0
   Z80.ops.ld_aIOn, Z80.ops.pop_af, Z80.ops.ld_aIOc, Z80.ops.di,
   Z80.ops.xx, Z80.ops.push_af, Z80.ops.or_an, Z80.ops.rst_30,
-  Z80.ops.ld_hlspn, Z80.ops.ld_sphl, Z80.ops.ld_an, Z80.ops.ei,
+  Z80.ops.ld_hlspn, Z80.ops.ld_sphl, Z80.ops.ld_ann, Z80.ops.ei,
   Z80.ops.xx, Z80.ops.xx, Z80.ops.cp_an, Z80.ops.rst_38
 ];
 

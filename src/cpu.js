@@ -11,15 +11,29 @@ JBA.CPU = function() {
 
 JBA.CPU.prototype = {
   /** @type {JBA.Memory} */
-
   memory: null,
-  reset: function() {},
 
+  ticks: 0,
+
+  reset: function() {
+    this.registers.reset();
+  },
+
+  /**
+   * Exec one instruction for this CPU
+   *
+   * @return {number} the number of cycles the instruction took to run.
+   */
   exec: function() {
-    var fun = Z80.map[this.memory.rb(this.registers.pc++)];
+    var instruction = this.memory.rb(this.registers.pc);
+    this.registers.pc++;
+    this.registers.pc &= 0xffff;
+    var fun = Z80.map[instruction];
     this.registers.pc &= 0xffff;
     fun(this.registers, this.memory);
 
-    return this.registers.m;
+    var ticks = this.registers.m * 4;
+    this.ticks += ticks;
+    return ticks;
   }
 };

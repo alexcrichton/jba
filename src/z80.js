@@ -51,9 +51,18 @@ Z80.Registers = function() {
 Z80.Registers.prototype = {
   a: 0, b: 0, c: 0, d: 0, e: 0, f: 0, h: 0, l: 0,
 
-  sp: 0, pc: 0, m: 0,
+  sp: 0, // Stack pointer
+  pc: 0, // Program counter
+  m: 0, // Cycles of last instruction
 
-  ime: 0, halt: 0, stop: 0,
+  ime: 0, // Interrupts enabled flag
+  halt: 0, // Halt until interrupt occurs
+  stop: 0, // kill processor ?
+
+  af: function() { return (this.a << 8) | this.f; },
+  bc: function() { return (this.b << 8) | this.c; },
+  de: function() { return (this.d << 8) | this.e; },
+  hl: function() { return (this.h << 8) | this.l; },
 
   /**
    * Saves the state of these registers in an internal structure. Can be
@@ -112,6 +121,6 @@ Z80.Registers.prototype = {
     this.h = 0x01; this.l = 0x4d;
 
     this.sp = 0xfffe;
-    this.pc = 0x100;
+    this.pc = 0x0100;
   }
 };

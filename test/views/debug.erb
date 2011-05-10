@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="http://code.jquery.com/jquery.min.js"></script>
+
+  <%= jba_js_include %>
+  <script src="/src/debug.js"></script>
+
+  <style>
+    * { font-family: monospace; }
+    dl { overflow: auto; }
+    dl dt { width: 25px; clear: left; float: left; }
+    dl dd { float: left; width: 100px; margin-left: 0; }
+
+    #registers, #memory, #roms, #gpu, #disas {
+      float: left;
+      margin: 5px;
+    }
+
+    #memory {
+      height: 370px;
+      width: 600px;
+      border: 1px solid black;
+    }
+
+    #memory dd, #memory dt, #gpu dd, #gpu dt, #disas dd, #disas dt {
+      width: auto;
+      margin-left: 3px;
+    }
+
+    #memory .bad {
+      color: red;
+    }
+
+    .highlight {
+      background: yellow;
+    }
+
+    #special {
+      width: 200px;
+    }
+
+    h2 { margin: 0 }
+  </style>
+
+  <script type='text/javascript'>
+    window.loadrom = function(rom) {
+      $.ajax({
+        url: rom,
+        beforeSend: function(xhr) {
+          xhr.overrideMimeType('text/plain; charset=x-user-defined');
+        },
+        success: function(data) {
+          debug.gb.memory.load_cartridge(data);
+          debug.update();
+        }
+      });
+    };
+
+    $(function() {
+      window.debug = new JBA.Debug();
+      debug.update();
+      debug.gb.gpu.set_canvas($('#gb')[0]);
+
+      $('#addr').keyup(function() { debug.highlight($(this).val()); });
+    });
+  </script>
+</head>
+
+<body>
+  <div id='registers'>
+    <h2>Registers</h2>
+    <dl>
+      <dt>A</dt><dd class='a'></dd>
+      <dt>B</dt><dd class='b'></dd>
+      <dt>C</dt><dd class='c'></dd>
+      <dt>D</dt><dd class='d'></dd>
+      <dt>E</dt><dd class='e'></dd>
+      <dt>F</dt><dd class='f'></dd>
+      <dt>H</dt><dd class='h'></dd>
+      <dt>L</dt><dd class='l'></dd>
+
+      <dt>&nbsp;</dt>
+      <dt>AF</dt><dd class='af'></dd>
+      <dt>BC</dt><dd class='bc'></dd>
+      <dt>DE</dt><dd class='de'></dd>
+      <dt>HL</dt><dd class='hl'></dd>
+
+      <dt>&nbsp;</dt>
+      <dt>SP</dt><dd class='sp'></dd>
+      <dt>PC</dt><dd class='pc'></dd>
+    </dl>
+
+    <div id='flags'>
+      <h2><a href='http://nocash.emubase.de/pandocs.htm#cpuregistersandflags'>Flags</a></h2>
+      <div class='label'>z n h c 0 0 0 0</div>
+      <div class='flags'></div>
+    </div>
+  </div>
+
+  <div id='memory'>
+    <div class='actions'>
+      <button onclick='debug.memory_up();'>up</button>
+      <button onclick='debug.memory_down();'>down</button>
+
+      Goto:
+      <input id='addr'/>
+
+      <div style='float: right;'>
+        <button onclick='debug.gb.exec(); debug.update()'>Step</button>
+        <button onclick='debug.gb.reset(); debug.update()'>Reset</button>
+      </div>
+    </div>
+    <dl></dl>
+  </div>
+
+  <div id='disas'>
+    <h2>Disassembly</h2>
+    <dl></dl>
+  </div>
+
+  <div id='gpu'>
+    <h2>GPU</h2>
+    <dl>
+      <dt>Clocks:</dt>
+      <dd class='clocks'></dd>
+
+      <dt>&nbsp;</dt>
+      <dt>0xff40 (msb - lsb)</dt>
+      <dt>LCDON:</dt>
+      <dd class='lcdon'></dd>
+      <dt>WINMAP:</dt>
+      <dd class='winmap'></dd>
+      <dt>WINON:</dt>
+      <dd class='winon'></dd>
+      <dt>TILEDATA:</dt>
+      <dd class='tiledata'></dd>
+      <dt>BGMAP:</dt>
+      <dd class='bgmap'></dd>
+      <dt>OBJSIZE:</dt>
+      <dd class='objsize'></dd>
+      <dt>OBJON:</dt>
+      <dd class='objon'></dd>
+      <dt>BGON:</dt>
+      <dd class='bgon'></dd>
+
+      <dt>&nbsp;</dt>
+      <dt>0xff41 (msb - lsb)</dt>
+      <dt>LYCLY:</dt>
+      <dd class='lycly'></dd>
+      <dt>MODE2INT:</dt>
+      <dd class='mode2int'></dd>
+      <dt>MODE1INT:</dt>
+      <dd class='mode1int'></dd>
+      <dt>MODE0INT:</dt>
+      <dd class='mode0int'></dd>
+      <dt>COINC:</dt>
+      <dd class='coinc'></dd>
+      <dt>MODE:</dt>
+      <dd class='mode'></dd>
+
+      <dt>&nbsp;</dt>
+      <dt>0xff42 (scy)</dt>
+      <dd class='scy'></dd>
+      <dt>0xff43 (scx)</dt>
+      <dd class='scx'></dd>
+      <dt>0xff44 (ly)</dt>
+      <dd class='ly'></dd>
+      <dt>0xff45 (lyc)</dt>
+      <dd class='lyc'></dd>
+
+      <dt>&nbsp;</dt>
+      <dt>0xff47 (bgp)</dt>
+      <dd class='bgp'></dd>
+      <dt>0xff48 (obp0)</dt>
+      <dd class='obp0'></dd>
+      <dt>0xff49 (obp1)</dt>
+      <dd class='obp1'></dd>
+
+      <dt>&nbsp;</dt>
+      <dt>0xff4a (wy)</dt>
+      <dd class='wy'></dd>
+      <dt>0xff4b (wx)</dt>
+      <dd class='wx'></dd>
+
+    </dl>
+  </div>
+
+  <div id='roms'>
+    <h2>Roms</h2>
+    <button onclick='debug.gb.load_rom("/roms/opus5.gb", function() { debug.update(); });'>opus5</button>
+    <button onclick='debug.gb.load_rom("/roms/mario.gb", function() { debug.update(); });'>mario</button>
+  </div>
+
+  <canvas id='gb' height='144' width='160'></canvas>
+
+</body>
+
+</html>

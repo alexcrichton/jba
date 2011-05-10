@@ -1,6 +1,7 @@
 module('GPU', {
   setup: function() {
     window.gpu = new JBA.GPU();
+    gpu.reset();
   },
 
   teardown: function() {
