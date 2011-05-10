@@ -11,10 +11,18 @@
     $(function() {
       gb.gpu.set_canvas($('#gb')[0]);
 
-      $('a.opus5').click(function() {
-        gb.load_rom('/roms/opus5.gb', function() { gb.run(); });
+      $('a.rom').click(function() {
+        gb.load_rom($(this).attr('href'), function() { gb.run(); });
         return false;
       });
+
+      $(window).keydown(function(e) { gb.memory.input.keydown(e.keyCode); });
+      $(window).keyup(function(e) { gb.memory.input.keyup(e.keyCode); });
+
+      setInterval(function() {
+        $('#fps').text(gb.fps);
+        gb.fps = 0;
+      }, 1000);
     });
   </script>
 
@@ -31,7 +39,10 @@
 </head>
 
 <body>
-  <a href='#' class='opus5'>opus5</a>
+  <a href='/roms/opus5.gb' class='rom'>opus5</a><br/>
+  <a href='/roms/ttt.gb' class='rom'>ttt</a><br/>
+  <a href='#' onclick='gb.stop(); return false;'>stop</a><br/>
+  <div id='fps'></div>
   <canvas id='gb' height='144' width='160'></canvas>
 </body>
 

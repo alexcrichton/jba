@@ -28,12 +28,28 @@ JBA.Memory.MBC = {
 JBA.Memory.prototype = {
   /** @type {JBA.GPU} */
   gpu: null,
+  /** @type {JBA.RTC} */
+  rtc: null,
+  /** @type {JBA.Input} */
+  input: null,
+
+  /** @type {JBA.Memory.MBC} */
+  mbc: JBA.Memory.MBC.UNKNOWN,
+
+  // See reset() for descriptions
+  rom: '',
+  ram: [],
+  wram: [],
+  hiram: [],
+  rombank: 1,
+  rambank: 0,
+  wrambank: 1,
+  ramon: 0,
+  mode: 0,
 
   reset: function() {
-    this.rtc = new JBA.RTC();
-
-    /** @type {JBA.Memory.MBC} */
-    this.mbc = JBA.Memory.MBC.UNKNOWN;
+    this.rtc   = new JBA.RTC();
+    this.input = new JBA.Input();
 
     this.rom      = '';
     this.ram      = [];
@@ -223,7 +239,10 @@ JBA.Memory.prototype = {
     JBA.assert(0xff00 <= addr && addr < 0xff80);
     switch ((addr >> 4) & 0xf) {
       case 0x0:
-        // TODO: joypad data, http://nocash.emubase.de/pandocs.htm#joypadinput
+        // joypad data, http://nocash.emubase.de/pandocs.htm#joypadinput
+        if (addr == 0xff00) {
+          return this.input.rb(addr);
+        }
         // TODO: serial data transfer
         //      http://nocash.emubase.de/pandocs.htm#serialdatatransferlinkcable
         // TODO: timer/divider regisers
@@ -370,6 +389,10 @@ JBA.Memory.prototype = {
 
     switch ((addr >> 4) & 0xf) {
       case 0x0:
+        if (addr == 0xff00) {
+          this.input.wb(addr, value);
+          break;
+        }
         // TODO: joypad data, http://nocash.emubase.de/pandocs.htm#joypadinput
         // TODO: serial data transfer
         //      http://nocash.emubase.de/pandocs.htm#serialdatatransferlinkcable

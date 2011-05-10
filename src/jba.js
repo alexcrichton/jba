@@ -21,6 +21,8 @@ JBA.prototype = {
   /** @type {JBA.GPU} */
   gpu: null,
 
+  fps: 0,
+
   reset: function() {
     this.cpu.reset();
     this.memory.reset();
@@ -41,11 +43,17 @@ JBA.prototype = {
     do {
       cycles_left -= this.exec();
     } while (cycles_left > 0);
+    this.fps++;
+
+    this._timeout = setTimeout(this.frame.bind(this), 0);
   },
 
   run: function() {
-    for (var i = 0; i < 10; i++)
-      this.frame();
+    this.frame();
+  },
+
+  stop: function() {
+    clearTimeout(this._timeout);
   },
 
   /**
