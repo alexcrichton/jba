@@ -1,3 +1,5 @@
+var Z = 0x80, N = 0x40, H = 0x20, C = 0x10;
+
 module('Z80 - Instructions', {
   setup: function() {
     var cpu = new JBA.CPU();
@@ -176,18 +178,6 @@ test('add HL, BC', function() {
     equals(reg.h, 0x77);
     equals(reg.f, 0x10);
   });
-
-  reg.b = 0x00;
-  reg.c = 0x01;
-  reg.h = 0x00;
-  reg.l = 0xff;
-  reg.f = 0x80;
-  // Half carry
-  opcode_test(0x09, 1, 2, function() {
-    equals(reg.l, 0x00);
-    equals(reg.h, 0x01);
-    equals(reg.f, 0xa0);
-  });
 });
 
 test('ld A, (BC)', function() {
@@ -253,10 +243,6 @@ test('rrca', function() {
 /******************************************************************************/
 /**   0x10                                                                    */
 /******************************************************************************/
-test('stop', function() {
-  opcode_test(0x10, 1, 1, function() { equals(reg.stop, 1); });
-});
-
 test('ld DE, nn', function() {
   stub_next_word(0x8739);
   opcode_test(0x11, 3, 3, function() {
@@ -490,6 +476,135 @@ test('bit 0, b', function() {
   stub_next_byte(0x40);
   opcode_test(0xcb, 2, 2, function() {
     equals(reg.f, 0xb0);
+  });
+});
+
+/******************************************************************************/
+/**   0x80                                                                    */
+/******************************************************************************/
+
+test('add a, b', function() {
+  reg.a = 0x02;
+  reg.b = 0x01;
+  reg.f = Z | N | H | C;
+  opcode_test(0x80, 1, 1, function() {
+    equals(reg.a, 0x3);
+    equals(reg.f, 0); // all flags cleared
+  });
+
+  // half carry
+  reg.a = 0x0f;
+  reg.b = 0x01;
+  opcode_test(0x80, 1, 1, function() {
+    equals(reg.a, 0x10);
+    equals(reg.f & H, H);
+  });
+
+  // carry, zero
+  reg.a = 0xf0;
+  reg.b = 0x10;
+  opcode_test(0x80, 1, 1, function() {
+    equals(reg.a, 0x00);
+    equals(reg.f & C, C);
+    equals(reg.f & Z, Z);
+  });
+});
+
+test('adc a, b', function() {
+  reg.a = 0x02;
+  reg.b = 0x01;
+  reg.f = Z | N | H | C;
+  opcode_test(0x88, 1, 1, function() {
+    equals(reg.a, 0x4); // C carried through
+    equals(reg.f, 0); // all flags cleared
+  });
+
+  // half carry
+  reg.a = 0x0f;
+  reg.b = 0x01;
+  opcode_test(0x80, 1, 1, function() {
+    equals(reg.a, 0x10);
+    equals(reg.f, H);
+  });
+
+  // carry, zero
+  reg.a = 0xf0;
+  reg.b = 0x10;
+  opcode_test(0x80, 1, 1, function() {
+    equals(reg.a, 0x00);
+    equals(reg.f, C | Z);
+  });
+});
+
+/******************************************************************************/
+/**   0x90                                                                    */
+/******************************************************************************/
+
+test('sub a, b', function() {
+  reg.a = 0x02;
+  reg.b = 0x01;
+  reg.f = Z | N | H | C;
+  opcode_test(0x90, 1, 1, function() {
+    equals(reg.a, 0x1);
+    equals(reg.f, N); // all flags cleared
+  });
+
+  // half carry
+  reg.a = 0xf1;
+  reg.b = 0x02;
+  opcode_test(0x90, 1, 1, function() {
+    equals(reg.a, 0xef);
+    equals(reg.f, N | H);
+  });
+
+  // zero
+  reg.a = 0x10;
+  reg.b = 0x10;
+  opcode_test(0x90, 1, 1, function() {
+    equals(reg.a, 0x00);
+    equals(reg.f, N | Z);
+  });
+
+  // carry
+  reg.a = 0x10;
+  reg.b = 0x20;
+  opcode_test(0x90, 1, 1, function() {
+    equals(reg.a, 0xf0);
+    equals(reg.f, N | C);
+  });
+});
+
+test('sbc a, b', function() {
+  reg.a = 0x02;
+  reg.b = 0x01;
+  reg.f = Z | N | H | C;
+  opcode_test(0x98, 1, 1, function() {
+    equals(reg.a, 0x0); // carry flag also subtracted
+    equals(reg.f, N | Z); // all flags cleared
+  });
+
+  // half carry
+  reg.a = 0xf1;
+  reg.b = 0x02;
+  opcode_test(0x98, 1, 1, function() {
+    equals(reg.a, 0xef);
+    equals(reg.f, N | H);
+  });
+
+  // zero
+  reg.a = 0x10;
+  reg.b = 0x10;
+  opcode_test(0x98, 1, 1, function() {
+    equals(reg.a, 0x00);
+    equals(reg.f, N | Z);
+  });
+
+  // carry
+  reg.a = 0x10;
+  reg.b = 0x20;
+  opcode_test(0x98, 1, 1, function() {
+    equals(reg.a, 0xf0);
+    equals(reg.f, N | C);
   });
 });
 

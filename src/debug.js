@@ -242,7 +242,6 @@ JBA.Debug.prototype = {
     $('#gpu .mode2int').text(gpu.mode2int);
     $('#gpu .mode1int').text(gpu.mode1int);
     $('#gpu .mode0int').text(gpu.mode0int);
-    $('#gpu .coinc').text(gpu.coinc);
     $('#gpu .mode').text(gpu.mode);
 
     $('#gpu .scy').text(gpu.scy);
@@ -256,6 +255,5 @@ JBA.Debug.prototype = {
 
     $('#gpu .wy').text(gpu.wy);
     $('#gpu .wx').text(gpu.wx);
-
   }
 };

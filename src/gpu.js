@@ -62,7 +62,6 @@ JBA.GPU.prototype = {
   mode2int: 0,  // Mode 2 OAM Interrupt         (1=Enable)
   mode1int: 0,  // Mode 1 V-Blank Interrupt     (1=Enable)
   mode0int: 0,  // Mode 0 H-Blank Interrupt     (1=Enable)
-  coinc: 0,     // Coincidence Flag  (0:LYC<>LY, 1:LYC=LY)
   /** @type {JBA.GPU.Mode} */
   mode: JBA.GPU.Mode.RDOAM,      // bits 0,1 - Mode Flag
 
@@ -198,13 +197,12 @@ JBA.GPU.prototype = {
     JBA.assert(this.canvas != null, "Canvas can't be null when rendering!");
 
     if (this.bgon) {
-      // console.log('rendering line background');
       this.render_background();
     }
 
-    // if (this.objon) {
-    //
-    // }
+    if (this.objon) {
+      this.render_sprites();
+    }
   },
 
   /** @private */
@@ -231,7 +229,6 @@ JBA.GPU.prototype = {
 
     /* Offset into the canvas to draw. line * width * 4 colors */
     var coff = this.ly * 160 * 4;
-    JBA.assert(0 <= this.ly && this.ly < 144);
 
     /* this.tiledata is a flag to determine which tile data table to use.
        0=8800-97FF, 1=8000-8FFF. For some odd reason, if tiledata = 0, then
@@ -251,8 +248,6 @@ JBA.GPU.prototype = {
             byte 1 : 01101010
 
          The colors are [0, 2, 2, 1, 3, 0, 3, 1] */
-      JBA.assert(mapbase + lineoff < 0x2000, 'mapbase out of bounds!');
-      JBA.assert(0 <= mapbase + lineoff, 'mapbase out of bounds!');
       var tilei = this.vram[mapbase + lineoff];
 
       /* Perform wankery with negative addresses here to get it to work out
@@ -265,16 +260,13 @@ JBA.GPU.prototype = {
             base + (sizeof(tile) = 16) * tilei + (offset into tile = 2 * y)
          Because each tile is 16 bytes and a row represents 2 bytes */
       var byteaddr = tilebase + tilei * 16 + 2 * y;
-      JBA.assert(0 <= byteaddr && byteaddr + 1 < 0x2000,
-          'byte addr out bounds!');
       var lsb = this.vram[byteaddr];
       var msb = this.vram[byteaddr + 1];
 
       for (; x < 8 && i < 160; x++, i++) {
         var colori =
-          (((msb >> (7-x)) & 1) << 1) |
-          (((lsb >> (7-x)) & 1) << 0);
-        JBA.assert(0 <= colori && colori < 4, 'Color index out of bounds!');
+          (((msb >> (7 - x)) & 1) << 1) |
+          (((lsb >> (7 - x)) & 1) << 0);
 
         // BGP register is index of actual palette. See
         // http://nocash.emubase.de/pandocs.htm#lcdmonochromepalettes
@@ -282,7 +274,6 @@ JBA.GPU.prototype = {
 
         var color = JBA.GPU.Palette[palette];
         for (var j = 0; j < 4; j++) {
-          JBA.assert(coff + j + i * 4 < this.image.data.length);
           this.image.data[coff + j + i * 4] = color[j];
         }
       }
@@ -290,30 +281,79 @@ JBA.GPU.prototype = {
       x = 0;
       lineoff++;
     } while (i < 160);
+  },
 
-    // for (var i = 0; i < 160; i++, coff += 4) {
-      // var color = JBA.GPU.Palette[tile][y];
+  /** @private */
+  render_sprites: function() {
+    // More information about sprites is located at:
+    // http://nocash.emubase.de/pandocs.htm#vramspriteattributetableoam
 
-    // }
-    //   do {
-    //    GPU._scanrow[160-x] = tilerow[x];
-    //     GPU._scrn.data[linebase+3] = GPU._palette.bg[tilerow[x]];
-    //     x++;
-    //     if(x==8) { t=(t+1)&31; x=0; tile=GPU._vram[mapbase+t]; if(tile<128) tile=256+tile; tilerow = GPU._tilemap[tile][y]; }
-    //     linebase+=4;
-    //   } while(--w);
-    //
-    // } else {
-    //   throw "no tiledata!";
-    //   var tilerow=GPU._tilemap[GPU._vram[mapbase+t]][y];
-    //   do {
-    //     GPU._scanrow[160-x] = tilerow[x];
-    //     GPU._scrn.data[linebase+3] = GPU._palette.bg[tilerow[x]];
-    //     x++;
-    //     if(x==8) { t=(t+1)&31; x=0; tilerow=GPU._tilemap[GPU._vram[mapbase+t]][y]; }
-    //     linebase+=4;
-    //   } while(--w);
-    // }
+    var line = this.ly;
+
+    /* All sprites are located in OAM */
+    /* There are 40 sprites in total */
+    for (var i = 0; i < 40; i++) {
+      var offset = i * 4; /* each sprite is 4 bytes wide */
+      var yoff   = this.oam[offset] - 16; // -16/-8... sure...
+      var xoff   = this.oam[offset + 1] - 8;
+      var tile   = this.oam[offset + 2];
+      var flags  = this.oam[offset + 3];
+
+      /* First make sure that this sprite even lands on the current line being
+         rendered. The y value in the sprite is the top left corner, so if that
+         is below the scanline or the bottom of the sprite (which is 8 pixels
+         high) lands below the scanline, this sprite doesn't need to be
+         rendered right now */
+      if (yoff > line || yoff + 8 < line) {
+        continue;
+      }
+
+      /* bit4 is the palette number. 0 = obp0, 1 = obp1 */
+      var palsel = (flags & 0x10) ? this.obp1 : this.obp0;
+      var coff   = (160 * line + xoff) * 4; /* 160px/line, 4 entries/px */
+
+      /* All sprite tile palettes are at 0x8000-0x8fff => start of vram */
+      var tileaddr = (tile * 16); /* tiles are 16 bytes each */
+
+      /* bit6 = vertical flip */
+      if (flags & 0x40) {
+        tileaddr += 2 * (7 - (line - yoff));
+      } else {
+        tileaddr += 2 * (line - yoff);
+      }
+
+      var lsb = this.vram[tileaddr];
+      var msb = this.vram[tileaddr + 1];
+
+      for (var x = 0; x < 8; x++, coff += 4) {
+        /* If these pixels are off screen, don't bother drawing anything */
+        if (xoff + x < 0 || xoff + x >= 160) {
+          continue;
+        }
+        /* bit5 is the horizontal flip flag */
+        var shift = (flags & 0x20) ? x : 7 - x;
+        var colori = (((msb >> shift) & 1) << 1) |
+                     (((lsb >> shift) & 1) << 0);
+
+        /* A color index of 0 for sprites means transparent */
+        if (colori == 0) {
+          continue;
+        }
+
+        /* bit7 0=OBJ Above BG, 1=OBJ Behind BG color 1-3. So if this sprite
+           has this flag set and the data at this location already contains
+           data (nonzero), then don't render this sprite */
+        if ((flags & 0x80) && this.image.data[coff]) {
+          continue;
+        }
+
+        var color = JBA.GPU.Palette[(palsel >> (colori * 2)) & 0x3];
+        this.image.data[coff]     = color[0];
+        this.image.data[coff + 1] = color[1];
+        this.image.data[coff + 2] = color[2];
+        this.image.data[coff + 3] = color[3];
+      }
+    }
   },
 
   rb: function(addr) {
@@ -333,7 +373,7 @@ JBA.GPU.prototype = {
                (this.mode2int << 5) |
                (this.mode1int << 4) |
                (this.mode0int << 3) |
-               (this.coinc    << 2) |
+               (this.lycly == this.ly ? 1 << 2 : 0) |
                (this.mode);
 
       case 0x42: return this.scy;
@@ -374,7 +414,6 @@ JBA.GPU.prototype = {
         this.mode1int = (value >> 4) & 1;
         this.mode0int = (value >> 3) & 1;
         /* These values are read-only */
-        // this.coinc    = (value >> 2) & 1;
         // this.mode     =  value       & 0x3;
         break;
 
@@ -393,7 +432,17 @@ JBA.GPU.prototype = {
 
   /** @private */
   oam_dma_transfer: function(value) {
+    /* DMA transfer moves data in regular ram to OAM. It's triggered when
+       writing to a specific address in memory. Here's what happens:
+
+         Source:      XX00-XX9F   ;XX in range from 00-F1h
+         Destination: FE00-FE9F */
+
     var orval = (value & 0xff) << 8;
+    if (orval > 0xf100) {
+      return;
+    }
+
     for (var i = 0; i < 0xa0; i++) {
       this.oam[i] = this.mem.rb(orval | i);
     }

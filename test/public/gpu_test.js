@@ -20,11 +20,11 @@ test('reading from GPU registers', function() {
   gpu.bgon     = 1;
   equals(gpu.rb(0xff40), 0xb9);
 
+  gpu.ly = 0; /* So coinc flag is 0 */
   gpu.lycly    = 1;
   gpu.mode2int = 0;
   gpu.mode1int = 1;
   gpu.mode0int = 1;
-  gpu.coinc    = 0;
   gpu.mode     = 2;
   equals(gpu.rb(0xff41), 0x5a);
 
@@ -67,7 +67,6 @@ test('writing the GPU registers', function() {
   equals(gpu.mode2int, 0);
   equals(gpu.mode1int, 1);
   equals(gpu.mode0int, 1);
-  equals(gpu.coinc, 0);
   equals(gpu.mode, 2);
 
   gpu.wb(0xff42, 0x98);

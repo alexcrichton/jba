@@ -25,12 +25,12 @@ module Z80
       hlmm = "r.l = (r.l - 1) & 0xff; if (r.l == 0xff) r.h = (r.h - 1) & 0xff"
 
       def sign_fix var
-        "(#{var} > 127 ? -((~(#{var}) + 1) & 255) : #{var})"
+        "(#{var} > 0x7f ? -((~(#{var}) + 1) & 0xff) : #{var})"
       end
 
       @funs = {}
 
-      section '8 bit loading between registers' do
+      section '8 bit loading' do
         regs.each{ |i|
           regs.each{ |j|
             @funs["ld_#{i}#{j}"] = if i != j
@@ -40,21 +40,11 @@ module Z80
             end
           }
         }
-      end
 
-      section '8 bit loading immediate values' do
         regs.each{ |i| @funs["ld_#{i}n"] =  "r.#{i} = m.rb(r.pc++); r.m = 2;" }
-      end
-
-      section '8 bit loading from HL' do
         regs.each{ |i| @funs["ld_#{i}hlm"] = "r.#{i} = m.rb(#{hl}); r.m = 2;" }
-      end
-
-      section '8 bit writing to HL' do
         regs.each{ |i| @funs["ld_hlm#{i}"] = "m.wb(#{hl}, r.#{i}); r.m = 2;" }
-      end
 
-      section 'Other loading commands' do
         @funs['ld_hlmn'] = "m.wb(#{hl}, m.rb(r.pc++)); r.m = 3;"
         @funs['ld_abc'] = "r.a = m.rb(#{bc}); r.m = 2;"
         @funs['ld_ade'] = "r.a = m.rb(#{de}); r.m = 2;"
@@ -100,11 +90,10 @@ module Z80
         def add var, name, cycles
           @funs["add_a#{name}"] = <<-JS.strip_heredoc
             var i = r.a, j = #{var};
-            r.a += j;
-            r.f = r.a > 0xff ? #{C} : 0;
-            r.a &= 0xff;
-            if (!r.a) { r.f |= #{Z}; }
-            if ((r.a ^ j ^ i) & 0x10) { r.f |= #{H}; }
+            r.f = ((i & 0xf) + (j & 0xf) > 0xf ? #{H} : 0);
+            r.f |= (i + j > 0xff ? #{C} : 0);
+            r.a = (i + j) & 0xff;
+            r.f |= (r.a ? 0 : #{Z});
             r.m = #{cycles};
           JS
         end
@@ -114,12 +103,11 @@ module Z80
 
         def adc var, name, cycles
           @funs["adc_a#{name}"] = <<-JS.strip_heredoc
-            var i = r.a, j = #{var};
-            r.a += j + ((r.f & #{C}) ? 1 : 0);
-            r.f = r.a > 0xff ? #{C} : 0;
-            r.a &= 0xff;
-            if (!r.a) r.f |= #{Z};
-            if ((r.a ^ j ^ i) & 0x10) r.f |= #{H};
+            var i = r.a, j = #{var}, k = !!(r.f & #{C});
+            r.f = ((i & 0xf) + (j & 0xf) + k > 0xf ? #{H} : 0);
+            r.f |= (i + j + k > 0xff ? #{C} : 0);
+            r.a = (i + j + k) & 0xff;
+            r.f |= (r.a ? 0 : #{Z});
             r.m = #{cycles};
           JS
         end
@@ -133,11 +121,10 @@ module Z80
           @funs["sub_a#{name}"] = <<-JS.strip_heredoc
             var a = r.a;
             var b = #{var};
-            r.a -= b;
-            r.f = #{N} | (r.a < 0 ? #{C} : 0);
-            r.a &= 0xff;
-            if (!r.a) r.f |= #{Z};
-            if ((r.a ^ b ^ a) & 0x10) r.f |= #{H};
+            r.f = #{N} | (a < b ? #{C} : 0) |
+              (((a & 0xf) < (b & 0xf)) ? #{H} : 0);
+            r.a = (a - b) & 0xff;
+            r.f |= (r.a ? 0 : #{Z});
             r.m = #{cycles};
           JS
         end
@@ -148,12 +135,11 @@ module Z80
         def sbc var, name, cycles
           @funs["sbc_a#{name}"] = <<-JS.strip_heredoc
             var a = r.a;
-            var b = #{var};
-            r.a -= b + ((r.f & #{C}) >> 4);
-            r.f = r.a > 0xff ? #{C} : 0;
-            r.a &= 0xff;
-            if (!r.a) r.f |= #{Z};
-            if ((r.a ^ b ^ a) & 0x10) r.f |= #{H};
+            var b = #{var} + (!!(r.f & #{C}));
+            r.f = #{N} | (a < b ? #{C} : 0) |
+              (((a & 0xf) < (b & 0xf)) ? #{H} : 0);
+            r.a = (a - b) & 0xff;
+            r.f |= (r.a ? 0 : #{Z});
             r.m = #{cycles};
           JS
         end
@@ -165,7 +151,7 @@ module Z80
       section '8 bit bit-ops' do
         def anda var, name, cycles
           @funs["and_a#{name}"] = <<-JS.strip_heredoc
-            #{var == 'r.a' ? '' : "r.a &= #{var};"}
+            r.a &= #{var};
             r.f = (r.a ? 0 : #{Z}) | #{H};
             r.m = #{cycles};
           JS
@@ -176,8 +162,8 @@ module Z80
 
         def xora var, name, cycles
           @funs["xor_a#{name}"] = <<-JS.strip_heredoc
-            #{var == 'r.a' ? "r.a = 0; r.f = #{Z};" :
-                "r.a ^= #{var}; r.f = r.a ? 0 : #{Z};"}
+            r.a ^= #{var};
+            r.f = r.a ? 0 : #{Z};
             r.m = #{cycles};
           JS
         end
@@ -187,7 +173,7 @@ module Z80
 
         def ora var, name, cycles
           @funs["or_a#{name}"] = <<-JS.strip_heredoc
-            #{var == 'r.a' ? '' : "r.a |= #{var};"}
+            r.a |= #{var};
             r.f = r.a ? 0 : #{Z};
             r.m = #{cycles};
           JS
@@ -203,10 +189,8 @@ module Z80
             var a = r.a;
             var b = #{var};
             var i = a - b;
-            r.f = #{N} | (r.a < 0 ? #{C} : 0);
-            i &= 0xff;
-            if (!i) r.f |= #{Z};
-            if ((a ^ b ^ i) & 0x10) r.f |= #{H};
+            r.f = #{N} | (a == b ? #{Z} : 0) | (a < b ? #{C} : 0) |
+              ((a & 0xf) < (b & 0xf) ? #{H} : 0);
             r.m = #{cycles};
           JS
         end
@@ -216,7 +200,6 @@ module Z80
         cp 'm.rb(r.pc++)', 'n', 2
       end
 
-      # TODO: check these, not sure about flags...
       section '8 bit increments/decrements' do
         regs.each{ |i|
           @funs["inc_#{i}"] = "r.#{i} = (r.#{i} + 1) & 0xff; " \
@@ -238,6 +221,7 @@ module Z80
       section 'Miscellaneous 8 bit arithmetic' do
         # WTF is this function?!
         @funs['daa'] = <<-JS.strip_heredoc
+          throw 'daa';
           var a = r.a;
           if ((r.f & #{H}) || ((r.a & 0xf) > 9)) r.a += 6;
           r.f &= 0xef;
@@ -248,16 +232,16 @@ module Z80
           r.m = 1;
         JS
 
-        @funs['cpl'] = "r.a ^= 0xff; r.f = #{N} | #{C}; r.m = 1;"
+        @funs['cpl'] = "r.a ^= 0xff; r.f |= #{N} | #{H}; r.m = 1;"
       end
 
-      # TODO: start checking here
       section '16 bit arithmetic' do
         def add_hl name, add_in, hl
           @funs["add_hl#{name}"] = <<-JS.strip_heredoc
             var a = #{hl}, b = #{add_in}, hl = a + b;
-            if (hl > 0xfff) r.f |= #{C}; else r.f &= #{~C & 0xff};
-            if ((a & 0xf) + (b & 0xf) > 0xf) r.f |= #{H};
+            r.f &= #{~N & 0xff};
+            if (hl > 0xffff) r.f |= #{C}; else r.f &= #{~C & 0xff};
+            if ((a & 0xfff) + (b & 0xfff) > 0xfff) r.f |= #{H};
             r.l = hl & 0xff;
             r.h = (hl >> 8) & 0xff;
             r.m = 2;
@@ -297,21 +281,25 @@ module Z80
       end
 
       section 'Rotating left' do
-        def rlc name, var, cy
+        def rlc name, var, cy, before='', after=''
           @funs["rlc#{name}"] = <<-JS.strip_heredoc
+            #{before};
             var ci = (#{var} & 0x80) ? 1 : 0;
-            #{var} = ((#{var} << 1) | ci) & 0xff;
+            #{var} = ((#{var} << 1) & 0xff) | ci;
             r.f = (#{var} ? 0 : #{Z}) | (ci ? #{C} : 0);
+            #{after};
             r.m = #{cy};
           JS
         end
 
-        def rl name, var, cy
+        def rl name, var, cy, before='', after=''
           @funs["rl#{name}"] = <<-JS.strip_heredoc
+            #{before};
             var ci = (r.f & #{C}) ? 1 : 0;
             var co = #{var} & 0x80;
-            #{var} = ((#{var} << 1) | ci) & 0xff;
+            #{var} = ((#{var} << 1) & 0xff) | ci;
             r.f = (#{var} ? 0 : #{Z}) | (co ? #{C} : 0);
+            #{after};
             r.m = #{cy};
           JS
         end
@@ -322,41 +310,30 @@ module Z80
           rlc "_#{r}", "r.#{r}", 2
           rl "_#{r}", "r.#{r}", 2
         }
-        @funs['rlc_hlm'] = <<-JS.strip_heredoc
-          var hl = m.rb(#{hl});
-          var ci = (hl & 0x80) >> 7;
-          hl = ((hl << 1) | ci) & 0xff;
-          m.wb(#{hl}, hl);
-          r.f = (hl ? 0 : #{Z}) | (ci << 4);
-          r.m = 4;
-        JS
-        @funs['rl_hlm'] = <<-JS.strip_heredoc
-          var hl = m.rb(#{hl});
-          var ci = (r.f & 0x10) >> 4;
-          var co = (hl & 0x80) >> 3;
-          hl = ((hl << 1) | ci) & 0xff;
-          m.wb(#{hl}, hl);
-          r.f = (hl ? 0 : #{Z}) | co;
-          r.m = 4;
-        JS
+        rlc '_hlm', 'hl', 4, "var hl = m.rb(#{hl})", "m.wb(#{hl}, hl)"
+        rl '_hlm', 'hl', 4, "var hl = m.rb(#{hl})", "m.wb(#{hl}, hl)"
       end
 
       section 'Rotating right' do
-        def rrc name, var, cy
+        def rrc name, var, cy, before='', after=''
           @funs["rrc#{name}"] = <<-JS.strip_heredoc
-            var ci = (#{var} & 1) << 7;
-            #{var} = (#{var} >> 1) | ci;
-            r.f = (#{var} ? 0 : #{Z}) | (ci >> 3);
+            #{before};
+            var ci = #{var} & 1;
+            #{var} = (#{var} >> 1) | (ci << 7);
+            r.f = (#{var} ? 0 : #{Z}) | (ci ? #{C} : 0);
+            #{after};
             r.m = #{cy};
           JS
         end
 
-        def rr name, var, cy
+        def rr name, var, cy, before='', after=''
           @funs["rr#{name}"] = <<-JS.strip_heredoc
-            var ci = (r.f & 0x10) << 3;
-            var co = (#{var} & 1) << 4;
+            #{before};
+            var ci = (r.f & #{C}) ? 0x80 : 0;
+            var co = (#{var} & 1) ? #{C} : 0;
             #{var} = (#{var} >> 1) | ci;
             r.f = (#{var} ? 0 : #{Z}) | co;
+            #{after};
             r.m = #{cy};
           JS
         end
@@ -367,44 +344,24 @@ module Z80
           rrc "_#{r}", "r.#{r}", 2
           rr "_#{r}", "r.#{r}", 2
         }
-        @funs['rrc_hlm'] = <<-JS.strip_heredoc
-          var hl = m.rb(#{hl});
-          var ci = (hl & 1) << 7;
-          hl = (hl >> 1) | ci;
-          m.wb(#{hl}, hl);
-          r.f = (hl ? 0 : #{Z}) | (ci >> 3);
-          r.m = 4;
-        JS
-
-        @funs['rr_hlm'] = <<-JS.strip_heredoc
-          var hl = m.rb(#{hl});
-          var ci = (r.f & 0x10) << 3;
-          var co = (hl & 0x80) << 4;
-          hl = (hl >> 1) | ci;
-          m.wb(#{hl}, hl);
-          r.f = (hl ? 0 : #{Z}) | co;
-          r.m = 4;
-        JS
+        rrc '_hlm', 'hl', 4, "var hl = m.rb(#{hl})", "m.wb(#{hl}, hl)"
+        rr '_hlm', 'hl', 4, "var hl = m.rb(#{hl})", "m.wb(#{hl}, hl)"
       end
 
       section 'Shifting arithmetically left' do
-        regs.each do |reg|
-          @funs["sla_#{reg}"] = <<-JS.strip_heredoc
-            var co = r.#{reg} >> 7;
-            r.#{reg} = (r.#{reg} << 1) & 0xff;
-            r.f = (r.#{reg} ? 0 : #{Z}) | (co ? #{C} : 0);
-            r.m = 2;
+        def sla name, var, cy, before='', after=''
+          @funs["sla_#{name}"] = <<-JS.strip_heredoc
+            #{before};
+            var co = (#{var} >> 7) & 1;
+            #{var} = (#{var} << 1) & 0xff;
+            r.f = (#{var} ? 0 : #{Z}) | (co ? #{C} : 0);
+            #{after};
+            r.m = #{cy};
           JS
         end
 
-        @funs['sla_hlm'] = <<-JS.strip_heredoc
-          var hl = m.rb(#{hl});
-          var co = (hl & 0x80) >> 7;
-          hl = (hl << 1) & 0xff;
-          m.wb(#{hl}, hl);
-          r.f = (hl ? 0 : #{Z}) | (co ? #{C} : 0);
-          r.m = 4;
-        JS
+        regs.each { |reg| sla reg, "r.#{reg}", 2 }
+        sla 'hlm', 'hl', 4, "var hl = m.rb(#{hl})", "m.wb(#{hl}, hl)"
       end
 
       section 'Swapping' do
@@ -469,10 +426,11 @@ module Z80
 
       section 'Bit checking' do
         def bitcmp pos, name, reader, cy
-          @funs["bit_#{pos}#{name}"] = \
-            "var b = #{reader} & 0x#{(1 << pos).to_s(16)}; " \
-            "r.f = (r.f & #{C}) | #{H} " \
-            "| (b ? 0 : #{Z}); r.m = #{cy};"
+          @funs["bit_#{pos}#{name}"] = <<-JS.strip_heredoc
+            var b = #{reader} & #{1 << pos};
+            r.f = (r.f & #{C}) | #{H} | (b ? 0 : #{Z});
+            r.m = #{cy};
+          JS
         end
 
         (0..7).each do |pos|
@@ -483,21 +441,20 @@ module Z80
 
       section 'Bit setting/resetting' do
         (0..7).each do |pos|
-          mask = '0x' + (1 << pos).to_s(16)
           regs.each{ |reg|
-            @funs["set_#{pos}#{reg}"] = "r.#{reg} |= #{mask}; r.m = 2;"
+            @funs["set_#{pos}#{reg}"] = "r.#{reg} |= #{1 << pos}; r.m = 2;"
           }
           @funs["set_#{pos}hlm"] = "m.wb(#{hl}, m.rb(#{hl}) | " \
-            " #{mask}); r.m = 4;"
+            " #{1 << pos}); r.m = 4;"
         end
 
         (0..7).each do |pos|
-          mask = '0x' + (~(1 << pos) & 0xff).to_s(16)
+          mask = (~(1 << pos) & 0xff)
           regs.each{ |reg|
             @funs["res_#{pos}#{reg}"] = "r.#{reg} &= #{mask}; r.m = 2;"
           }
-          @funs["res_#{pos}hlm"] = "m.wb(#{hl}, m.rb(#{hl}) &" \
-            " #{mask}); r.m = 4;"
+          @funs["res_#{pos}hlm"] = \
+            "m.wb(#{hl}, m.rb(#{hl}) & #{mask}); r.m = 4;"
         end
       end
 
@@ -505,20 +462,20 @@ module Z80
         @funs['ccf'] = "r.f = (r.f & #{Z}) | ((r.f & #{C}) ^ #{C}); r.m = 1;"
         @funs['scf'] = "r.f = (r.f & #{Z}) | #{C}; r.m = 1;"
         @funs['nop'] = "r.m = 1;"
-        @funs['halt'] = "r.halt = 1; r.m = 1;"
-        @funs['stop'] = "r.stop = 1; r.m = 1;"
+        @funs['halt'] = "r.halt = 1; r.m = 1; throw 'halt';"
+        @funs['stop'] = "r.stop = 1; r.m = 1; throw 'stop';"
         @funs['di'] = "r.ime = 0; r.m = 1;"
         @funs['ei'] = "r.ime = 1; r.m = 1;"
       end
 
       section 'Jump commands' do
-        @funs['jp_nn'] = "r.pc = m.rw(r.pc); r.m = 4;"
+        @do_jp = "r.pc = m.rw(r.pc); r.m = 4;"
+        @funs['jp_nn'] = @do_jp
         @funs['jp_hl'] = "r.pc = #{hl}; r.m = 1;"
 
         def jp_n name, cond
           @funs["jp_#{name}_nn"] =
-            "if (#{cond}) { r.pc = m.rw(r.pc); r.m = 4; } " \
-            "else { r.pc += 2; r.m = 3; }"
+            "if (#{cond}) { #{@do_jp} } else { r.pc += 2; r.m = 3; }"
         end
 
         jp_n 'nz', "!(r.f & #{Z})"
@@ -526,8 +483,13 @@ module Z80
         jp_n 'nc', "!(r.f & #{C})"
         jp_n 'c', "r.f & #{C}"
 
-        # TODO: test this
-        @do_jr = "var i = m.rb(r.pc++); i = #{sign_fix 'i'}; r.pc += i; r.pc &= 0xffff; r.m = 3;"
+        @do_jr = <<-JS.strip_heredoc
+          var i = m.rb(r.pc++);
+          i = #{sign_fix 'i'};
+          r.pc += i;
+          r.pc &= 0xffff;
+          r.m = 3;
+        JS
         @funs['jr_n'] = @do_jr
 
         def jr_n name, cond

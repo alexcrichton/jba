@@ -20,17 +20,17 @@ JBA.Input.SEL = {
  */
 JBA.Input.Map = {
   buttons: {
-    90: 0xfe, // 'z' => button A
-    88: 0xfd, // 'x' => button B
-    13: 0xf7, // enter key => start
-    188: 0xfb // comma => select
+    90: 0xe, // 'z' => button A
+    88: 0xd, // 'x' => button B
+    13: 0x7, // enter key => start
+    188: 0xb // comma => select
   },
 
   directions: {
-    37: 0xfd, // left arrow => input left
-    38: 0xfb, // up arrow => input up
-    39: 0xfe, // right arrow => input right
-    40: 0xf7 // down arrow => input down
+    37: 0xd, // left arrow => input left
+    38: 0xb, // up arrow => input up
+    39: 0xe, // right arrow => input right
+    40: 0x7 // down arrow => input down
   }
 };
 
@@ -48,14 +48,16 @@ JBA.Input.prototype = {
     switch (this.col) {
       case JBA.Input.SEL.BUTTON:    return this.buttons;
       case JBA.Input.SEL.DIRECTION: return this.directions;
-      default: return 0;
+      default: return 0xf;
     }
   },
 
   wb: function(addr, value) {
     JBA.assert(addr == 0xff00, 'Input only accepts 0xff00');
 
-    this.col = value & 0x30;
+    /* The selected column is also negatively asserted, so invert the value
+       written in to get a positively asserted selection */
+    this.col = ~value & 0x30;
   },
 
   keydown: function(code) {
@@ -68,19 +70,17 @@ JBA.Input.prototype = {
     if (mask) {
       this.buttons &= mask;
     }
-    console.log(this.directions, this.buttons);
   },
 
   keyup: function(code) {
     var mask = JBA.Input.Map.directions[code];
     if (mask) {
-      this.directions |= (~mask) & 0xff;
+      this.directions |= (~mask) & 0xf;
     }
 
     mask = JBA.Input.Map.buttons[code];
     if (mask) {
-      this.buttons |= (~mask) & 0xff;
+      this.buttons |= (~mask) & 0xf;
     }
-    console.log(this.directions, this.buttons);
   }
 };

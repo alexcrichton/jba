@@ -36,7 +36,7 @@ JBA.prototype = {
     return t;
   },
 
-  frame: function() {
+  frame: function(do_another) {
     // See http://imrannazar.com/GameBoy-Emulation-in-JavaScript:-GPU-Timings
     // for the timing for this constant
     var cycles_left = 70224;
@@ -45,11 +45,12 @@ JBA.prototype = {
     } while (cycles_left > 0);
     this.fps++;
 
-    this._timeout = setTimeout(this.frame.bind(this), 0);
+    if (do_another)
+      this._timeout = setTimeout(this.frame.bind(this, do_another), 0);
   },
 
   run: function() {
-    this.frame();
+    this.frame(true);
   },
 
   stop: function() {

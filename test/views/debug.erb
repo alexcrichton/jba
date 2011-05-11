@@ -62,6 +62,15 @@
       debug.update();
       debug.gb.gpu.set_canvas($('#gb')[0]);
 
+      $(window).keydown(function(e) {
+        console.log(e.keyCode + ' down');
+        debug.gb.memory.input.keydown(e.keyCode);
+      });
+      $(window).keyup(function(e) {
+        console.log(e.keyCode + ' up');
+        debug.gb.memory.input.keyup(e.keyCode);
+      });
+
       $('#addr').keyup(function() { debug.highlight($(this).val()); });
     });
   </script>
@@ -154,8 +163,6 @@
       <dd class='mode1int'></dd>
       <dt>MODE0INT:</dt>
       <dd class='mode0int'></dd>
-      <dt>COINC:</dt>
-      <dd class='coinc'></dd>
       <dt>MODE:</dt>
       <dd class='mode'></dd>
 
@@ -190,6 +197,7 @@
     <h2>Roms</h2>
     <button onclick='debug.gb.load_rom("/roms/opus5.gb", function() { debug.update(); });'>opus5</button>
     <button onclick='debug.gb.load_rom("/roms/mario.gb", function() { debug.update(); });'>mario</button>
+    <button onclick='debug.gb.load_rom("/roms/ttt.gb", function() { debug.update(); });'>ttt</button>
   </div>
 
   <canvas id='gb' height='144' width='160'></canvas>
