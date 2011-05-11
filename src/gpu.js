@@ -205,6 +205,8 @@ JBA.GPU.prototype = {
 
   /** @private */
   render_background: function() {
+    var data = this.image.data, vram = this.vram, bgp = this.bgp;
+
     /* vram is from 0x8000-0x9fff
        this.bgmap: 0=9800-9bff, 1=9c00-9fff
 
@@ -245,7 +247,7 @@ JBA.GPU.prototype = {
             byte 1 : 01101010
 
          The colors are [0, 2, 2, 1, 3, 0, 3, 1] */
-      var tilei = this.vram[mapbase + lineoff];
+      var tilei = vram[mapbase + lineoff];
 
       /* Perform wankery with negative addresses here to get it to work out
          in the next section */
@@ -257,22 +259,23 @@ JBA.GPU.prototype = {
             base + (sizeof(tile) = 16) * tilei + (offset into tile = 2 * y)
          Because each tile is 16 bytes and a row represents 2 bytes */
       var byteaddr = tilebase + tilei * 16 + 2 * y;
-      var lsb = this.vram[byteaddr];
-      var msb = this.vram[byteaddr + 1];
+      var lsb = vram[byteaddr];
+      var msb = vram[byteaddr + 1];
 
-      for (; x < 8 && i < 160; x++, i++) {
+      for (; x < 8 && i < 160; x++, i++, coff += 4) {
         var colori =
           (((msb >> (7 - x)) & 1) << 1) |
           (((lsb >> (7 - x)) & 1) << 0);
 
         // BGP register is index of actual palette. See
         // http://nocash.emubase.de/pandocs.htm#lcdmonochromepalettes
-        var palette = (this.bgp >> (2 * colori)) & 0x3;
+        var palette = (bgp >> (2 * colori)) & 0x3;
 
         var color = JBA.GPU.Palette[palette];
-        for (var j = 0; j < 4; j++) {
-          this.image.data[coff + j + i * 4] = color[j];
-        }
+        data[coff] = color[0];
+        data[coff + 1] = color[1];
+        data[coff + 2] = color[2];
+        data[coff + 3] = color[3];
       }
 
       x = 0;

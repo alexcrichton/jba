@@ -17,7 +17,24 @@ get '/debug' do
 end
 
 get '/roms' do
+  @js_include = jba_js_include
   erb :roms
+end
+
+get '/min' do
+  @js_include = javascript_include_tag 'jba.min.js'
+  erb :roms
+end
+
+get '/jba.min.js' do
+  content_type :js
+  file = File.expand_path('../../jba.min.js', __FILE__)
+
+  if File.exist? file
+    File.read(file)
+  else
+    "alert('please run `thor jba:minify` \\nfrom: #{File.dirname(file)}');"
+  end
 end
 
 helpers do
