@@ -461,7 +461,16 @@ JBA.GPU.prototype = {
     pal[3] = JBA.GPU.Palette[(val >> 6) & 0x3];
   },
 
-  /** @private */
+  /**
+   * Trigger a DMA transfer into OAM. This happens whenever something is written
+   * to 0xff46. See http://nocash.emubase.de/pandocs.htm#lcdoamdmatransfers for
+   * the specifics, but the gist is that the value written to this memory is the
+   * upper byte of the addresses which should be copied over into OAM.
+   *
+   * @param {number} value the byte written to 0xff46
+   *
+   * @private
+   */
   oam_dma_transfer: function(value) {
     /* DMA transfer moves data in regular ram to OAM. It's triggered when
        writing to a specific address in memory. Here's what happens:
