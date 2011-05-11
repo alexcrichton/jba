@@ -85,6 +85,13 @@ JBA.GPU.prototype = {
   // 0xff4b - WX - Window X Position minus 7
   wx: 0,
 
+  /* Compiled palettes. These are updated when writing to BGP/OBP0/OBP1 */
+  _pal: {
+    bg: [],
+    obp0: [],
+    obp1: []
+  },
+
   /**
    * Reset this GPU. This clears all registers, re-initializes all ram banks
    * and such.
@@ -205,7 +212,7 @@ JBA.GPU.prototype = {
 
   /** @private */
   render_background: function() {
-    var data = this.image.data, vram = this.vram, bgp = this.bgp;
+    var data = this.image.data, vram = this.vram, bgp = this._pal.bg;
 
     /* vram is from 0x8000-0x9fff
        this.bgmap: 0=9800-9bff, 1=9c00-9fff
@@ -267,11 +274,7 @@ JBA.GPU.prototype = {
           (((msb >> (7 - x)) & 1) << 1) |
           (((lsb >> (7 - x)) & 1) << 0);
 
-        // BGP register is index of actual palette. See
-        // http://nocash.emubase.de/pandocs.htm#lcdmonochromepalettes
-        var palette = (bgp >> (2 * colori)) & 0x3;
-
-        var color = JBA.GPU.Palette[palette];
+        var color = bgp[colori];
         data[coff] = color[0];
         data[coff + 1] = color[1];
         data[coff + 2] = color[2];
@@ -285,20 +288,22 @@ JBA.GPU.prototype = {
 
   /** @private */
   render_sprites: function() {
+    var data = this.image.data, vram = this.vram, oam = this.oam;
+
     // More information about sprites is located at:
     // http://nocash.emubase.de/pandocs.htm#vramspriteattributetableoam
 
     var line = this.ly;
-    var zerocolor = JBA.GPU.Palette[this.bgp & 0x3][0];
+    var zerocolor = this._pal.bg[0][0];
 
     /* All sprites are located in OAM */
     /* There are 40 sprites in total */
     for (var i = 0; i < 40; i++) {
       var offset = i * 4; /* each sprite is 4 bytes wide */
-      var yoff   = this.oam[offset] - 16;
-      var xoff   = this.oam[offset + 1] - 8;
-      var tile   = this.oam[offset + 2];
-      var flags  = this.oam[offset + 3];
+      var yoff   = oam[offset] - 16;
+      var xoff   = oam[offset + 1] - 8;
+      var tile   = oam[offset + 2];
+      var flags  = oam[offset + 3];
 
       /* First make sure that this sprite even lands on the current line being
          rendered. The y value in the sprite is the top left corner, so if that
@@ -310,8 +315,8 @@ JBA.GPU.prototype = {
       }
 
       /* bit4 is the palette number. 0 = obp0, 1 = obp1 */
-      var palsel = (flags & 0x10) ? this.obp1 : this.obp0;
-      var coff   = (160 * line + xoff) * 4; /* 160px/line, 4 entries/px */
+      var pal  = (flags & 0x10) ? this._pal.obp1 : this._pal.obp0;
+      var coff = (160 * line + xoff) * 4; /* 160px/line, 4 entries/px */
 
       /* All sprite tile palettes are at 0x8000-0x8fff => start of vram */
       var tileaddr = (tile * 16); /* tiles are 16 bytes each */
@@ -323,8 +328,8 @@ JBA.GPU.prototype = {
         tileaddr += 2 * (line - yoff);
       }
 
-      var lsb = this.vram[tileaddr];
-      var msb = this.vram[tileaddr + 1];
+      var lsb = vram[tileaddr];
+      var msb = vram[tileaddr + 1];
 
       for (var x = 0; x < 8; x++, coff += 4) {
         /* If these pixels are off screen, don't bother drawing anything */
@@ -344,15 +349,15 @@ JBA.GPU.prototype = {
         /* bit7 0=OBJ Above BG, 1=OBJ Behind BG color 1-3. So if this sprite
            has this flag set and the data at this location already contains
            data (nonzero), then don't render this sprite */
-        if ((flags & 0x80) && this.image.data[coff] != zerocolor) {
+        if ((flags & 0x80) && data[coff] != zerocolor) {
           continue;
         }
 
-        var color = JBA.GPU.Palette[(palsel >> (colori * 2)) & 0x3];
-        this.image.data[coff]     = color[0];
-        this.image.data[coff + 1] = color[1];
-        this.image.data[coff + 2] = color[2];
-        this.image.data[coff + 3] = color[3];
+        var color = pal[colori];
+        data[coff]     = color[0];
+        data[coff + 1] = color[1];
+        data[coff + 2] = color[2];
+        data[coff + 3] = color[3];
       }
     }
   },
@@ -419,12 +424,41 @@ JBA.GPU.prototype = {
       // 0x44 this.ly is read-only
       case 0x45: this.lyc = value; break;
       case 0x46: this.oam_dma_transfer(value); break;
-      case 0x47: this.bgp  = value; break;
-      case 0x48: this.obp0 = value; break;
-      case 0x49: this.obp1 = value; break;
+
+      case 0x47:
+        this.bgp = value;
+        this.update_palette(this._pal.bg, value);
+        break;
+      case 0x48:
+        this.obp0 = value;
+        this.update_palette(this._pal.obp0, value);
+        break;
+      case 0x49:
+        this.obp1 = value;
+        this.update_palette(this._pal.obp1, value);
+        break;
+
       case 0x4a: this.wy   = value; break;
       case 0x4b: this.wx   = value; break;
     }
+  },
+
+  /**
+   * Update the cached palettes for BG/OBP0/OBP1. This should be called whenever
+   * these registers are modified.
+   *
+   * @param {Array.<number>} pal the palette to update
+   * @param {number} val the value written into the register
+   *
+   * @private
+   */
+  update_palette: function(pal, val) {
+    // These registers are indices into the actual palette. See
+    // http://nocash.emubase.de/pandocs.htm#lcdmonochromepalettes
+    pal[0] = JBA.GPU.Palette[(val >> 0) & 0x3];
+    pal[1] = JBA.GPU.Palette[(val >> 2) & 0x3];
+    pal[2] = JBA.GPU.Palette[(val >> 4) & 0x3];
+    pal[3] = JBA.GPU.Palette[(val >> 6) & 0x3];
   },
 
   /** @private */
