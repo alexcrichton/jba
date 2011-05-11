@@ -438,8 +438,8 @@ JBA.GPU.prototype = {
         this.update_palette(this._pal.obp1, value);
         break;
 
-      case 0x4a: this.wy   = value; break;
-      case 0x4b: this.wx   = value; break;
+      case 0x4a: this.wy = value; break;
+      case 0x4b: this.wx = value; break;
     }
   },
 
