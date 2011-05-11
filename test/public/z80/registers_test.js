@@ -15,17 +15,3 @@ test('initialized values', function() {
   equals(reg.pc, 0x100);
   equals(reg.sp, 0xfffe);
 });
-
-test('saving and restoring state', function() {
-  var reg = new Z80.Registers();
-
-  reg.a = 0xf3;
-  reg.pc = 0xff88;
-  reg.save();
-  reg.a = 0x31;
-  reg.pc = 0x3194;
-  reg.restore();
-
-  equals(reg.a, 0xf3);
-  equals(reg.pc, 0xff88);
-});

@@ -40,11 +40,6 @@ var Z80 = {};
  * @constructor
  */
 Z80.Registers = function() {
-  this._saved = {
-    a: 0, b: 0, c: 0, d: 0, e: 0, f: 0, h: 0, l: 0,
-    sp: 0, pc: 0, m: 0, ime: 0, halt: 0, stop: 0
-  };
-
   this.reset();
 };
 
@@ -63,51 +58,6 @@ Z80.Registers.prototype = {
   bc: function() { return (this.b << 8) | this.c; },
   de: function() { return (this.d << 8) | this.e; },
   hl: function() { return (this.h << 8) | this.l; },
-
-  /**
-   * Saves the state of these registers in an internal structure. Can be
-   * restored via a call to #restore()
-   */
-  save: function() {
-    this._saved.a = this.a;
-    this._saved.b = this.b;
-    this._saved.c = this.c;
-    this._saved.d = this.d;
-    this._saved.e = this.e;
-    this._saved.f = this.f;
-    this._saved.h = this.h;
-    this._saved.l = this.l;
-
-    this._saved.sp = this.sp;
-    this._saved.pc = this.pc;
-    this._saved.m = this.m;
-
-    this._saved.ime = this.ime;
-    this._saved.halt = this.halt;
-    this._saved.stop = this.stop;
-  },
-
-  /**
-   * Restores the state of the registers recorded from the last call to #save()
-   */
-  restore: function() {
-    this.a = this._saved.a;
-    this.b = this._saved.b;
-    this.c = this._saved.c;
-    this.d = this._saved.d;
-    this.e = this._saved.e;
-    this.f = this._saved.f;
-    this.h = this._saved.h;
-    this.l = this._saved.l;
-
-    this.sp = this._saved.sp;
-    this.pc = this._saved.pc;
-    this.m = this._saved.m;
-
-    this.ime = this._saved.ime;
-    this.halt = this._saved.halt;
-    this.stop = this._saved.stop;
-  },
 
   /**
    * Resets the registers to a know value from which emulation can possibly

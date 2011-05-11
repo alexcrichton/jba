@@ -219,16 +219,10 @@ module Z80
       end
 
       section 'Miscellaneous 8 bit arithmetic' do
-        # WTF is this function?!
         @funs['daa'] = <<-JS.strip_heredoc
-          throw 'daa';
-          var a = r.a;
-          if ((r.f & #{H}) || ((r.a & 0xf) > 9)) r.a += 6;
-          r.f &= 0xef;
-          if ((r.f & #{H}) || (a > 0x99)) {
-            r.a += 0x60;
-            r.f |= #{C};
-          }
+          var daa = Z80.daa_table[r.a | (r.f << 4)];
+          r.a = daa >> 8;
+          r.f = daa & 0xff;
           r.m = 1;
         JS
 
@@ -462,7 +456,7 @@ module Z80
         @funs['ccf'] = "r.f = (r.f & #{Z}) | ((r.f & #{C}) ^ #{C}); r.m = 1;"
         @funs['scf'] = "r.f = (r.f & #{Z}) | #{C}; r.m = 1;"
         @funs['nop'] = "r.m = 1;"
-        @funs['halt'] = "r.halt = 1; r.m = 1; throw 'halt';"
+        @funs['halt'] = "r.halt = 1; r.m = 1;"
         @funs['stop'] = "r.stop = 1; r.m = 1; throw 'stop';"
         @funs['di'] = "r.ime = 0; r.m = 1;"
         @funs['ei'] = "r.ime = 1; r.m = 1;"
@@ -530,12 +524,12 @@ module Z80
         ret_f 'nc', "!(r.f & #{C})"
         ret_f 'c', "r.f & #{C}"
 
-        @funs['reti'] = "r.ime = 1; r.restore(); #{@do_ret} r.m = 4;"
+        @funs['reti'] = "r.ime = 1; #{@do_ret} r.m = 4;"
       end
 
       section 'Resetting' do
         %w(00 08 10 18 20 28 30 38 40 48 50 58 60).each do |code|
-          @funs["rst_#{code}"] = "r.save(); r.sp -= 2; " +
+          @funs["rst_#{code}"] = "r.sp -= 2; " +
             "m.ww(r.sp, r.pc); r.pc = 0x#{code}; r.m = 4;"
         end
       end

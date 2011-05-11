@@ -32,6 +32,8 @@ JBA.Memory.prototype = {
   rtc: null,
   /** @type {JBA.Input} */
   input: null,
+  /** @type {JBA.Timer} */
+  timer: null,
 
   /** @type {JBA.Memory.MBC} */
   mbc: JBA.Memory.MBC.UNKNOWN,
@@ -47,9 +49,14 @@ JBA.Memory.prototype = {
   ramon: 0,
   mode: 0,
 
+  /* Interrupt flags, http://nocash.emubase.de/pandocs.htm#interrupts.
+     The master enable flag is on the cpu */
+  _ie: 0,
+  _if: 0,
+
   reset: function() {
     this.rtc   = new JBA.RTC();
-    this.input = new JBA.Input();
+    this.input = new JBA.Input(this);
 
     this.rom      = '';
     this.ram      = [];
@@ -168,8 +175,6 @@ JBA.Memory.prototype = {
    * @return {number} the 8 bit value at this address
    */
   rb: function(addr) {
-    JBA.assert((addr & 0xffff) == addr, addr + ' is not 16 bits (mem.js)!');
-
     /* More information about mappings can be found online at
        http://nocash.emubase.de/pandocs.htm#memorymap */
     switch (addr >> 12) {
@@ -193,7 +198,7 @@ JBA.Memory.prototype = {
 
       case 0xa:
       case 0xb:
-      // Swappable banks of RAM
+        // Swappable banks of RAM
         if (this.ramon) {
           if (this.rtc.current & 0x8) {
             return this.rtc.regs[this.rtc.current & 0x7];
@@ -223,9 +228,7 @@ JBA.Memory.prototype = {
         } else if (addr < 0xffff) { // High RAM
           return this.hiram[addr & 0xff];
         } else {
-          // TODO: interrupt enable register here
-          //      http://nocash.emubase.de/pandocs.htm#interrupts
-          throw "Interrupt enable register not implemented";
+          return this._ie;
         }
     }
 
@@ -236,19 +239,23 @@ JBA.Memory.prototype = {
    * Reads a value from a known IO type register
    */
   ioreg_rb: function(addr) {
-    JBA.assert(0xff00 <= addr && addr < 0xff80);
     switch ((addr >> 4) & 0xf) {
       case 0x0:
         // joypad data, http://nocash.emubase.de/pandocs.htm#joypadinput
-        if (addr == 0xff00) {
-          return this.input.rb(addr);
-        }
+        // interrupts, http://nocash.emubase.de/pandocs.htm#interrupts
+        // timer, http://nocash.emubase.de/pandocs.htm#timeranddividerregisters
+        switch (addr & 0xf) {
+          case 0x0: return this.input.rb(addr);
+          case 0x4: return this.timer.div;
+          case 0x5: return this.timer.tima;
+          case 0x6: return this.timer.tma;
+          case 0x7: return this.timer.tac;
+          case 0xf: return this._if;
+
         // TODO: serial data transfer
         //      http://nocash.emubase.de/pandocs.htm#serialdatatransferlinkcable
-        // TODO: timer/divider regisers
-        //       http://nocash.emubase.de/pandocs.htm#timeranddividerregisters
-        // TODO: interrupt flag not finished
-        //      http://nocash.emubase.de/pandocs.htm#interrupts
+          default: return 0xff;
+        }
         return 0xff;
 
       /* Sound info: http://nocash.emubase.de/pandocs.htm#soundcontroller */
@@ -275,9 +282,6 @@ JBA.Memory.prototype = {
    * @param {number} value the 8 bit value to write to memory
    */
   wb: function(addr, value) {
-    JBA.assert((addr & 0xffff) == addr, addr + ' is not 16 bits (mem.js)!');
-    JBA.assert((value & 0xff) == value, value + ' is not a byte! (mem.js)');
-
     /* More information about mappings can be found online at
        http://nocash.emubase.de/pandocs.htm#memorymap */
     switch (addr >> 12) {
@@ -376,6 +380,8 @@ JBA.Memory.prototype = {
           this.ioreg_wb(addr, value);
         } else if (addr < 0xffff) {
           this.hiram[addr & 0xff] = value;
+        } else {
+          this._ie = value;
         }
         break;
     }
@@ -385,21 +391,23 @@ JBA.Memory.prototype = {
    * Writes a value into a known IO type register
    */
   ioreg_wb: function(addr, value) {
-    JBA.assert(0xff00 <= addr && addr < 0xff80);
-
     switch ((addr >> 4) & 0xf) {
       case 0x0:
-        if (addr == 0xff00) {
-          this.input.wb(addr, value);
-          break;
+        switch (addr & 0xf) {
+          case 0x0: this.input.wb(addr, value); break;
+
+          case 0x4: this.timer.div  = 0;     break; // writing zeros out counter
+          case 0x5: this.timer.tima = value; break;
+          case 0x6: this.timer.tma  = value; break;
+          case 0x7:
+            this.timer.tac = value;
+            this.timer.update();
+            break;
+
+          case 0xf: this._if = value; break;
         }
-        // TODO: joypad data, http://nocash.emubase.de/pandocs.htm#joypadinput
         // TODO: serial data transfer
         //      http://nocash.emubase.de/pandocs.htm#serialdatatransferlinkcable
-        // TODO: timer/divider regisers
-        //       http://nocash.emubase.de/pandocs.htm#timeranddividerregisters
-        // TODO: interrupt flag not finished
-        //      http://nocash.emubase.de/pandocs.htm#interrupts
         break;
 
       /* Sound info: http://nocash.emubase.de/pandocs.htm#soundcontroller */

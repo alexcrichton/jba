@@ -1,5 +1,10 @@
-JBA.Input = function() {
-
+/**
+ * @constructor
+ * @param {JBA.Memory} memory the memory which this input will set the interrupt
+ *                     request flag for.
+ */
+JBA.Input = function(memory) {
+  this.memory = memory;
 };
 
 // See http://nocash.emubase.de/pandocs.htm#joypadinput for codes
@@ -37,14 +42,14 @@ JBA.Input.Map = {
 JBA.Input.prototype = {
   /** @type {JBA.Input.SEL} */
   col: 0,
+  /** @type {JBA.Memory} */
+  memory: null,
 
   /* These values are asserted LOW, so initialize them to all unasserted */
   buttons: 0xf,
   directions: 0xf,
 
   rb: function(addr) {
-    JBA.assert(addr == 0xff00, 'Input only accepts 0xff00');
-
     switch (this.col) {
       case JBA.Input.SEL.BUTTON:    return this.buttons;
       case JBA.Input.SEL.DIRECTION: return this.directions;
@@ -53,8 +58,6 @@ JBA.Input.prototype = {
   },
 
   wb: function(addr, value) {
-    JBA.assert(addr == 0xff00, 'Input only accepts 0xff00');
-
     /* The selected column is also negatively asserted, so invert the value
        written in to get a positively asserted selection */
     this.col = ~value & 0x30;
@@ -64,11 +67,13 @@ JBA.Input.prototype = {
     var mask = JBA.Input.Map.directions[code];
     if (mask) {
       this.directions &= mask;
+      this.memory._if |= 0x10; /* Joypad interrupt bit */
     }
 
     mask = JBA.Input.Map.buttons[code];
     if (mask) {
       this.buttons &= mask;
+      this.memory._if |= 0x10;
     }
   },
 

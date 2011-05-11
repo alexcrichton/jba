@@ -5,10 +5,13 @@ var JBA = function() {
   this.cpu    = new JBA.CPU();
   this.memory = new JBA.Memory();
   this.gpu    = new JBA.GPU();
+  this.timer  = new JBA.Timer();
 
   this.cpu.memory = this.memory;
   this.gpu.mem = this.memory;
   this.memory.gpu = this.gpu;
+  this.memory.timer = this.timer;
+  this.timer.memory = this.memory;
 
   this.memory.powerOn();
 };
@@ -20,6 +23,8 @@ JBA.prototype = {
   memory: null,
   /** @type {JBA.GPU} */
   gpu: null,
+  /** @type {JBA.Timer} */
+  timer: null,
 
   fps: 0,
 
@@ -39,9 +44,11 @@ JBA.prototype = {
   frame: function(do_another) {
     // See http://imrannazar.com/GameBoy-Emulation-in-JavaScript:-GPU-Timings
     // for the timing for this constant
-    var cycles_left = 70224;
+    var cycles_left = 70224, t;
     do {
-      cycles_left -= this.exec();
+      t = this.cpu.exec();
+      cycles_left -= t;
+      this.gpu.step(t);
     } while (cycles_left > 0);
     this.fps++;
 
@@ -80,16 +87,5 @@ JBA.prototype = {
         }
       }
     });
-  }
-};
-
-/** @nosideffects */
-JBA.assert = function(bool, message) {
-  if (!bool) {
-    if (message !== undefined) {
-      throw message;
-    } else {
-      throw "Assertion failed!";
-    }
   }
 };

@@ -113,8 +113,6 @@ JBA.GPU.prototype = {
   },
 
   white_canvas: function() {
-    JBA.assert(this.canvas !== null, 'Cannot white a null canvas!');
-
     for (var i = 0; i < this.image.data.length; i++)
       this.image.data[i] = 0xff;
     this.canvas.putImageData(this.image, 0, 0);
@@ -138,8 +136,6 @@ JBA.GPU.prototype = {
 
     this.clock += clocks;
 
-    JBA.assert(this.mode !== undefined);
-
     switch (this.mode) {
       case JBA.GPU.Mode.HBLANK: // 51 CPU cycles here
         if (this.clock >= 51) {
@@ -147,6 +143,10 @@ JBA.GPU.prototype = {
             this.mode = JBA.GPU.Mode.VBLANK;
             if (this.canvas != null) {
               this.canvas.putImageData(this.image, 0, 0);
+            }
+            /* Deliver the vblank interrupt */
+            if (this.mem != null) {
+              this.mem._if |= 0x01;
             }
           } else {
             this.mode = JBA.GPU.Mode.RDOAM;
@@ -194,8 +194,6 @@ JBA.GPU.prototype = {
   render_line: function() {
     if (!this.lcdon) return;
 
-    JBA.assert(this.canvas != null, "Canvas can't be null when rendering!");
-
     if (this.bgon) {
       this.render_background();
     }
@@ -238,7 +236,6 @@ JBA.GPU.prototype = {
     var tilebase = this.tiledata ? 0x0000 : 0x0800;
 
     do {
-      JBA.assert(0 <= lineoff && lineoff < 32, 'oh hoes noes');
       /* Each tile is 16 bytes long. Each pair of bytes represents a line of
          pixels (making 8 lines). The first byte is the LSB of the color
          number and the second byte is the MSB of the color.
@@ -289,12 +286,13 @@ JBA.GPU.prototype = {
     // http://nocash.emubase.de/pandocs.htm#vramspriteattributetableoam
 
     var line = this.ly;
+    var zerocolor = JBA.GPU.Palette[this.bgp & 0x3][0];
 
     /* All sprites are located in OAM */
     /* There are 40 sprites in total */
     for (var i = 0; i < 40; i++) {
       var offset = i * 4; /* each sprite is 4 bytes wide */
-      var yoff   = this.oam[offset] - 16; // -16/-8... sure...
+      var yoff   = this.oam[offset] - 16;
       var xoff   = this.oam[offset + 1] - 8;
       var tile   = this.oam[offset + 2];
       var flags  = this.oam[offset + 3];
@@ -304,7 +302,7 @@ JBA.GPU.prototype = {
          is below the scanline or the bottom of the sprite (which is 8 pixels
          high) lands below the scanline, this sprite doesn't need to be
          rendered right now */
-      if (yoff > line || yoff + 8 < line) {
+      if (yoff > line || yoff + 8 <= line) {
         continue;
       }
 
@@ -343,7 +341,7 @@ JBA.GPU.prototype = {
         /* bit7 0=OBJ Above BG, 1=OBJ Behind BG color 1-3. So if this sprite
            has this flag set and the data at this location already contains
            data (nonzero), then don't render this sprite */
-        if ((flags & 0x80) && this.image.data[coff]) {
+        if ((flags & 0x80) && this.image.data[coff] != zerocolor) {
           continue;
         }
 
@@ -392,10 +390,6 @@ JBA.GPU.prototype = {
   },
 
   wb: function(addr, value) {
-    JBA.assert(0xff40 <= addr && addr < 0xff80,
-        addr + ' out of bounds for gpu!');
-    JBA.assert((value & 0xff) == value, value + ' is not just a byte in gpu!');
-
     switch (addr & 0xff) {
       case 0x40:
         this.lcdon    = (value >> 7) & 1;
