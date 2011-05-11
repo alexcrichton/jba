@@ -3,26 +3,22 @@
 <head>
   <script src="http://code.jquery.com/jquery.min.js"></script>
 
+  <!--<script src="/jba.min.js"></script>-->
   <%= jba_js_include %>
 
   <script type='text/javascript'>
     window.gb = new JBA();
 
     $(function() {
-      gb.gpu.set_canvas($('#gb')[0]);
+      gb.set_canvas($('#gb')[0]);
+      gb.bind_keys(window);
 
       $('a.rom').click(function() {
         gb.load_rom($(this).attr('href'), function() { gb.run(); });
         return false;
       });
 
-      $(window).keydown(function(e) { gb.memory.input.keydown(e.keyCode); });
-      $(window).keyup(function(e) { gb.memory.input.keyup(e.keyCode); });
-
-      setInterval(function() {
-        $('#fps').text(gb.fps);
-        gb.fps = 0;
-      }, 1000);
+      setInterval(function() { $('#fps').text(gb.frames_count()); }, 1000);
     });
   </script>
 

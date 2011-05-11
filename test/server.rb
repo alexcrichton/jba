@@ -3,7 +3,7 @@ require 'active_support/json'
 require 'active_support/ordered_hash'
 require 'erb'
 
-require File.expand_path('../../lib/js/utils', __FILE__)
+require File.expand_path('../../lib/jba/utils', __FILE__)
 
 set :public, File.expand_path('../public', __FILE__)
 mime_type :gb, 'application/octet-stream'
@@ -21,7 +21,7 @@ get '/roms' do
 end
 
 helpers do
-  include JS::Utils
+  include JBA::Utils
 
   def jba_js_include
     javascript_include_tag js_files.map{ |s| 'src/' + s }

@@ -1,10 +1,10 @@
 require File.expand_path('../lib/z80/generator', __FILE__)
-require File.expand_path('../lib/js/utils', __FILE__)
+require File.expand_path('../lib/jba/utils', __FILE__)
 
 class JBA < Thor
   include Thor::Actions
   include Z80::Generator
-  include JS::Utils
+  include ::JBA::Utils
 
   def self.source_root
     File.expand_path('../src/z80/templates', __FILE__)
@@ -21,12 +21,13 @@ class JBA < Thor
     args = '--warning_level VERBOSE ' + js_args.join(' ')
     args << ' --js_output_file /dev/null'
 
-    system 'closure ' + args
+    exec 'closure ' + args
   end
 
   desc 'minify', 'Minify all of the JS into one file'
   def minify
-    system "closure #{js_args.join(" ")} --js_output_file jba.min.js"
+    exec "closure #{js_args.join(" ")} --js_output_file jba.min.js" \
+      " --compilation_level ADVANCED_OPTIMIZATIONS"
   end
 
   desc 'server', 'Run the testing server and the "guard" command'
@@ -40,6 +41,8 @@ class JBA < Thor
   protected
 
   def js_args
-    js_files.map{ |s| '--js src/' + s }
+    js_files.map{ |s|
+      '--js src/' + s
+    } << '--externs lib/jba/jquery-1.4.3.externs.js'
   end
 end

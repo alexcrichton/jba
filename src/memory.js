@@ -256,7 +256,6 @@ JBA.Memory.prototype = {
         //      http://nocash.emubase.de/pandocs.htm#serialdatatransferlinkcable
           default: return 0xff;
         }
-        return 0xff;
 
       /* Sound info: http://nocash.emubase.de/pandocs.htm#soundcontroller */
       case 0x1:
@@ -271,7 +270,9 @@ JBA.Memory.prototype = {
       case 0x6:
       case 0x7:
         return this.gpu.rb(addr);
-      default: throw "Not implemented reading that address!";
+
+      default:
+        throw "Not implemented reading that address!";
     }
   },
 
@@ -424,6 +425,7 @@ JBA.Memory.prototype = {
       case 0x7:
         this.gpu.wb(addr, value);
         break;
+
       default:
         throw "Not implemented writing that address!";
     }
