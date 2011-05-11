@@ -415,8 +415,8 @@ JBA.GPU.prototype = {
         this.mode2int = (value >> 5) & 1;
         this.mode1int = (value >> 4) & 1;
         this.mode0int = (value >> 3) & 1;
-        /* These values are read-only */
-        // this.mode     =  value       & 0x3;
+        /* The other bits of this register are mode and lycly, but thse are
+           read-only and won't be modified */
         break;
 
       case 0x42: this.scy = value; break;
