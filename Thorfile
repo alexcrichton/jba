@@ -27,7 +27,7 @@ class JBA < Thor
   desc 'minify', 'Minify all of the JS into one file'
   def minify
     exec "closure #{js_args.join(" ")} --js_output_file jba.min.js" \
-      " --compilation_level ADVANCED_OPTIMIZATIONS"
+      " --compilation_level SIMPLE_OPTIMIZATIONS"
   end
 
   desc 'server', 'Run the testing server and the "guard" command'
