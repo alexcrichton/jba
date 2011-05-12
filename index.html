@@ -1,31 +1,117 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>Testing</title>
-    <script type='text/javascript' src='http://code.jquery.com/jquery.min.js'></script>
-    <script type='text/javascript' src='/jba/js/jba.min.js'></script>
+<head>
+  <title>JBA</title>
+  <script src="http://code.jquery.com/jquery.min.js"></script>
 
-    <script type='text/javascript'>
-      $(function() {
-        var gb = new JBA();
-        $.get('/jba/roms/opus5.gb', function(data) {
-          gb.memory.load_cartridge(data);
+  <script type="text/javascript" src="/jba/js/jba.min.js"></script>
+
+  <script type="text/javascript">
+    window.gb = new JBA();
+
+    $(function() {
+      gb.set_canvas($('#gb')[0]);
+      gb.bind_keys(window);
+
+      $('.rom select').change(function() {
+        $('button').prop('disabled', true);
+        $(this).blur();
+        gb.stop();
+        gb.reset();
+
+        if ($(this).val() == '') {
+          $('.state').text('waiting');
+          return;
+        }
+        $('.state').text('loading');
+        gb.load_rom($(this).val(), function() {
           gb.run();
+          $('button').prop('disabled', false);
+          $('button.run').text('Stop');
+          $('.state').text('running');
         });
-        window.gb = gb;
       });
-    </script>
 
-    <style type="text/css">
-      #gb {
-        border: 1px solid black;
-        display: block;
-        margin: auto;
-        margin-top: 200px;
-      }
-    </style>
-  </head>
-  <body>
-    <canvas id='gb' height='144' width='160'></canvas>
-  </body>
+      $('button.run').click(function() {
+        if ($(this).text() == 'Stop') {
+          gb.stop();
+          $(this).text('Run');
+          $('.state').text('stopped');
+        } else {
+          gb.run();
+          $(this).text('Stop');
+          $('.state').text('running');
+        }
+      });
+
+      $('button.reset').click(function() { $('.rom select').change() });
+
+      $('input[type=range]').change(function() {
+        $('#gb').width($(this).val() * 160).height($(this).val() * 144);
+      });
+
+      setInterval(function() { $('.fps').text(gb.frames_count()); }, 1000);
+    });
+  </script>
+
+  <style type="text/css">
+    #gb {
+      border: 1px solid black;
+    }
+
+    #gb, #controls, #status {
+      display: block;
+      margin: 0 auto;
+    }
+
+    .state {
+      font-style: italic;
+    }
+
+    #controls, #status {
+      text-align: center;
+    }
+
+    dl, div { overflow: auto; }
+    dl { font-size: 70%; margin: 0 auto; width: 130px; }
+    dt { width: 50px; clear: left; float: left; }
+    dd { width: 80px; float: left; margin: 0; }
+  </style>
+</head>
+
+<body>
+  <div id="status">
+    <span class="state">stopped</span> | fps: <span class="fps">0</span><br>
+    <input type="range" min="1" max="4" step="0.25" value="1">
+  </div>
+  <canvas id="gb" height="144" width="160"></canvas>
+  <div id="controls">
+    <div class="rom">
+      <select>
+        <option></option>
+        <option value="/roms/opus5.gb">Opus5</option>
+        <option value="/roms/ttt.gb">Tic-Tac-Toe</option>
+        <option value="/roms/tetris.gb">Tetris</option>
+        <option value="/roms/hangman.gb">Hangman</option>
+        <option value="/roms/adjtris.gb">Adjtris</option>
+        <option value="/roms/mario.gb">MarioLand</option>
+      </select>
+    </div>
+
+    <div class="buttons">
+      <button class="run">Run</button>
+      <button class="reset">Reset</button>
+    </div>
+
+    <div>
+      <dl>
+        <dt>A</dt><dd>z</dd>
+        <dt>B</dt><dd>x</dd>
+        <dt>Start</dt><dd>&lt;enter&gt;</dd>
+        <dt>Select</dt><dd>, (comma)</dd>
+        <dt>Joypad</dt><dd>arrow keys</dd>
+      </dl>
+    </div>
+  </div>
+
 </html>
