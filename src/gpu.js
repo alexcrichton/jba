@@ -90,6 +90,12 @@ JBA.GPU.prototype = {
   // 0xff4b - WX - Window X Position minus 7
   wx: 0,
 
+  // CGB VRAM DMA transfer, more info at:
+  // http://nocash.emubase.de/pandocs.htm#lcdvramdmatransferscgbonly
+  hdma_src: 0,
+  hdma_dst: 0,
+  hdma5: 0,
+
   /* Compiled palettes. These are updated when writing to BGP/OBP0/OBP1. Meant
      for non CGB use only */
   _pal: {
@@ -174,6 +180,8 @@ JBA.GPU.prototype = {
     this.bgon = this.objon = this.objsize = this.bgmap = this.tiledata = 0;
     this.winon = this.winmap = this.lcdon = 0;
     this.clock = 0;
+
+    this.hdma_src = this.hdma_dst = this.hdma5 = 0;
 
     if (this.canvas) {
       this.white_canvas();
@@ -534,6 +542,13 @@ JBA.GPU.prototype = {
       case 0x4b: return this.wx;
       case 0x4f: return this.vrambank;
 
+      // See http://nocash.emubase.de/pandocs.htm#lcdvramdmatransferscgbonly
+      case 0x51: return this.hdma_src >> 8;
+      case 0x52: return this.hdma_src & 0xff;
+      case 0x53: return this.hdma_dst >> 8;
+      case 0x54: return this.hdma_dst & 0xff;
+      case 0x55: return this.hdma5;
+
       // See http://nocash.emubase.de/pandocs.htm#lcdcolorpalettescgbonly
       case 0x68: return this.cgb.bgpi;
       case 0x69: return this.cgb.bgp[this.cgb.bgpi & 0x3f];
@@ -594,6 +609,13 @@ JBA.GPU.prototype = {
           this.vram = this.vrambanks[this.vrambank];
         }
         break;
+
+      // See http://nocash.emubase.de/pandocs.htm#lcdvramdmatransferscgbonly
+      case 0x51: this.hdma_src = (this.hdma_src & 0x00ff) | (value << 8); break;
+      case 0x52: this.hdma_src = (this.hdma_src & 0xff00) | value;        break;
+      case 0x53: this.hdma_dst = (this.hdma_dst & 0x00ff) | (value << 8); break;
+      case 0x54: this.hdma_dst = (this.hdma_dst & 0xff00) | value;        break;
+      case 0x55: this.hdma_dma_transfer(value); break;
 
       // See http://nocash.emubase.de/pandocs.htm#lcdcolorpalettescgbonly
 
@@ -706,5 +728,23 @@ JBA.GPU.prototype = {
     for (var i = 0; i < 0xa0; i++) {
       this.oam[i] = this.mem.rb(orval | i);
     }
+  },
+
+  /**
+   * When in CGB mode, this triggers a DMA transfer to VRAM. For more info, see
+   * http://nocash.emubase.de/pandocs.htm#lcdvramdmatransferscgbonly
+   *
+   * @param {number} value the byte written to 0xff55
+   */
+  hdma_dma_transfer: function(value) {
+    var src = this.hdma_src & 0xfff0;
+    var dst = this.hdma_dst & 0x1ff0;
+
+    if ((src > 0x7ff0 && src < 0xa000) || src > 0xdff0 ||
+          dst < 0x8000 || dst > 0x9ff0) {
+      return;
+    }
+
+    throw 'Implement HDMA DMA transfer!';
   }
 };
