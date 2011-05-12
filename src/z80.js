@@ -69,7 +69,9 @@ Z80.Registers.prototype = {
     this.m    = 0;
 
     // See: http://nocash.emubase.de/pandocs.htm#powerupsequence
-    this.a = 0x01; this.f = 0xb0;
+    // We initialize A to 0x11 instead of 0x01 because we're emulating CGB
+    // hardware and this is how the difference is detected
+    this.a = 0x11; this.f = 0xb0;
     this.b = 0x00; this.c = 0x13;
     this.d = 0x00; this.e = 0xd8;
     this.h = 0x01; this.l = 0x4d;

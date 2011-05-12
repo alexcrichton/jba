@@ -90,7 +90,8 @@ JBA.GPU.prototype = {
   // 0xff4b - WX - Window X Position minus 7
   wx: 0,
 
-  /* Compiled palettes. These are updated when writing to BGP/OBP0/OBP1 */
+  /* Compiled palettes. These are updated when writing to BGP/OBP0/OBP1. Meant
+     for non CGB use only */
   _pal: {
     bg: [],
     obp0: [],
@@ -108,10 +109,15 @@ JBA.GPU.prototype = {
    * accessible through some I/O registers. Each section of memory is 64 bytes
    * and defines 8 palettes of 4 colors each */
   cgb: {
+    /* Raw memory */
     bgp: [],
     obp: [],
+    /* Index registers into memory */
     bgpi: 0,
-    obpi: 0
+    obpi: 0,
+    /* Compiled palettes */
+    _bgp: [],
+    _obp: []
   },
 
   /**
@@ -119,7 +125,7 @@ JBA.GPU.prototype = {
    * and such.
    */
   reset: function() {
-    var i;
+    var i, j;
     this.vrambank  = 0;
     this.vrambanks = [[], []]; /* CGB supports only 2 banks of VRAM */
     this.oam  = [];
@@ -136,10 +142,11 @@ JBA.GPU.prototype = {
       this.oam[i] = 0;
     }
 
-    for (i = 0; i < 384; i++) {
+    // 384 tile/bank of VRAM, 2 banks = 384*2 tiles in total
+    for (i = 0; i < 384*2; i++) {
       this._tiles.data[i] = [];
       this._tiles.to_update[i] = false;
-      for (var j = 0; j < 8; j++) {
+      for (j = 0; j < 8; j++) {
         this._tiles.data[i][j] = [0, 0, 0, 0, 0, 0, 0, 0];
       }
     }
@@ -148,6 +155,14 @@ JBA.GPU.prototype = {
     for (i = 0; i < 64; i++) {
       this.cgb.bgp[i] = 255; // Background colors all initially white
       this.cgb.obp[i] = 0;
+    }
+    for (i = 0; i < 8; i++) {
+      this.cgb._bgp[i] = [];
+      this.cgb._obp[i] = [];
+      for (j = 0; j < 4; j++) {
+        this.cgb._bgp[i][j] = [255, 255, 255, 255];
+        this.cgb._obp[i][j] = [0, 0, 0, 255];
+      }
     }
     this.cgb.bgpi = 0;
     this.cgb.obpi = 0;
@@ -340,8 +355,9 @@ JBA.GPU.prototype = {
   /** @private */
   render_background: function() {
     var data  = this.image.data,
-        vram  = this.vram,
+        banks = this.vrambanks,
         bgp   = this._pal.bg,
+        cgb   = this.mem.cgb,
         tiles = this._tiles.data;
 
     /* vram is from 0x8000-0x9fff
@@ -375,14 +391,23 @@ JBA.GPU.prototype = {
       /* Backgrounds wrap around, so calculate the offset into the bgmap each
          loop to check for wrapping */
       var mapoff = ((i + this.scx) & 0xff) >> 3;
-      var tilei = vram[mapbase + mapoff];
+      var tilei = banks[0][mapbase + mapoff];
 
       /* tiledata = 0 => tilei is a signed byte, so fix it here */
       if (this.tiledata == 0) {
         tilei = (tilei + 128) & 0xff;
       }
 
-      var tile = tiles[tilebase + tilei][y];
+      var tile;
+      if (cgb) {
+        // See http://nocash.emubase.de/pandocs.htm#vrambackgroundmaps for what
+        // the attribute byte all maps to
+        var attrs = banks[1][mapbase + mapoff];
+        bgp  = this.cgb._bgp[attrs & 0x7];
+        tile = tiles[tilebase + tilei + ((attrs >> 3) & 1) * 384][y];
+      } else {
+        tile = tiles[tilebase + tilei][y];
+      }
 
       for (; x < 8 && i < 160; x++, i++, coff += 4) {
         var color = bgp[tile[x]];
@@ -565,12 +590,14 @@ JBA.GPU.prototype = {
       case 0x6a: this.cgb.obpi = value & 0xbf; break;
       case 0x69:
         this.cgb.bgp[this.cgb.bgpi & 0x3f] = value;
+        this.update_cgb_palette(this.cgb._bgp, this.cgb.bgp, this.cgb.bgpi);
         if (this.cgb.bgpi & 0x80) {
           this.cgb.bgpi = (this.cgb.bgpi + 1) & 0xbf;
         }
         break;
       case 0x6b:
         this.cgb.obp[this.cgb.obpi & 0x3f] = value;
+        this.update_cgb_palette(this.cgb._obp, this.cgb.obp, this.cgb.obpi);
         if (this.cgb.obpi & 0x80) {
           this.cgb.obpi = (this.cgb.obpi + 1) & 0xbf;
         }
@@ -585,6 +612,7 @@ JBA.GPU.prototype = {
    */
   update_tile: function(addr) {
     var tilei = (addr & 0x1fff) >> 4; /* each tile is 16 bytes, divide by 16 */
+    tilei += this.vrambank * 384;
     this._tiles.need_update = true;
     this._tiles.to_update[tilei] = true;
   },
@@ -605,6 +633,37 @@ JBA.GPU.prototype = {
     pal[1] = JBA.GPU.Palette[(val >> 2) & 0x3];
     pal[2] = JBA.GPU.Palette[(val >> 4) & 0x3];
     pal[3] = JBA.GPU.Palette[(val >> 6) & 0x3];
+  },
+
+  /**
+   * Update the cached CGB palette that was just written to
+   *
+   * @param {*} pal the cgb._(obp|bgp) palette object
+   * @param {Array.<number>} mem the cgb.(obp|bgp) array object
+   * @param {number} addr the address that was just written to (obpi|bgpi)
+   */
+  update_cgb_palette: function(pal, mem, addr) {
+    // See http://nocash.emubase.de/pandocs.htm#lcdcolorpalettescgbonly
+    var pali = (addr & 0x3f) >> 3; /* divide by 8 (size of one palette) */
+    var colori = (addr & 0x7) >> 1; /* 2 bytes per color, divide by 2 */
+
+    var byte1 = mem[(addr & 0x3e)];
+    var byte2 = mem[(addr & 0x3e) + 1];
+
+    var color = pal[pali][colori];
+
+    // Bits 0-7 in byte1, others in byte2
+    //  Bit 0-4   Red Intensity   (00-1F)
+    //  Bit 5-9   Green Intensity (00-1F)
+    //  Bit 10-14 Blue Intensity  (00-1F)
+    color[0] = byte1 & 0x1f;
+    color[1] = (byte1 >> 5) | ((byte2 & 0x3) << 3);
+    color[2] = (byte2 >> 2) & 0x1f;
+    color[3] = 255;
+
+    for (var i = 0; i < 3; i++) {
+      color[i] = (color[i] * 0xff) >> 5;
+    }
   },
 
   /**

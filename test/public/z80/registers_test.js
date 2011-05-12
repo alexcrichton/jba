@@ -3,7 +3,7 @@ module('Z80 - Registers');
 test('initialized values', function() {
   var reg = new Z80.Registers();
 
-  equals(reg.a, 0x01);
+  equals(reg.a, 0x11);
   equals(reg.f, 0xb0);
   equals(reg.b, 0x00);
   equals(reg.c, 0x13);
