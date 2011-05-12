@@ -9,8 +9,11 @@
   <style>
     * { font-family: monospace; }
     dl { overflow: auto; }
-    dl dt { width: 25px; clear: left; float: left; }
-    dl dd { float: left; width: 100px; margin-left: 0; }
+    dl dt { width: auto; clear: left; float: left; }
+    dl dd { float: left; width: auto; margin-left: 3px; }
+
+    #registers dt { width: 25px; }
+    #registers dd { width: 100px; margin-left: 0; }
 
     #registers, #memory, #roms, #gpu, #disas {
       float: left;
@@ -21,11 +24,6 @@
       height: 370px;
       width: 600px;
       border: 1px solid black;
-    }
-
-    #memory dd, #memory dt, #gpu dd, #gpu dt, #disas dd, #disas dt {
-      width: auto;
-      margin-left: 3px;
     }
 
     #memory .bad {
@@ -190,6 +188,28 @@
       <dt>0xff4b (wx)</dt>
       <dd class='wx'></dd>
 
+    </dl>
+  </div>
+
+  <div id='interrupts'>
+    <h2>Interrupts</h2>
+    <div>IME:<span class='ime'></span></div>
+    <dl>
+      <dt>VBLANK</dt><dd class='vblank'></dd>
+      <dt>LCD STAT</dt><dd class='lcdstat'></dd>
+      <dt>Timer</dt><dd class='timer'></dd>
+      <dt>Serial</dt><dd class='serial'></dd>
+      <dt>Joypad</dt><dd class='joypad'></dd>
+    </dl>
+  </div>
+
+  <div id='timer'>
+    <h2>Timer</h2>
+    <dl>
+      <dt>0xff04 (div) -</dt><dd class='div'></dd>
+      <dt>0xff05 (tima) -</dt><dd class='tima'></dd>
+      <dt>0xff06 (tma) -</dt><dd class='tma'></dd>
+      <dt>0xff07 (tac) -</dt><dd class='tac'></dd>
     </dl>
   </div>
 

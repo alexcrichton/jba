@@ -126,6 +126,54 @@ JBA.GPU.prototype = {
   },
 
   /**
+   * Switch to hblank (mode0)
+   * @private
+   */
+  switch_mode0: function() {
+    this.mode = JBA.GPU.Mode.HBLANK;
+    this.render_line();
+    if (this.mode0int) {
+      this.mem._if |= 0x02;
+    }
+  },
+
+  /**
+   * Switch to vblank (mode1)
+   * @private
+   */
+  switch_mode1: function() {
+    this.mode = JBA.GPU.Mode.VBLANK;
+    if (this.canvas != null) {
+      this.canvas.putImageData(this.image, 0, 0);
+    }
+
+    /* Deliver the interrupt as both a VBLANK and LCD STAT if necessary */
+    this.mem._if |= 0x01;
+    if (this.mode1int) {
+      this.mem._if |= 0x02;
+    }
+  },
+
+  /**
+   * Switch to rdoam (mode2)
+   * @private
+   */
+  switch_mode2: function() {
+    this.mode = JBA.GPU.Mode.RDOAM;
+    if (this.mode2int) {
+      this.mem._if |= 0x02;
+    }
+  },
+
+  /**
+   * Switch to rdvram (mode3)
+   * @private
+   */
+  switch_mode3: function() {
+    this.mode = JBA.GPU.Mode.RDVRAM;
+  },
+
+  /**
    * Step the GPU a number of clock cycles forward. The GPU's screen is
    * synchronized with the CPU clock because in a real GB, the two are
    * matched up on the same clock.
@@ -139,56 +187,34 @@ JBA.GPU.prototype = {
    */
   step: function(clocks) {
     // Timings located here:
-    //    http://imrannazar.com/GameBoy-Emulation-in-JavaScript:-GPU-Timings
+    //    http://nocash.emubase.de/pandocs.htm#lcdstatusregister
 
     this.clock += clocks;
 
-    switch (this.mode) {
-      case JBA.GPU.Mode.HBLANK: // 51 CPU cycles here
-        if (this.clock >= 51) {
-          if (this.ly == 143) {
-            this.mode = JBA.GPU.Mode.VBLANK;
-            if (this.canvas != null) {
-              this.canvas.putImageData(this.image, 0, 0);
-            }
-            /* Deliver the vblank interrupt */
-            if (this.mem != null) {
-              this.mem._if |= 0x01;
-            }
-          } else {
-            this.mode = JBA.GPU.Mode.RDOAM;
-          }
-          this.ly++;
-          this.clock -= 51;
-        }
-        break;
+    /* If clock >= 456, then we've completed an entire line. This line might
+       have been part of a vblank or part of a scanline. */
+    if (this.clock >= 456) {
+      this.clock -= 456;
+      this.ly = (this.ly + 1) % 154; /* 144 lines tall, 10 for a vblank */
 
-      case JBA.GPU.Mode.VBLANK: // 114 CPU cycles per line, 10 more lines
-        if (this.clock >= 114) {
-          this.ly++;
-          this.clock -= 114;
+      if (this.ly >= 144 && this.mode != JBA.GPU.Mode.VBLANK) {
+        this.switch_mode1();
+      }
 
-          if (this.ly > 153) {
-            this.mode = JBA.GPU.Mode.RDOAM;
-            this.ly   = 0;
-          }
-        }
-        break;
+      if (this.ly == this.lyc && this.lycly) {
+        this.mem._if |= 0x02;
+      }
+    }
 
-      case JBA.GPU.Mode.RDOAM: // 20 cycles here
-        if (this.clock >= 20) {
-          this.mode  = JBA.GPU.Mode.RDVRAM;
-          this.clock -= 20;
-        }
-        break;
-
-      case JBA.GPU.Mode.RDVRAM: // 43 cycles here
-        if (this.clock >= 43) {
-          this.mode = JBA.GPU.Mode.HBLANK;
-          this.clock -= 43;
-          this.render_line();
-        }
-        break;
+    /* Hop between modes if we're not in vblank */
+    if (this.ly < 144) {
+      if (this.clock <= 80) { /* RDOAM takes 80 cycles */
+        if (this.mode != JBA.GPU.Mode.RDOAM) { this.switch_mode2(); }
+      } else if (this.clock <= 252) { /* RDVRAM takes 172 cycles */
+        if (this.mode != JBA.GPU.Mode.RDVRAM) { this.switch_mode3(); }
+      } else { /* HBLANK takes rest of time before line rendered */
+        if (this.mode != JBA.GPU.Mode.HBLANK) { this.switch_mode0(); }
+      }
     }
   },
 

@@ -1,7 +1,10 @@
 var BGP  = 0xff47,
     LCDC = 0xff40,
-    SCY = 0xff42,
-    SCX = 0xff43;
+    SCY  = 0xff42,
+    SCX  = 0xff43,
+    STAT = 0xff41,
+    LY   = 0xff44,
+    LYC  = 0xff45;
 
 var LCDON   = 0x80,
     TILESEL = 0x10,
@@ -35,7 +38,7 @@ test('reading from GPU registers', function() {
   gpu.objsize  = 0;
   gpu.objon    = 0;
   gpu.bgon     = 1;
-  equals(gpu.rb(0xff40), 0xb9);
+  equals(gpu.rb(LCDC), 0xb9);
 
   gpu.ly = 0; /* So coinc flag is 0 */
   gpu.lycly    = 1;
@@ -43,22 +46,22 @@ test('reading from GPU registers', function() {
   gpu.mode1int = 1;
   gpu.mode0int = 1;
   gpu.mode     = 2;
-  equals(gpu.rb(0xff41), 0x5a);
+  equals(gpu.rb(STAT), 0x5a);
 
   gpu.scy = 0x98;
   gpu.scx = 0x32;
-  equals(gpu.rb(0xff42), 0x98);
-  equals(gpu.rb(0xff43), 0x32);
+  equals(gpu.rb(SCY), 0x98);
+  equals(gpu.rb(SCX), 0x32);
 
   gpu.ly  = 0x89;
   gpu.lyc = 0x42;
-  equals(gpu.rb(0xff44), 0x89);
-  equals(gpu.rb(0xff45), 0x42);
+  equals(gpu.rb(LY), 0x89);
+  equals(gpu.rb(LYC), 0x42);
 
   gpu.bgp  = 0x42;
   gpu.obp0 = 0xd8;
   gpu.obp1 = 0x20;
-  equals(gpu.rb(0xff47), 0x42);
+  equals(gpu.rb(BGP), 0x42);
   equals(gpu.rb(0xff48), 0xd8);
   equals(gpu.rb(0xff49), 0x20);
 
@@ -69,7 +72,7 @@ test('reading from GPU registers', function() {
 });
 
 test('writing the GPU registers', function() {
-  gpu.wb(0xff40, 0xb9);
+  gpu.wb(LCDC, 0xb9);
   equals(gpu.lcdon, 1);
   equals(gpu.winmap, 0);
   equals(gpu.winon, 1);
@@ -79,24 +82,24 @@ test('writing the GPU registers', function() {
   equals(gpu.objon, 0);
   equals(gpu.bgon, 1);
 
-  gpu.wb(0xff41, 0x5a);
+  gpu.wb(STAT, 0x5a);
   equals(gpu.lycly, 1);
   equals(gpu.mode2int, 0);
   equals(gpu.mode1int, 1);
   equals(gpu.mode0int, 1);
   equals(gpu.mode, 2);
 
-  gpu.wb(0xff42, 0x98);
-  gpu.wb(0xff43, 0x32);
+  gpu.wb(SCY, 0x98);
+  gpu.wb(SCX, 0x32);
   equals(gpu.scy, 0x98);
   equals(gpu.scx, 0x32);
 
-  gpu.wb(0xff44, 0x89);
-  gpu.wb(0xff45, 0x42);
+  gpu.wb(LY, 0x89);
+  gpu.wb(LYC, 0x42);
   equals(gpu.ly, 0x00); // this should be read only
   equals(gpu.lyc, 0x42);
 
-  gpu.wb(0xff47, 0x42);
+  gpu.wb(BGP, 0x42);
   gpu.wb(0xff48, 0xd8);
   gpu.wb(0xff49, 0x20);
   equals(gpu.bgp, 0x42);
@@ -119,30 +122,76 @@ test('DMA transfers', function() {
 
 test('clocking between modes', function() {
   gpu.render_line = function(){};
+  /* Enable all interrupts and STAT interrupts */
+  gpu.wb(STAT, 0xff);
 
-  gpu.mode = JBA.GPU.Mode.RDOAM;
-  gpu.step(1); // Don't change the mode
-  equals(gpu.mode, JBA.GPU.Mode.RDOAM);
+  /*
+     Timings (from http://nocash.emubase.de/pandocs.htm#lcdstatusregister)
+       Mode 2  2_____2_____2_____2_____2_____2___________________2____
+       Mode 3  _33____33____33____33____33____33__________________3___
+       Mode 0  ___000___000___000___000___000___000________________000
+       Mode 1  ____________________________________11111111111111_____
 
-  gpu.step(19); // Change the mode now
-  equals(gpu.mode, JBA.GPU.Mode.RDVRAM);
+     mode0 - hblank - 204
+     mode1 - vblank - 456
+     mode2 - rdoam  - 80
+     mode3 - rdvram - 172
+   */
 
-  gpu.step(42);
-  equals(gpu.mode, JBA.GPU.Mode.RDVRAM);
-
+  /* Initially at line 0 with 1 tick on the clock in RDOAM (mode 2) */
+  gpu.ly = 0;
   gpu.step(1);
+  gpu.mode = JBA.GPU.Mode.RDOAM;
+
+  /* Test going into RDVRAM and staying there */
+  gpu.step(80);
+  equals(gpu.mode, JBA.GPU.Mode.RDVRAM);
+  gpu.step(0);
+  equals(gpu.mode, JBA.GPU.Mode.RDVRAM);
+
+  /* Test entering HBLANK and the IF is set. Also test that we stay there and
+     don't request another interrupt */
+  gpu.step(172);
+  equals(mem._if, 0x2);
   equals(gpu.mode, JBA.GPU.Mode.HBLANK);
 
-  gpu.step(51);
+  mem._if = 0x0;
+  gpu.step(0);
+  equals(gpu.mode, JBA.GPU.Mode.HBLANK);
+  equals(mem._if, 0x0);
+
+  /* Test reentering RDOAM and the IF is set. Also test that we stay there and
+     don't request another interrupt */
+  gpu.step(204);
+  equals(gpu.ly, 1);
+  equals(mem._if, 0x2);
   equals(gpu.mode, JBA.GPU.Mode.RDOAM);
 
-  gpu.mode = JBA.GPU.Mode.HBLANK;
-  gpu.ly   = 143;
-  gpu.step(51);
-  equals(gpu.mode, JBA.GPU.Mode.VBLANK);
+  mem._if = 0x0;
+  gpu.step(0);
+  equals(gpu.mode, JBA.GPU.Mode.RDOAM);
+  equals(mem._if, 0x0);
 
-  for (var i = 0; i < 10; i++) gpu.step(114);
+  /* Now simulate that we're at the end of the screen and we're gonna enter
+     a VBLANK period */
+  gpu.clock = 456; /* an entire row was scanned */
+  gpu.ly    = 143;
+  gpu.step(1);
 
+  /* Both a LCD STAT interrupt and a VBLANK interrupt should be delivered */
+  equals(mem._if, 0x3);
+  mem._if = 0x0;
+
+  /* When in VBLANK, this lasts for 10 lines */
+  for (var i = 0; i < 10; i++) {
+    equals(gpu.mode, JBA.GPU.Mode.VBLANK);
+    equals(mem._if, 0x0);
+    gpu.step(456);
+  }
+
+  /* Coming out of a VBLANK, we should be in RDOAM with an LCD STAT interrupt
+     requested because mode2int is set */
+  equals(mem._if, 0x2);
   equals(gpu.mode, JBA.GPU.Mode.RDOAM);
 });
 

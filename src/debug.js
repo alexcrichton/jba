@@ -45,6 +45,8 @@ JBA.Debug.prototype = {
     this.update_memory();
     this.update_disassembly();
     this.update_gpu();
+    this.update_timer();
+    this.update_interrupts();
 
     this.highlight(hexw(this.gb.cpu.registers.pc));
   },
@@ -255,5 +257,31 @@ JBA.Debug.prototype = {
 
     $('#gpu .wy').text(gpu.wy);
     $('#gpu .wx').text(gpu.wx);
+  },
+
+  /**
+   * Update timer-related variables
+   */
+  update_timer: function() {
+    var timer = this.gb.timer;
+
+    $('#timer .div').text(hexb(timer.div));
+    $('#timer .tima').text(hexb(timer.tima));
+    $('#timer .tma').text(hexb(timer.tma));
+    $('#timer .tac').text(hexb(timer.tac));
+  },
+
+  update_interrupts: function() {
+    $('#interrupts .ime').text(this.gb.cpu.registers.ime);
+
+    var _if = this.gb.memory._if, _ie = this.gb.memory._ie;
+
+    var children = $('#interrupts dd');
+    for (var i = 0; i < children.length; i++) {
+      $(children[i]).text((_ie & 1) + ' ' + (_if & 1));
+
+      _ie >>= 1;
+      _if >>= 1;
+    }
   }
 };
