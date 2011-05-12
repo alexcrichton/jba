@@ -13,7 +13,7 @@
       gb.bind_keys(window);
 
       $('a.rom').click(function() {
-        gb.load_rom($(this).attr('href'), function() { gb.run(); });
+        gb.load_rom($(this).attr('href'), function() { $('.b').show(); });
         return false;
       });
 
@@ -25,11 +25,13 @@
     #gb {
       border: 1px solid black;
       display: block;
-      margin: auto;
-      margin-top: 10px;
+      position: absolute;
+      top: 0;
+      left: 200px;
     }
 
-    a { float: left }
+    a { float: left; }
+    .b { display: none; }
   </style>
 </head>
 
@@ -40,7 +42,9 @@
   <a href='/roms/hangman.gb' class='rom'>hangman</a><br/>
   <a href='/roms/adjtris.gb' class='rom'>adjtris</a><br/>
   <a href='/roms/mario.gb' class='rom'>mario</a><br/>
-  <a href='#' onclick='gb.stop(); return false;'>stop</a><br/>
+  <a href='#' onclick='gb.run(0); return false;' class='b'>bench</a><br/>
+  <a href='#' onclick='gb.run(); return false;' class='b'>run</a><br/>
+  <a href='#' onclick='gb.stop(); return false;' class='b'>stop</a><br/>
   <div id='fps'></div>
   <canvas id='gb' height='144' width='160'></canvas>
 </body>
