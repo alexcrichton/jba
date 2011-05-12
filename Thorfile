@@ -1,9 +1,9 @@
-require File.expand_path('../lib/z80/generator', __FILE__)
+require File.expand_path('../lib/jba/generator', __FILE__)
 require File.expand_path('../lib/jba/utils', __FILE__)
 
 class JBA < Thor
   include Thor::Actions
-  include Z80::Generator
+  include ::JBA::Generator
   include ::JBA::Utils
 
   def self.source_root
@@ -30,12 +30,16 @@ class JBA < Thor
       " --compilation_level SIMPLE_OPTIMIZATIONS"
   end
 
-  desc 'server', 'Run the testing server and the "guard" command'
+  desc 'server [--shotgun]', 'Run the testing server and the "guard" command'
+  method_options :shotgun => :boolean
   def server
     pids = []
     pids << fork { exec 'guard' }
-    pids << fork { exec 'shotgun test/server.rb' }
-    pids.each{ |p| Process.waitpid p }
+    pids << fork {
+      exec "#{options[:shotgun] ? 'shotgun -p 4567' : 'ruby'} test/server.rb"
+    }
+
+    pids.each{ |p| begin; Process.waitpid p; rescue Interrupt; end }
   end
 
   protected

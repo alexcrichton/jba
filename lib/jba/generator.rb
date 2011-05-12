@@ -3,7 +3,7 @@
 
 require 'active_support/core_ext/string/strip'
 
-module Z80
+class JBA
   module Generator
     Z = 0x80
     N = 0x40
