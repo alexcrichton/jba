@@ -57,36 +57,38 @@ JBA.CPU.prototype = {
    * @return {number} the number of cycles the instruction took to run.
    */
   exec: function() {
+    var r = this.registers, m = this.memory;
+
     /* When the CPU halts, it simply goes into a "low power mode" that doesn't
        execute any more instructions until an interrupt comes in. Deferring
        until this interrupt happens is fairly difficult, so we just don't
        execute any instructions. We simulate that the 'nop' instruction
        continuously happens until an interrupt comes in which will disable the
        halt flag */
-    if (this.registers.halt == 0) {
-      var instruction = this.memory.rb(this.registers.pc++);
+    if (r.halt == 0) {
+      var instruction = m.rb(r.pc++);
       var fun = Z80.map[instruction];
-      fun(this.registers, this.memory);
+      fun(r, m);
     } else {
-      this.registers.m = 1;
+      r.m = 1;
     }
 
-    var ticks = this.registers.m * 4;
-    this.registers.m = 0;
+    var ticks = r.m * 4;
+    r.m = 0;
 
     // See http://nocash.emubase.de/pandocs.htm#interrupts
-    if (this.registers.ime) {
-      var interrupts = this.memory._if & this.memory._ie;
+    if (r.ime) {
+      var interrupts = m._if & m._ie;
 
       var fn = JBA.CPU.Interrupts[interrupts].bind(this);
-      fn(this.registers, this.memory);
+      fn(r, m);
 
-      ticks += this.registers.m * 4;
+      ticks += r.m * 4;
     }
 
     this.ticks += ticks;
-    if (this.memory.timer) {
-      this.memory.timer.step(ticks / 4);
+    if (m.timer) {
+      m.timer.step(ticks / 4);
     }
 
     return ticks;
