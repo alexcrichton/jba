@@ -326,3 +326,28 @@ test('switching VRAM banks in CGB mode', function() {
   mem.wb(0xff4f, 0x01); /* now switch vram banks */
   equals(mem.rb(0x8000), 0x00);
 });
+
+test('reading/writing CGB color palettes', function() {
+  mem.cgb = 1;
+  /* Background Palette */
+  mem.wb(0xff68, 0x80); /* Indicate auto-increment, index 0 */
+  for (i = 0; i < 64; i++) {
+    mem.wb(0xff69, i);
+  }
+
+  for (i = 0; i < 64; i++) {
+    mem.wb(0xff68, 0x80 | i);
+    equals(mem.rb(0xff69), i);
+  }
+
+  /* Object Palette */
+  mem.wb(0xff6a, 0x80); /* Indicate auto-increment, index 0 */
+  for (i = 0; i < 64; i++) {
+    mem.wb(0xff6b, i + 64);
+  }
+
+  for (i = 0; i < 64; i++) {
+    mem.wb(0xff6a, 0x80 | i);
+    equals(mem.rb(0xff6b), i + 64);
+  }
+});

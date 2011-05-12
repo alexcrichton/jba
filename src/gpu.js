@@ -104,6 +104,16 @@ JBA.GPU.prototype = {
     to_update: []       /* Which tiles we specifically need to update */
   },
 
+  /* When in CGB mode, the BGP and OBP memory is stored internally and is only
+   * accessible through some I/O registers. Each section of memory is 64 bytes
+   * and defines 8 palettes of 4 colors each */
+  cgb: {
+    bgp: [],
+    obp: [],
+    bgpi: 0,
+    obpi: 0
+  },
+
   /**
    * Reset this GPU. This clears all registers, re-initializes all ram banks
    * and such.
@@ -134,6 +144,13 @@ JBA.GPU.prototype = {
       }
     }
     this._tiles.need_update = false;
+
+    for (i = 0; i < 64; i++) {
+      this.cgb.bgp[i] = 255; // Background colors all initially white
+      this.cgb.obp[i] = 0;
+    }
+    this.cgb.bgpi = 0;
+    this.cgb.obpi = 0;
 
     this.mode = JBA.GPU.Mode.RDOAM;
     this.wx = this.wy = this.obp1 = this.obp0 = this.bgp = 0;
@@ -476,6 +493,12 @@ JBA.GPU.prototype = {
       case 0x4a: return this.wy;
       case 0x4b: return this.wx;
       case 0x4f: return this.vrambank;
+
+      // See http://nocash.emubase.de/pandocs.htm#lcdcolorpalettescgbonly
+      case 0x68: return this.cgb.bgpi;
+      case 0x69: return this.cgb.bgp[this.cgb.bgpi & 0x3f];
+      case 0x6a: return this.cgb.obpi;
+      case 0x6b: return this.cgb.obp[this.cgb.obpi & 0x3f];
     }
 
     return 0xff;
@@ -530,6 +553,28 @@ JBA.GPU.prototype = {
           this.vrambank = value & 1;
           this.vram = this.vrambanks[this.vrambank];
         }
+        break;
+
+      // See http://nocash.emubase.de/pandocs.htm#lcdcolorpalettescgbonly
+
+      /* The two indices/palette memories work the same way. The index's lower
+       * 6 bits are the actual index, and bit 7 indicates that the index should
+       * be automatically incremented whenever this memory is written to. When
+       * dealing with the index, make sure to mask out bit 6. */
+      case 0x68: this.cgb.bgpi = value & 0xbf; break;
+      case 0x6a: this.cgb.obpi = value & 0xbf; break;
+      case 0x69:
+        this.cgb.bgp[this.cgb.bgpi & 0x3f] = value;
+        if (this.cgb.bgpi & 0x80) {
+          this.cgb.bgpi = (this.cgb.bgpi + 1) & 0xbf;
+        }
+        break;
+      case 0x6b:
+        this.cgb.obp[this.cgb.obpi & 0x3f] = value;
+        if (this.cgb.obpi & 0x80) {
+          this.cgb.obpi = (this.cgb.obpi + 1) & 0xbf;
+        }
+        break;
     }
   },
 
