@@ -442,6 +442,8 @@ JBA.GPU.prototype = {
 
     var line = this.ly;
     var zerocolor = this._pal.bg[0][0];
+    /* If the objsize bit in LCDC is set, sprites are 8x16 */
+    var ysize = this.objsize ? 16 : 8;
 
     /* All sprites are located in OAM */
     /* There are 40 sprites in total */
@@ -457,8 +459,19 @@ JBA.GPU.prototype = {
          is below the scanline or the bottom of the sprite (which is 8 pixels
          high) lands below the scanline, this sprite doesn't need to be
          rendered right now */
-      if (yoff > line || yoff + 8 <= line || xoff <= -8 || xoff >= 160) {
+      if (yoff > line || yoff + ysize <= line || xoff <= -8 || xoff >= 160) {
         continue;
+      }
+
+      /* 8x16 tiles always use adjacent tile indices. If we're in 8x16 mode and
+         this sprite needs the second tile, add 1 to the tile index and change
+         yoff so it looks like we're rendering that tile */
+      if (ysize == 16) {
+        tile &= 0xfe;
+        if (line - yoff >= 8) {
+          tile += 1;
+          yoff += 8;
+        }
       }
 
       var coff = (160 * line + xoff) * 4; /* 160px/line, 4 entries/px */
