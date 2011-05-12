@@ -314,3 +314,15 @@ test('painting the background', function() {
   }
 
 });
+
+test('switching VRAM banks in CGB mode', function() {
+  /* First, make sure non CGB doesn't switch VRAM banks */
+  mem.cgb = 0;
+  mem.wb(0x8000, 0x89);
+  mem.wb(0xff4f, 0x01); /* would normally switch VRAM bank */
+  equals(mem.rb(0x8000), 0x89);
+
+  mem.cgb = 1;
+  mem.wb(0xff4f, 0x01); /* now switch vram banks */
+  equals(mem.rb(0x8000), 0x00);
+});

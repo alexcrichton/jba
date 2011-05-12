@@ -44,6 +44,11 @@ JBA.GPU.prototype = {
   canvas: null,
   image: null,
 
+  /* The banks that are swappable into vram */
+  vrambanks: null,
+  /* Selected vram bank */
+  vrambank: 0,
+
   clock: 0,
 
   /**** Registers used by the GPU ******/
@@ -105,14 +110,21 @@ JBA.GPU.prototype = {
    */
   reset: function() {
     var i;
-    this.vram = [];
+    this.vrambank  = 0;
+    this.vrambanks = [[], []]; /* CGB supports only 2 banks of VRAM */
     this.oam  = [];
 
-    /* 8K of vram */
-    for (i = 0; i < (8 << 10); i++) this.vram[i] = 0;
+    /* 8K of vram, 2 banks */
+    for (i = 0; i < (8 << 10); i++) {
+      this.vrambanks[0][i] = 0;
+      this.vrambanks[1][i] = 0;
+    }
+    this.vram = this.vrambanks[0];
 
     /* 0xffe00 - 0xffe9f is OAM */
-    for (i = 0; i < 0xa0; i++) this.oam[i] = 0;
+    for (i = 0; i < 0xa0; i++) {
+      this.oam[i] = 0;
+    }
 
     for (i = 0; i < 384; i++) {
       this._tiles.data[i] = [];
@@ -463,6 +475,7 @@ JBA.GPU.prototype = {
       case 0x49: return this.obp1;
       case 0x4a: return this.wy;
       case 0x4b: return this.wx;
+      case 0x4f: return this.vrambank;
     }
 
     return 0xff;
@@ -511,6 +524,12 @@ JBA.GPU.prototype = {
 
       case 0x4a: this.wy = value; break;
       case 0x4b: this.wx = value; break;
+
+      case 0x4f:
+        if (this.mem.cgb) {
+          this.vrambank = value & 1;
+          this.vram = this.vrambanks[this.vrambank];
+        }
     }
   },
 
