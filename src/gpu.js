@@ -253,9 +253,6 @@ JBA.GPU.prototype = {
        to happen beforehand */
     mapbase += (((this.ly + this.scy) & 0xff) >> 3) * 32;
 
-    /* Index of the entry into the background map array */
-    var lineoff = this.scx >> 3; /* divide by 8 */
-
     /* X and Y location inside the tile itself to paint */
     var y = (this.ly + this.scy) % 8;
     var x = this.scx % 8;
@@ -271,6 +268,9 @@ JBA.GPU.prototype = {
     var tilebase = this.tiledata ? 0x0000 : 0x0800;
 
     do {
+      /* Backgrounds wrap around, so calculate the offset into the bgmap each
+         loop to check for wrapping */
+      var mapoff = ((i + this.scx) & 0xff) >> 3;
       /* Each tile is 16 bytes long. Each pair of bytes represents a line of
          pixels (making 8 lines). The first byte is the LSB of the color
          number and the second byte is the MSB of the color.
@@ -280,7 +280,7 @@ JBA.GPU.prototype = {
             byte 1 : 01101010
 
          The colors are [0, 2, 2, 1, 3, 0, 3, 1] */
-      var tilei = vram[mapbase + lineoff];
+      var tilei = vram[mapbase + mapoff];
 
       /* Perform wankery with negative addresses here to get it to work out
          in the next section */
@@ -308,7 +308,6 @@ JBA.GPU.prototype = {
       }
 
       x = 0;
-      lineoff++;
     } while (i < 160);
   },
 
