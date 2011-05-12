@@ -40,6 +40,9 @@ JBA.Memory.prototype = {
   /** @type {JBA.Memory.MBC} */
   mbc: JBA.Memory.MBC.UNKNOWN,
 
+  /* Flag if this is a CGB cartridge or not */
+  cgb: 0,
+
   // See reset() for descriptions
   rom: [],
   ram: [],
@@ -135,6 +138,9 @@ JBA.Memory.prototype = {
       }
     }
 
+    // See http://nocash.emubase.de/pandocs.htm#thecartridgeheader for
+    // header information.
+
     switch (this.rom[0x0147]) {
       case 0x00:            // rom only
       case 0x08:            // rom + ram
@@ -163,6 +169,8 @@ JBA.Memory.prototype = {
 
       default: throw "Unknown/unimplemented MBC type: " + this.rom[0x147];
     }
+
+    this.cgb = this.rom[0x0143] & 0x80;
   },
 
   /**
@@ -222,8 +230,9 @@ JBA.Memory.prototype = {
           return 0xff;
         }
 
-      case 0xc:
+      // e000-fdff same as c000-ddff
       case 0xe:
+      case 0xc:
         return this.wram[addr & 0xfff];
 
       case 0xd:
@@ -279,10 +288,17 @@ JBA.Memory.prototype = {
         return 0xff;
 
       case 0x4:
+        if (this.cgb && addr == 0xff4d) {
+          throw "Can't go in double speed mode just yet for CGB!";
+        }
       case 0x5:
       case 0x6:
-      case 0x7:
         return this.gpu.rb(addr);
+
+      case 0x7:
+        if (this.cgb && addr == 0xff70) {
+          return this.wrambank;
+        }
 
       default:
         throw "Not implemented reading that address!";
@@ -436,10 +452,23 @@ JBA.Memory.prototype = {
         break;
 
       case 0x4:
+        // See http://nocash.emubase.de/pandocs.htm#cgbregisters
+        if (this.cgb && addr == 0xff4d) {
+          throw "Can't go in double speed mode just yet for CGB!";
+        }
+        /* fall through */
       case 0x5:
       case 0x6:
-      case 0x7:
         this.gpu.wb(addr, value);
+        break;
+
+      case 0x7:
+        // WRAM banks only for CGB mode, see
+        // http://nocash.emubase.de/pandocs.htm#cgbregisters
+        if (this.cgb && addr == 0xff70) {
+          value &= 0x7; /* only bits 0-2 are used */
+          this.wrambank = value + (!value); /* default to 1 */
+        }
         break;
 
       default:

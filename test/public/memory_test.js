@@ -46,3 +46,28 @@ test('reading/writing to OAM', function() {
   mem.wb(0xfe9f, 0x33);
   equals(mem.rb(0xfe9f), 0x33);
 });
+
+/**
+ * 0xc000-0xcfff is wram bank 0
+ * 0xd000-0xdfff is wram bank 1 (switchable 1-7 if CGB)
+ */
+test('reading/writing to WRAM banks', function() {
+  /* If not CGB, don't swap out banks */
+  mem.cgb = 0;
+  mem.wb(0xff70, 0x01);
+  mem.wb(0xd000, 0x54);
+  mem.wb(0xff70, 0x02); /* if CGB, would switch banks */
+  equals(mem.rb(0xd000), 0x54);
+
+  mem.cgb = 1;
+  mem.wb(0xff70, 0x02); /* now switch WRAM banks */
+  equals(mem.rb(0xd000), 0x00);
+
+  mem.wb(0xff70, 0x01); /* back to first bank */
+  equals(mem.rb(0xd000), 0x54);
+
+  /* make sure bank 0 is never visible in 0xd000 */
+  mem.wb(0xc000, 0x23);
+  mem.wb(0xff70, 0x00);
+  equals(mem.rb(0xd000), 0x54);
+});
