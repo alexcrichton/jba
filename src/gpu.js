@@ -92,6 +92,13 @@ JBA.GPU.prototype = {
     obp1: []
   },
 
+  /* Compiled tiles */
+  _tiles: {
+    data: [],           /* Actual compiled tiles */
+    need_update: false, /* Do we need to recompile any tiles? */
+    to_update: []       /* Which tiles we specifically need to update */
+  },
+
   /**
    * Reset this GPU. This clears all registers, re-initializes all ram banks
    * and such.
@@ -106,6 +113,15 @@ JBA.GPU.prototype = {
 
     /* 0xffe00 - 0xffe9f is OAM */
     for (i = 0; i < 0xa0; i++) this.oam[i] = 0;
+
+    for (i = 0; i < 384; i++) {
+      this._tiles.data[i] = [];
+      this._tiles.to_update[i] = false;
+      for (var j = 0; j < 8; j++) {
+        this._tiles.data[i][j] = [0, 0, 0, 0, 0, 0, 0, 0];
+      }
+    }
+    this._tiles.need_update = false;
 
     this.mode = JBA.GPU.Mode.RDOAM;
     this.wx = this.wy = this.obp1 = this.obp0 = this.bgp = 0;
@@ -239,6 +255,11 @@ JBA.GPU.prototype = {
   render_line: function() {
     if (!this.lcdon) return;
 
+    if (this._tiles.need_update) {
+      this.update_tileset();
+      this._tiles.need_update = false;
+    }
+
     if (this.bgon) {
       this.render_background();
     }
@@ -249,8 +270,50 @@ JBA.GPU.prototype = {
   },
 
   /** @private */
+  update_tileset: function() {
+    var to_update = this._tiles.to_update,
+        tiles     = this._tiles.data,
+        vram      = this.vram;
+
+    for (var i = 0; i < 384; i++) {
+      if (!to_update[i]) {
+        continue;
+      }
+      to_update[i] = false;
+
+      /* All tiles are located 0x8000-0x97ff => 0x0000-0x17ff in VRAM =>
+         that the index is simply an index into raw VRAM */
+      var addr = i * 16;
+
+      /* Each tile is 16 bytes long. Each pair of bytes represents a line of
+         pixels (making 8 lines). The first byte is the LSB of the color
+         number and the second byte is the MSB of the color.
+
+         For example, for:
+            byte 0 : 01011011
+            byte 1 : 01101010
+
+         The colors are [0, 2, 2, 1, 3, 0, 3, 1] */
+      for (var j = 0; j < 8; j++, addr += 2) {
+        var lsb = vram[addr];
+        var msb = vram[addr + 1];
+
+        /* LSB is the right-most pixel */
+        for (var k = 7; k >= 0; k--) {
+          tiles[i][j][k] = ((msb & 1) << 1) | (lsb & 1);
+          lsb >>= 1;
+          msb >>= 1;
+        }
+      }
+    }
+  },
+
+  /** @private */
   render_background: function() {
-    var data = this.image.data, vram = this.vram, bgp = this._pal.bg;
+    var data  = this.image.data,
+        vram  = this.vram,
+        bgp   = this._pal.bg,
+        tiles = this._tiles.data;
 
     /* vram is from 0x8000-0x9fff
        this.bgmap: 0=9800-9bff, 1=9c00-9fff
@@ -277,43 +340,24 @@ JBA.GPU.prototype = {
        (&tiles[0]) == 0x9000, where if tiledata = 1, (&tiles[0]) = 0x8000.
        This implies that the indices are treated as signed numbers.*/
     var i = 0;
-    var tilebase = this.tiledata ? 0x0000 : 0x0800;
+    var tilebase = this.tiledata == 0 ? 128 : 0;
 
     do {
       /* Backgrounds wrap around, so calculate the offset into the bgmap each
          loop to check for wrapping */
       var mapoff = ((i + this.scx) & 0xff) >> 3;
-      /* Each tile is 16 bytes long. Each pair of bytes represents a line of
-         pixels (making 8 lines). The first byte is the LSB of the color
-         number and the second byte is the MSB of the color.
-
-         For example, for:
-            byte 0 : 01011011
-            byte 1 : 01101010
-
-         The colors are [0, 2, 2, 1, 3, 0, 3, 1] */
       var tilei = vram[mapbase + mapoff];
 
-      /* Perform wankery with negative addresses here to get it to work out
-         in the next section */
+      /* tiledata = 0 => tilei is a signed byte, so fix it here */
       if (this.tiledata == 0) {
         tilei = (tilei + 128) & 0xff;
       }
 
-      /* The address of the pair of bytes we want will be:
-            base + (sizeof(tile) = 16) * tilei + (offset into tile = 2 * y)
-         Because each tile is 16 bytes and a row represents 2 bytes */
-      var byteaddr = tilebase + tilei * 16 + 2 * y;
-      var lsb = vram[byteaddr];
-      var msb = vram[byteaddr + 1];
+      var tile = tiles[tilebase + tilei][y];
 
       for (; x < 8 && i < 160; x++, i++, coff += 4) {
-        var colori =
-          (((msb >> (7 - x)) & 1) << 1) |
-          (((lsb >> (7 - x)) & 1) << 0);
-
-        var color = bgp[colori];
-        data[coff] = color[0];
+        var color = bgp[tile[x]];
+        data[coff]     = color[0];
         data[coff + 1] = color[1];
         data[coff + 2] = color[2];
         data[coff + 3] = color[3];
@@ -347,7 +391,7 @@ JBA.GPU.prototype = {
          is below the scanline or the bottom of the sprite (which is 8 pixels
          high) lands below the scanline, this sprite doesn't need to be
          rendered right now */
-      if (yoff > line || yoff + 8 <= line) {
+      if (yoff > line || yoff + 8 <= line || xoff <= -8 || xoff >= 160) {
         continue;
       }
 
@@ -356,17 +400,9 @@ JBA.GPU.prototype = {
       var coff = (160 * line + xoff) * 4; /* 160px/line, 4 entries/px */
 
       /* All sprite tile palettes are at 0x8000-0x8fff => start of vram */
-      var tileaddr = (tile * 16); /* tiles are 16 bytes each */
-
-      /* bit6 = vertical flip */
-      if (flags & 0x40) {
-        tileaddr += 2 * (7 - (line - yoff));
-      } else {
-        tileaddr += 2 * (line - yoff);
-      }
-
-      var lsb = vram[tileaddr];
-      var msb = vram[tileaddr + 1];
+      var tiled = this._tiles.data[tile];
+      /* bit6 is the vertical flip bit */
+      var row = flags & 0x40 ? tiled[7 - (line - yoff)] : tiled[line - yoff];
 
       for (var x = 0; x < 8; x++, coff += 4) {
         /* If these pixels are off screen, don't bother drawing anything */
@@ -374,9 +410,7 @@ JBA.GPU.prototype = {
           continue;
         }
         /* bit5 is the horizontal flip flag */
-        var shift = (flags & 0x20) ? x : 7 - x;
-        var colori = (((msb >> shift) & 1) << 1) |
-                     (((lsb >> shift) & 1) << 0);
+        var colori = row[(flags & 0x20) ? 7 - x : x];
 
         /* A color index of 0 for sprites means transparent */
         if (colori == 0) {
@@ -478,6 +512,17 @@ JBA.GPU.prototype = {
       case 0x4a: this.wy = value; break;
       case 0x4b: this.wx = value; break;
     }
+  },
+
+  /**
+   * Register that a tile needs to be updated.
+   *
+   * @param {number} addr the address of the tile that needs to be updated.
+   */
+  update_tile: function(addr) {
+    var tilei = (addr & 0x1fff) >> 4; /* each tile is 16 bytes, divide by 16 */
+    this._tiles.need_update = true;
+    this._tiles.to_update[tilei] = true;
   },
 
   /**

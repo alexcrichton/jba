@@ -361,6 +361,9 @@ JBA.Memory.prototype = {
       case 0x8:
       case 0x9:
         this.gpu.vram[addr & 0x1fff] = value;
+        if (addr < 0x9800) {
+          this.gpu.update_tile(addr);
+        }
         break;
 
       case 0xa:
