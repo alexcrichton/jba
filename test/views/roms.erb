@@ -12,41 +12,107 @@
       gb.set_canvas($('#gb')[0]);
       gb.bind_keys(window);
 
-      $('a.rom').click(function() {
-        gb.load_rom($(this).attr('href'), function() { $('.b').show(); });
-        return false;
+      $('.rom select').change(function() {
+        $('button').prop('disabled', true);
+        $(this).blur();
+        gb.stop();
+        gb.reset();
+
+        if ($(this).val() == '') {
+          $('.state').text('waiting');
+          return;
+        }
+        $('.state').text('loading');
+        gb.load_rom($(this).val(), function() {
+          gb.run();
+          $('button').prop('disabled', false);
+          $('button.run').text('Stop');
+          $('.state').text('running');
+        });
       });
 
-      setInterval(function() { $('#fps').text(gb.frames_count()); }, 1000);
+      $('button.run').click(function() {
+        if ($(this).text() == 'Stop') {
+          gb.stop();
+          $(this).text('Run');
+          $('.state').text('stopped');
+        } else {
+          gb.run();
+          $(this).text('Stop');
+          $('.state').text('running');
+        }
+      });
+
+      $('button.reset').click(function() { $('.rom select').change() });
+
+      $('input[type=range]').change(function() {
+        $('#gb').width($(this).val() * 160).height($(this).val() * 144);
+      });
+
+      setInterval(function() { $('.fps').text(gb.frames_count()); }, 1000);
     });
   </script>
 
   <style type="text/css">
     #gb {
       border: 1px solid black;
-      display: block;
-      position: absolute;
-      top: 0;
-      left: 200px;
     }
 
-    a { float: left; }
-    .b { display: none; }
+    #gb, #controls, #status {
+      display: block;
+      margin: 0 auto;
+    }
+
+    .state {
+      font-style: italic;
+    }
+
+    #controls, #status {
+      text-align: center;
+    }
+
+    dl, div { overflow: auto; }
+    dl { font-size: 70%; margin: 0 auto; width: 130px; }
+    dt { width: 50px; clear: left; float: left; }
+    dd { width: 80px; float: left; margin: 0; }
   </style>
 </head>
 
 <body>
-  <a href='/roms/opus5.gb' class='rom'>opus5</a><br/>
-  <a href='/roms/ttt.gb' class='rom'>ttt</a><br/>
-  <a href='/roms/tetris.gb' class='rom'>tetris</a><br/>
-  <a href='/roms/hangman.gb' class='rom'>hangman</a><br/>
-  <a href='/roms/adjtris.gb' class='rom'>adjtris</a><br/>
-  <a href='/roms/mario.gb' class='rom'>mario</a><br/>
-  <a href='#' onclick='gb.run(0); return false;' class='b'>bench</a><br/>
-  <a href='#' onclick='gb.run(); return false;' class='b'>run</a><br/>
-  <a href='#' onclick='gb.stop(); return false;' class='b'>stop</a><br/>
-  <div id='fps'></div>
+  <div id='status'>
+    <span class='state'>waiting</span> | fps: <span class='fps'>0</span><br/>
+    <input type='range' min='1' max='4' step='0.25' value='1' />
+  </div>
   <canvas id='gb' height='144' width='160'></canvas>
+  <div id='controls'>
+    <div class='rom'>
+      <select>
+        <option></option>
+        <option value='/roms/opus5.gb'>Opus5</option>
+        <option value='/roms/ttt.gb'>Tic-Tac-Toe</option>
+        <option value='/roms/tetris.gb'>Tetris</option>
+        <option value='/roms/hangman.gb'>Hangman</option>
+        <option value='/roms/adjtris.gb'>Adjtris</option>
+        <option value='/roms/mario.gb'>MarioLand</option>
+      </select>
+    </div>
+
+    <div class='buttons'>
+      <button class='run' disabled='disabled'>Run</button>
+      <button class='reset' disabled='disabled'>Reset</button>
+    </div>
+
+    <div>
+      <dl>
+        <dt>A</dt><dd>z</dd>
+        <dt>B</dt><dd>x</dd>
+        <dt>Start</dt><dd>&lt;enter&gt;</dd>
+        <dt>Select</dt><dd>, (comma)</dd>
+        <dt>Joypad</dt><dd>arrow keys</dd>
+      </dl>
+    </div>
+  </div>
+
 </body>
 
 </html>

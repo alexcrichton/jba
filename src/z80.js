@@ -63,6 +63,11 @@ Z80.Registers.prototype = {
    * begin.
    */
   reset: function() {
+    this.ime  = 0;
+    this.halt = 0;
+    this.stop = 0;
+    this.m    = 0;
+
     // See: http://nocash.emubase.de/pandocs.htm#powerupsequence
     this.a = 0x01; this.f = 0xb0;
     this.b = 0x00; this.c = 0x13;

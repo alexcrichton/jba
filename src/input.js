@@ -49,6 +49,12 @@ JBA.Input.prototype = {
   buttons: 0xf,
   directions: 0xf,
 
+  reset: function() {
+    this.col = 0;
+    this.buttons = 0xf;
+    this.directions = 0xf;
+  },
+
   rb: function(addr) {
     switch (this.col) {
       case JBA.Input.SEL.BUTTON:    return this.buttons;
@@ -64,28 +70,38 @@ JBA.Input.prototype = {
   },
 
   keydown: function(code) {
+    var keep_propogating = true;
     var mask = JBA.Input.Map.directions[code];
     if (mask) {
       this.directions &= mask;
       this.memory._if |= 0x10; /* Joypad interrupt bit */
+      keep_propogating = false;
     }
 
     mask = JBA.Input.Map.buttons[code];
     if (mask) {
       this.buttons &= mask;
       this.memory._if |= 0x10;
+      keep_propogating = false;
     }
+
+    return keep_propogating;
   },
 
   keyup: function(code) {
+    var keep_propogating = true;
     var mask = JBA.Input.Map.directions[code];
     if (mask) {
       this.directions |= (~mask) & 0xf;
+      keep_propogating = false;
     }
 
     mask = JBA.Input.Map.buttons[code];
     if (mask) {
       this.buttons |= (~mask) & 0xf;
+      keep_propogating = false;
     }
+
+    return keep_propogating;
   }
 };

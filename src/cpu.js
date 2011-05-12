@@ -48,6 +48,7 @@ JBA.CPU.prototype = {
   ticks: 0,
 
   reset: function() {
+    this.ticks = 0;
     this.registers.reset();
   },
 

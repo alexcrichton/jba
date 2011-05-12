@@ -106,6 +106,18 @@ JBA.GPU.prototype = {
 
     /* 0xffe00 - 0xffe9f is OAM */
     for (i = 0; i < 0xa0; i++) this.oam[i] = 0;
+
+    this.mode = JBA.GPU.Mode.RDOAM;
+    this.wx = this.wy = this.obp1 = this.obp0 = this.bgp = 0;
+    this.lyc = this.ly = this.scx = this.scy = 0;
+    this.mode0int = this.mode1int = this.mode2int = this.lycly = 0;
+    this.bgon = this.objon = this.objsize = this.bgmap = this.tiledata = 0;
+    this.winon = this.winmap = this.lcdon = 0;
+    this.clock = 0;
+
+    if (this.canvas) {
+      this.white_canvas();
+    }
   },
 
   /**

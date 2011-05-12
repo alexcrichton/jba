@@ -10,6 +10,8 @@
  * @constructor
  */
 JBA.Memory = function() {
+  this.rtc   = new JBA.RTC();
+  this.input = new JBA.Input(this);
   this.reset();
 };
 
@@ -55,8 +57,8 @@ JBA.Memory.prototype = {
   _if: 0,
 
   reset: function() {
-    this.rtc   = new JBA.RTC();
-    this.input = new JBA.Input(this);
+    this.rtc.reset();
+    this.input.reset();
 
     this.rom      = [];
     this.ram      = [];

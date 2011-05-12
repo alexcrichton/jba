@@ -32,6 +32,8 @@ JBA.prototype = {
     this.cpu.reset();
     this.memory.reset();
     this.gpu.reset();
+    this.timer.reset();
+    this.gpu.white_canvas();
     this.memory.powerOn();
   },
 
@@ -100,17 +102,16 @@ JBA.prototype = {
   },
 
   /**
-   * Set the element which will supply input events to this GB instance.
+   * Set the element which will supply input events to this GB instance. This
+   * function assumes that jQuery is available.
    *
    * @param {Element} element the element to receive key events from.
    */
   bind_keys: function(element) {
     /* See frame() for why there's this hack */
     var input = this.memory.input;
-    var keydown = function(e) { input.keydown(e.keyCode); };
-    var keyup   = function(e) { input.keyup(e.keyCode); };
-    element.onkeydown = keydown;
-    element.onkeyup = keyup;
+    $(element).keydown(function(e) { return input.keydown(e.keyCode); });
+    $(element).keyup(function(e) { return input.keyup(e.keyCode); });
   },
 
   /**

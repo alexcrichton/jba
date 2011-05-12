@@ -1,5 +1,8 @@
+/**
+ * @constructor
+ */
 JBA.Timer = function() {
-
+  this.reset();
 };
 
 JBA.Timer.prototype = {
@@ -20,6 +23,15 @@ JBA.Timer.prototype = {
 
   // TIMA cycle count
   _tima_speed: 256,
+
+  reset: function() {
+    this.div  = 0;
+    this.tima = 0;
+    this.tma  = 0;
+    this.tac  = 0;
+    this._clock.tima = 0;
+    this._clock.div  = 0;
+  },
 
   /**
    * Called whenever the TAC register changes
