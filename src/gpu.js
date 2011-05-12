@@ -307,17 +307,19 @@ JBA.GPU.prototype = {
   render_line: function() {
     if (!this.lcdon) return;
 
+    var scanline = [];
+
     if (this._tiles.need_update) {
       this.update_tileset();
       this._tiles.need_update = false;
     }
 
     if (this.bgon) {
-      this.render_background();
+      this.render_background(scanline);
     }
 
     if (this.objon) {
-      this.render_sprites();
+      this.render_sprites(scanline);
     }
   },
 
@@ -361,7 +363,7 @@ JBA.GPU.prototype = {
   },
 
   /** @private */
-  render_background: function() {
+  render_background: function(scanline) {
     var data  = this.image.data,
         banks = this.vrambanks,
         bgp   = this._pal.bg,
@@ -406,19 +408,39 @@ JBA.GPU.prototype = {
         tilei = (tilei + 128) & 0xff;
       }
 
-      var tile;
+      var row, bgpri = false, hflip = false;
       if (cgb) {
         // See http://nocash.emubase.de/pandocs.htm#vrambackgroundmaps for what
         // the attribute byte all maps to
+
+        /* Summary of attributes bits:
+            Bit 0-2  Background Palette number  (BGP0-7)
+            Bit 3    Tile VRAM Bank number      (0=Bank 0, 1=Bank 1)
+            Bit 4    Not used
+            Bit 5    Horizontal Flip       (0=Normal, 1=Mirror horizontally)
+            Bit 6    Vertical Flip         (0=Normal, 1=Mirror vertically)
+            Bit 7    BG-to-OAM Priority    (0=Use OAM priority, 1=BG Priority)
+         */
+
         var attrs = banks[1][mapbase + mapoff];
-        bgp  = this.cgb._bgp[attrs & 0x7];
-        tile = tiles[tilebase + tilei + ((attrs >> 3) & 1) * 384][y];
+
+        var tile = tiles[tilebase + tilei + ((attrs >> 3) & 1) * 384];
+        bgp   = this.cgb._bgp[attrs & 0x7];
+        bgpri = attrs & 0x80;
+        row   = tile[attrs & 0x40 ? 7 - y : y];
+        hflip = attrs & 0x20;
+
       } else {
-        tile = tiles[tilebase + tilei][y];
+        /* Non CGB backgrounds are boring :( */
+        row = tiles[tilebase + tilei][y];
       }
 
       for (; x < 8 && i < 160; x++, i++, coff += 4) {
-        var color = bgp[tile[x]];
+        var colori  = row[hflip ? 7 - x : x];
+        var color   = bgp[colori];
+        /* To indicate bg priority, list a color >= 4 */
+        scanline[i] = bgpri ? 4 : row[colori];
+
         data[coff]     = color[0];
         data[coff + 1] = color[1];
         data[coff + 2] = color[2];
@@ -430,7 +452,7 @@ JBA.GPU.prototype = {
   },
 
   /** @private */
-  render_sprites: function() {
+  render_sprites: function(scanline) {
     var data  = this.image.data,
         banks = this.vrambanks,
         oam   = this.oam,
@@ -467,7 +489,7 @@ JBA.GPU.prototype = {
          this sprite needs the second tile, add 1 to the tile index and change
          yoff so it looks like we're rendering that tile */
       if (ysize == 16) {
-        tile &= 0xfe;
+        tile &= 0xfe; /* Ignore lowest bit */
         if (line - yoff >= 8) {
           tile += 1;
           yoff += 8;
@@ -495,8 +517,10 @@ JBA.GPU.prototype = {
       var row = flags & 0x40 ? tiled[7 - (line - yoff)] : tiled[line - yoff];
 
       for (var x = 0; x < 8; x++, coff += 4) {
-        /* If these pixels are off screen, don't bother drawing anything */
-        if (xoff + x < 0 || xoff + x >= 160) {
+        /* If these pixels are off screen, don't bother drawing anything. Also,
+           if the background tile at this pixel has priority, don't render this
+           sprite at all. */
+        if (xoff + x < 0 || xoff + x >= 160 || scanline[x + xoff] > 3) {
           continue;
         }
         /* bit5 is the horizontal flip flag */
@@ -510,7 +534,7 @@ JBA.GPU.prototype = {
         /* bit7 0=OBJ Above BG, 1=OBJ Behind BG color 1-3. So if this sprite
            has this flag set and the data at this location already contains
            data (nonzero), then don't render this sprite */
-        if ((flags & 0x80) && data[coff] != zerocolor) {
+        if ((flags & 0x80) && scanline[xoff + x] != 0) {
           continue;
         }
 
