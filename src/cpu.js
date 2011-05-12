@@ -16,11 +16,11 @@ JBA.CPU.Interrupts = [];
 
 (function() {
   function deliver_interrupt(mask, rst) {
-    return function(a, b) {
-      this.registers.ime = 0;
-      this.registers.halt = 0;
-      this.memory._if &= (~mask) & 0xff;
-      rst(a, b);
+    return function(r, m) {
+      r.ime = 0;
+      r.halt = 0;
+      m._if &= (~mask) & 0xff;
+      rst(r, m);
     };
   }
 
@@ -67,8 +67,7 @@ JBA.CPU.prototype = {
        halt flag */
     if (r.halt == 0) {
       var instruction = m.rb(r.pc++);
-      var fun = Z80.map[instruction];
-      fun(r, m);
+      Z80.map[instruction](r, m);
     } else {
       r.m = 1;
     }
@@ -80,8 +79,7 @@ JBA.CPU.prototype = {
     if (r.ime) {
       var interrupts = m._if & m._ie;
 
-      var fn = JBA.CPU.Interrupts[interrupts].bind(this);
-      fn(r, m);
+      JBA.CPU.Interrupts[interrupts](r, m);
 
       ticks += r.m * 4;
     }

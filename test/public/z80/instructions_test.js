@@ -329,6 +329,39 @@ test('ccf', function() {
 });
 
 /******************************************************************************/
+/**   0xb0                                                                    */
+/******************************************************************************/
+test('cp b', function() {
+  // zero flag
+  reg.a = 0x1;
+  reg.b = 0x1;
+  opcode_test(0xb8, 1, 1, function() {
+    equals(reg.f, Z | N);
+  });
+
+  // no flags other than N
+  reg.a = 0x2;
+  reg.b = 0x1;
+  opcode_test(0xb8, 1, 1, function() {
+    equals(reg.f, N);
+  });
+
+  // H and C flags
+  reg.a = 0x0;
+  reg.b = 0x1;
+  opcode_test(0xb8, 1, 1, function() {
+    equals(reg.f, N | H | C);
+  });
+
+  // just carry flag
+  reg.a = 0x00;
+  reg.b = 0x10;
+  opcode_test(0xb8, 1, 1, function() {
+    equals(reg.f, N | C);
+  });
+});
+
+/******************************************************************************/
 /**   0xc0                                                                    */
 /******************************************************************************/
 

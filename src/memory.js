@@ -39,7 +39,7 @@ JBA.Memory.prototype = {
   mbc: JBA.Memory.MBC.UNKNOWN,
 
   // See reset() for descriptions
-  rom: '',
+  rom: [],
   ram: [],
   wram: [],
   hiram: [],
@@ -58,7 +58,7 @@ JBA.Memory.prototype = {
     this.rtc   = new JBA.RTC();
     this.input = new JBA.Input(this);
 
-    this.rom      = '';
+    this.rom      = [];
     this.ram      = [];
     this.wram     = []; // Special 'Work' ram
     this.hiram    = []; // 256 bytes of ram at the end of the address space
@@ -117,10 +117,23 @@ JBA.Memory.prototype = {
    * Loads a string of data as a cartridge into this memory. The data provided
    * will be used as ROM.
    *
-   * @param {string} data the data of the cartridge
+   * @param {(string|Object)} data the data of the cartridge. If a string is
+   *    supplied, then the entire string is loaded into rom using charCodeAt. If
+   *    the argument is an object, then it's interpreted as a sparse mapping of
+   *    data. The key/value pairs are interpreted as address/value pairs
    */
   load_cartridge: function(data) {
-    switch (data.charCodeAt(0x0147)) {
+    if (typeof data == 'string') {
+      for (var i = 0; i < data.length; i++) {
+        this.rom[i] = data.charCodeAt(i) & 0xff;
+      }
+    } else {
+      for (var addr in data) {
+        this.rom[addr] = data[addr];
+      }
+    }
+
+    switch (this.rom[0x0147]) {
       case 0x00:            // rom only
       case 0x08:            // rom + ram
       case 0x09:            // rom + ram + battery
@@ -146,10 +159,8 @@ JBA.Memory.prototype = {
         this.mbc = JBA.Memory.MBC.MBC3;
         break;
 
-      default: throw "Unknown/unimplemented MBC type!";
+      default: throw "Unknown/unimplemented MBC type: " + this.rom[0x147];
     }
-
-    this.rom = data;
   },
 
   /**
@@ -183,14 +194,14 @@ JBA.Memory.prototype = {
       case 0x2:
       case 0x3:
         // Always mapped in as first bank of cartridge
-        return this.rom.charCodeAt(addr) & 0xff;
+        return this.rom[addr];
 
       case 0x4:
       case 0x5:
       case 0x6:
       case 0x7:
         // Swappable banks of ROM
-        return this.rom.charCodeAt((this.rombank << 14) | (addr & 0x3fff)) & 0xff;
+        return this.rom[(this.rombank << 14) | (addr & 0x3fff)];
 
       case 0x8:
       case 0x9:

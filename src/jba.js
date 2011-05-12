@@ -58,7 +58,10 @@ JBA.prototype = {
     if (typeof interval == 'undefined') {
       interval = 16;
     }
-    this._interval = setInterval(this.frame.bind(this), interval);
+    /* I'd like to use this.frame.bind(this) instead of this t=this hack, but
+       apparently the bind function doesn't exist in safari */
+    var t = this;
+    this._interval = setInterval(function() { t.frame(); }, interval);
   },
 
   stop: function() {
@@ -102,10 +105,12 @@ JBA.prototype = {
    * @param {Element} element the element to receive key events from.
    */
   bind_keys: function(element) {
-    var keydown = function(e) { this.memory.input.keydown(e.keyCode); };
-    var keyup   = function(e) { this.memory.input.keyup(e.keyCode); };
-    element.onkeydown = keydown.bind(this);
-    element.onkeyup = keyup.bind(this);
+    /* See frame() for why there's this hack */
+    var input = this.memory.input;
+    var keydown = function(e) { input.keydown(e.keyCode); };
+    var keyup   = function(e) { input.keyup(e.keyCode); };
+    element.onkeydown = keydown;
+    element.onkeyup = keyup;
   },
 
   /**

@@ -13,7 +13,6 @@
  *    var registers = this.registers; // an instance of Z80.Registers
  *
  *    var fun = Z80.map[memory.rb(registers.pc++)];
- *    registers.pc &= 0xffff;
  *    fun(registers, memory);
  *
  *    // ... other things

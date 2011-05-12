@@ -25,7 +25,7 @@ module Z80
       hlmm = "r.l = (r.l - 1) & 0xff; if (r.l == 0xff) r.h = (r.h - 1) & 0xff"
 
       def sign_fix var
-        "(#{var} > 0x7f ? -((~(#{var}) + 1) & 0xff) : #{var})"
+        "(#{var} > 127 ? ((#{var} & 127) - 128) : #{var})"
       end
 
       @funs = {}
@@ -188,7 +188,6 @@ module Z80
           @funs["cp_a#{name}"] = <<-JS.strip_heredoc
             var a = r.a;
             var b = #{var};
-            var i = a - b;
             r.f = #{N} | (a == b ? #{Z} : 0) | (a < b ? #{C} : 0) |
               ((a & 0xf) < (b & 0xf) ? #{H} : 0);
             r.m = #{cycles};
@@ -204,7 +203,6 @@ module Z80
         regs.each{ |i|
           @funs["inc_#{i}"] = "r.#{i} = (r.#{i} + 1) & 0xff; " \
             "r.f = (r.#{i} ? 0 : #{Z}); r.m = 1;"
-            # "; r.m = 1;"
         }
         @funs['inc_hlm'] = "var hl = #{hl}, k = (m.rb(hl) + 1) & 0xff;" \
           " m.wb(hl, k); r.f = k ? 0 : #{Z}; r.m = 3;"
@@ -481,7 +479,6 @@ module Z80
           var i = m.rb(r.pc++);
           i = #{sign_fix 'i'};
           r.pc += i;
-          r.pc &= 0xffff;
           r.m = 3;
         JS
         @funs['jr_n'] = @do_jr

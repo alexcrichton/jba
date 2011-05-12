@@ -10,7 +10,6 @@ module('MBC3', {
 
 function dummy_mbc3_data() {
   var dummy = {0x0147: 0x0f};
-  dummy.charCodeAt = function(addr){ return dummy[addr]; };
   return dummy;
 }
 

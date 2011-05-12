@@ -10,7 +10,6 @@ module('No MBC', {
 
 function dummy_nombc_data() {
   var dummy = {0x0147: 0x00};
-  dummy.charCodeAt = function(addr){ return dummy[addr]; };
   return dummy;
 }
 
