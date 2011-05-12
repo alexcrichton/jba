@@ -423,7 +423,11 @@ JBA.GPU.prototype = {
 
   /** @private */
   render_sprites: function() {
-    var data = this.image.data, vram = this.vram, oam = this.oam;
+    var data  = this.image.data,
+        banks = this.vrambanks,
+        oam   = this.oam,
+        cgb   = this.mem.cgb,
+        tiles = this._tiles.data;
 
     // More information about sprites is located at:
     // http://nocash.emubase.de/pandocs.htm#vramspriteattributetableoam
@@ -449,12 +453,23 @@ JBA.GPU.prototype = {
         continue;
       }
 
-      /* bit4 is the palette number. 0 = obp0, 1 = obp1 */
-      var pal  = (flags & 0x10) ? this._pal.obp1 : this._pal.obp0;
       var coff = (160 * line + xoff) * 4; /* 160px/line, 4 entries/px */
 
-      /* All sprite tile palettes are at 0x8000-0x8fff => start of vram */
-      var tiled = this._tiles.data[tile];
+      /* All sprite tile palettes are at 0x8000-0x8fff => start of vram.
+         If we're in CGB mode, then we get our palette from the spite flags. We
+         also need to take into account the tile being in a different bank.
+
+         Otherwise, we just use the tile index as a raw index. */
+      var pal, tiled;
+      if (cgb) {
+        tiled = tiles[((flags >> 3) & 1 * 384) + tile];
+        pal   = this.cgb._obp[flags & 0x3];
+      } else {
+        /* bit4 is the palette number. 0 = obp0, 1 = obp1 */
+        pal   = (flags & 0x10) ? this._pal.obp1 : this._pal.obp0;
+        tiled = tiles[tile];
+      }
+
       /* bit6 is the vertical flip bit */
       var row = flags & 0x40 ? tiled[7 - (line - yoff)] : tiled[line - yoff];
 
