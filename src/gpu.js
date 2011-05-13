@@ -318,6 +318,10 @@ JBA.GPU.prototype = {
       this.render_background(scanline);
     }
 
+    if (this.winon) {
+      this.render_window(scanline);
+    }
+
     if (this.objon) {
       this.render_sprites(scanline);
     }
@@ -422,6 +426,77 @@ JBA.GPU.prototype = {
             Bit 7    BG-to-OAM Priority    (0=Use OAM priority, 1=BG Priority)
          */
 
+        var attrs = banks[1][mapbase + mapoff];
+
+        var tile = tiles[tilebase + tilei + ((attrs >> 3) & 1) * 384];
+        bgp   = this.cgb._bgp[attrs & 0x7];
+        bgpri = attrs & 0x80;
+        row   = tile[attrs & 0x40 ? 7 - y : y];
+        hflip = attrs & 0x20;
+
+      } else {
+        /* Non CGB backgrounds are boring :( */
+        row = tiles[tilebase + tilei][y];
+      }
+
+      for (; x < 8 && i < 160; x++, i++, coff += 4) {
+        var colori  = row[hflip ? 7 - x : x];
+        var color   = bgp[colori];
+        /* To indicate bg priority, list a color >= 4 */
+        scanline[i] = bgpri ? 4 : row[colori];
+
+        data[coff]     = color[0];
+        data[coff + 1] = color[1];
+        data[coff + 2] = color[2];
+        data[coff + 3] = color[3];
+      }
+
+      x = 0;
+    } while (i < 160);
+  },
+
+  /** @private */
+  render_window: function(scanline) {
+    if (this.wy >= 144 || this.wx >= 160) {
+      return;
+    }
+    // console.log('hello world');
+    var data  = this.image.data,
+        banks = this.vrambanks,
+        bgp   = this._pal.bg,
+        cgb   = this.mem.cgb,
+        tiles = this._tiles.data;
+
+    var mapbase = this.winmap ? 0x1c00 : 0x1800;
+    mapbase += ((this.ly + this.wy) >> 3) * 32;
+
+    /* X and Y location inside the tile itself to paint */
+    var y = this.ly % 8;
+    var x = this.wx % 8;
+
+    /* Offset into the canvas to draw. line * width * 4 colors */
+    var coff = (this.ly + this.wy) * 160 * 4;
+
+    /* this.tiledata is a flag to determine which tile data table to use.
+       0=8800-97FF, 1=8000-8FFF. For some odd reason, if tiledata = 0, then
+       (&tiles[0]) == 0x9000, where if tiledata = 1, (&tiles[0]) = 0x8000.
+       This implies that the indices are treated as signed numbers.*/
+    var i = this.wx;
+    var tilebase = this.tiledata == 0 ? 128 : 0;
+
+    do {
+      /* Backgrounds wrap around, so calculate the offset into the bgmap each
+         loop to check for wrapping */
+      var mapoff = (i) >> 3;
+      var tilei = banks[0][mapbase + mapoff];
+
+      /* tiledata = 0 => tilei is a signed byte, so fix it here */
+      if (this.tiledata == 0) {
+        tilei = (tilei + 128) & 0xff;
+      }
+
+      var row, bgpri = false, hflip = false;
+      if (cgb) {
         var attrs = banks[1][mapbase + mapoff];
 
         var tile = tiles[tilebase + tilei + ((attrs >> 3) & 1) * 384];
@@ -638,7 +713,7 @@ JBA.GPU.prototype = {
         break;
 
       case 0x4a: this.wy = value; break;
-      case 0x4b: this.wx = value; break;
+      case 0x4b: this.wx = value - 7; break;
 
       case 0x4f:
         if (this.mem.cgb) {
