@@ -253,7 +253,6 @@ class JBA
         @funs['inc_sp'] = "r.sp = (r.sp + 1) & 0xffff; r.m = 2;"
         @funs['dec_sp'] = 'r.sp = (r.sp - 1) & 0xffff; r.m = 2;'
 
-        # TODO: test this
         @funs['add_spn'] = <<-JS.strip_heredoc
           var i = m.rb(r.pc++);
           i = #{sign_fix 'i'};
@@ -261,7 +260,6 @@ class JBA
           r.m = 4;
         JS
 
-        # TODO: test this
         @funs['ld_hlspn'] = <<-JS.strip_heredoc
           var i = m.rb(r.pc++);
           i = #{sign_fix 'i'};
