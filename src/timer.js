@@ -1,5 +1,6 @@
 /**
  * @constructor
+ * @implements {Serializable}
  */
 JBA.Timer = function() {
   this.reset();
@@ -31,6 +32,24 @@ JBA.Timer.prototype = {
     this.tac  = 0;
     this._clock.tima = 0;
     this._clock.div  = 0;
+  },
+
+  serialize: function(io) {
+    io.wb(this.div);
+    io.wb(this.tima);
+    io.wb(this.tma);
+    io.wb(this.tac);
+    io.wb(this._clock.tima);
+    io.wb(this._clock.div);
+  },
+
+  deserialize: function(io) {
+    this.div  = io.rb();
+    this.tima = io.rb();
+    this.tma  = io.rb();
+    this.tac  = io.rb();
+    this._clock.tima = io.rb();
+    this._clock.div  = io.rb();
   },
 
   /**

@@ -37,6 +37,7 @@ var Z80 = {};
  *  - stop : flag as to whether a stop has happened or should
  *
  * @constructor
+ * @implements {Serializable}
  */
 Z80.Registers = function() {
   this.reset();
@@ -78,5 +79,31 @@ Z80.Registers.prototype = {
 
     this.sp = 0xfffe;
     this.pc = 0x0100;
+  },
+
+  serialize: function(io) {
+    io.wb(this.ime);
+    io.wb(this.halt);
+    io.wb(this.stop);
+    io.wb(this.m);
+    io.wb(this.a); io.wb(this.f);
+    io.wb(this.b); io.wb(this.c);
+    io.wb(this.d); io.wb(this.e);
+    io.wb(this.h); io.wb(this.l);
+    io.ww(this.sp);
+    io.ww(this.pc);
+  },
+
+  deserialize: function(io) {
+    this.ime  = io.rb();
+    this.halt = io.rb();
+    this.stop = io.rb();
+    this.m = io.rb();
+    this.a = io.rb(); this.f = io.rb();
+    this.b = io.rb(); this.c = io.rb();
+    this.d = io.rb(); this.e = io.rb();
+    this.h = io.rb(); this.l = io.rb();
+    this.sp = io.rw();
+    this.pc = io.rw();
   }
 };

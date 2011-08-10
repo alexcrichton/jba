@@ -7,12 +7,11 @@ var JBA = function() {
   this.gpu    = new JBA.GPU();
   this.timer  = new JBA.Timer();
 
-  this.cpu.memory = this.memory;
-  this.gpu.mem = this.memory;
-  this.memory.gpu = this.gpu;
+  this.cpu.memory   = this.memory;
+  this.gpu.mem      = this.memory;
+  this.memory.gpu   = this.gpu;
   this.memory.timer = this.timer;
   this.timer.memory = this.memory;
-
   this.memory.powerOn();
 };
 
@@ -133,13 +132,52 @@ JBA.prototype = {
     var cnt = this.fps;
     this.fps = 0;
     return cnt;
+  },
+
+  /**
+   * Marshal this JBA instance into a string which can be loaded with a call to
+   * load_snapshot()
+   *
+   * @return {string} a string representing the state of this gameboy
+   */
+  snapshot: function() {
+    var io = new JBA.StringIO();
+    this.cpu.serialize(io);
+    this.gpu.serialize(io);
+    this.memory.serialize(io);
+    this.timer.serialize(io);
+    return io.data;
+  },
+
+  load_snapshot: function(snapshot) {
+    var io = new JBA.StringIO(snapshot);
+    this.cpu.deserialize(io);
+    this.gpu.deserialize(io);
+    this.memory.deserialize(io);
+    this.timer.deserialize(io);
   }
 };
 
+/**
+ * A serializable object which can be convered to/from a string of bytes
+ * @interface
+ */
+function Serializable() {};
+/**
+ * @param {JBA.StringIO} io the IO object to write to
+ */
+Serializable.prototype.serialize = function(io) {};
+/**
+ * @param {JBA.StringIO} io the IO object to read from
+ */
+Serializable.prototype.deserialize = function(io) {};
+
 window['JBA'] = JBA;
-JBA.prototype['load_rom']     = JBA.prototype.load_rom;
-JBA.prototype['set_canvas']   = JBA.prototype.set_canvas;
-JBA.prototype['bind_keys']    = JBA.prototype.bind_keys;
-JBA.prototype['run']          = JBA.prototype.run;
-JBA.prototype['stop']         = JBA.prototype.stop;
-JBA.prototype['frames_count'] = JBA.prototype.frames_count;
+JBA.prototype['load_rom']      = JBA.prototype.load_rom;
+JBA.prototype['set_canvas']    = JBA.prototype.set_canvas;
+JBA.prototype['bind_keys']     = JBA.prototype.bind_keys;
+JBA.prototype['run']           = JBA.prototype.run;
+JBA.prototype['stop']          = JBA.prototype.stop;
+JBA.prototype['frames_count']  = JBA.prototype.frames_count;
+JBA.prototype['snapshot']      = JBA.prototype.snapshot;
+JBA.prototype['load_snapshot'] = JBA.prototype.load_snapshot;

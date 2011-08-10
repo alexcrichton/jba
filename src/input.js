@@ -1,10 +1,12 @@
 /**
  * @constructor
+ * @implements {Serializable}
  * @param {JBA.Memory} memory the memory which this input will set the interrupt
  *                     request flag for.
  */
 JBA.Input = function(memory) {
   this.memory = memory;
+  this.reset();
 };
 
 // See http://nocash.emubase.de/pandocs.htm#joypadinput for codes
@@ -49,10 +51,27 @@ JBA.Input.prototype = {
   buttons: 0xf,
   directions: 0xf,
 
+  /**
+   * Reset this Input device to its original state.
+   *
+   * @param {Object=} fields optional initial values for the Input fields
+   */
   reset: function() {
     this.col = 0;
-    this.buttons = 0xf;
+    this.buttons    = 0xf;
     this.directions = 0xf;
+  },
+
+  serialize: function(io) {
+    io.wb(this.col);
+    io.wb(this.buttons);
+    io.wb(this.directions);
+  },
+
+  deserialize: function(io) {
+    this.col = io.rb();
+    this.buttons = io.rb();
+    this.directions = io.rb();
   },
 
   rb: function(addr) {

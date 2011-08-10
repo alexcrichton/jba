@@ -2,10 +2,10 @@
  * Contains logic for the CPU of the GB.
  *
  * @constructor
+ * @implements {Serializable}
  */
 JBA.CPU = function() {
   this.registers = new Z80.Registers();
-
   this.reset();
 };
 
@@ -51,6 +51,10 @@ JBA.CPU.prototype = {
     this.ticks = 0;
     this.registers.reset();
   },
+
+  // Don't care about ticks, not sure about size anyway.
+  serialize: function(io) { this.registers.serialize(io); },
+  deserialize: function(io) { this.registers.deserialize(io); },
 
   /**
    * Exec one instruction for this CPU

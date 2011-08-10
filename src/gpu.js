@@ -4,10 +4,14 @@
  * For more information, see: http://nocash.emubase.de/pandocs.htm#videodisplay
  *
  * @constructor
+ * @implements {Serializable}
  */
 JBA.GPU = function() {
   this.reset();
 };
+
+var VRAM_SIZE = (8 << 10); // 8k
+var OAM_SIZE  = 0xa0;      // 0xffe00 - 0xffe9f is OAM
 
 /**
  * Current mode the GPU is in
@@ -134,17 +138,17 @@ JBA.GPU.prototype = {
     var i, j;
     this.vrambank  = 0;
     this.vrambanks = [[], []]; /* CGB supports only 2 banks of VRAM */
-    this.oam  = [];
+    this.oam = [];
 
     /* 8K of vram, 2 banks */
-    for (i = 0; i < (8 << 10); i++) {
+    for (i = 0; i < VRAM_SIZE; i++) {
       this.vrambanks[0][i] = 0;
       this.vrambanks[1][i] = 0;
     }
     this.vram = this.vrambanks[0];
 
     /* 0xffe00 - 0xffe9f is OAM */
-    for (i = 0; i < 0xa0; i++) {
+    for (i = 0; i < OAM_SIZE; i++) {
       this.oam[i] = 0;
     }
 
@@ -186,6 +190,39 @@ JBA.GPU.prototype = {
     if (this.canvas) {
       this.white_canvas();
     }
+  },
+
+  serialize: function(io) {
+    var i;
+    for (i = 0; i < VRAM_SIZE; i++) io.wb(this.vram[i]);
+    for (i = 0; i < OAM_SIZE;  i++) io.wb(this.oam[i]);
+    io.wb(this.mode);
+    io.wb(this.wx); io.wb(this.wy);
+    io.wb(this.obp0); io.wb(this.obp1); io.wb(this.bgp);
+    io.wb(this.scx); io.wb(this.scy);
+    io.wb(this.ly); io.wb(this.lyc); io.wb(this.lycly);
+    io.wb(this.mode0int); io.wb(this.mode1int); io.wb(this.mode2int);
+    io.wb(this.bgon); io.wb(this.objon); io.wb(this.objsize);
+    io.wb(this.bgmap); io.wb(this.tiledata);
+    io.wb(this.winon); io.wb(this.winmap);
+    io.wb(this.lcdon);
+  },
+
+  deserialize: function(io) {
+    // TODO: compiled palettes?
+    var i;
+    for (i = 0; i < VRAM_SIZE; i++) this.vram[i] = io.rb();
+    for (i = 0; i < OAM_SIZE;  i++) this.oam[i]  = io.rb();
+    this.mode = io.rb();
+    this.wx = io.rb(); this.wy = io.rb();
+    this.obp0 = io.rb(); this.obp1 = io.rb(); this.bgp = io.rb();
+    this.scx = io.rb(); this.scy = io.rb();
+    this.ly = io.rb(); this.lyc = io.rb(); this.lycly = io.rb();
+    this.mode0int = io.rb(); this.mode1int = io.rb(); this.mode2int = io.rb();
+    this.bgon = io.rb(); this.objon = io.rb(); this.objsize = io.rb();
+    this.bgmap = io.rb(); this.tiledata = io.rb();
+    this.winon = io.rb(); this.winmap = io.rb();
+    this.lcdon = io.rb();
   },
 
   /**
