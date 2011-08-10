@@ -2,16 +2,30 @@
 <html>
 <head>
   <script src="http://code.jquery.com/jquery.min.js"></script>
-
+  <script src='http://cdnjs.cloudflare.com/ajax/libs/modernizr/2.0.6/modernizr.min.js'></script>
   <%= @js_include %>
 
   <script type='text/javascript'>
     window.gb = new JBA();
 
+    // Run the gameboy, doing some UI tweaks as well
+    function run() {
+      gb.run();
+      $('button').prop('disabled', false);
+      $('button.run').text('Stop');
+      $('.state').text('running');
+    }
+
     $(function() {
+      if (!Modernizr.canvas) {
+        $('#gb, #status, #controls').hide();
+        return;
+      }
+      // Integrate the GB with the current window
       gb.set_canvas($('#gb')[0]);
       gb.bind_keys(window);
 
+      // Callback for selecting new ROMs in the dropdown menu.
       $('.rom select').change(function() {
         $('button').prop('disabled', true);
         $(this).blur();
@@ -23,14 +37,38 @@
           return;
         }
         $('.state').text('loading');
-        gb.load_rom($(this).val(), function() {
-          gb.run();
-          $('button').prop('disabled', false);
-          $('button.run').text('Stop');
-          $('.state').text('running');
-        });
+        gb.load_remote_rom($(this).val(), run);
       });
 
+      // If we can read local files, then bind the link. Otherwise, hide the
+      // link.
+      if (typeof FileReader == 'function') {
+        $('.rom a').click(function() {
+          gb.stop();
+          $('input[type=file]').click();
+          return false;
+        });
+
+        $('.rom input[type=file]').change(function() {
+          var file = this.files[0];
+          var reader = new FileReader();
+          reader.readAsBinaryString(file);
+          reader.onloadend = function() {
+            gb.reset();
+            try {
+              gb.load_rom(reader.result);
+              run();
+            } catch (e) {
+              alert("Invalid ROM!");
+            }
+          };
+        });
+        $('#nofilereader').hide();
+      } else {
+        $('.rom .local').hide();
+      }
+
+      // Callback for the start/stop emulation button.
       $('button.run').click(function() {
         if ($(this).text() == 'Stop') {
           gb.stop();
@@ -43,38 +81,43 @@
         }
       });
 
-      $('button.reset').click(function() { $('.rom select').change() });
-
+      // Callback for reset to the beginning of the rom (power on/off).
+      $('button.reset').click(function() { $('.rom select').change(); });
+      // Callback for the slider to resize the gameboy window.
       $('input[type=range]').change(function() {
         $('#gb').width($(this).val() * 160).height($(this).val() * 144);
       });
-
+      // FPS updater
       setInterval(function() { $('.fps').text(gb.frames_count()); }, 1000);
+
+      // Don't show non-pretty slider range unless it's supported
+      if (!Modernizr.inputtypes.range) {
+        $('input[type=range]').hide();
+      }
+
+      // Please use chrome
+      if (navigator.userAgent.match(/chrome/i)) {
+        $('#nochrome').hide();
+      }
     });
   </script>
 
   <style type="text/css">
-    #gb {
-      border: 1px solid black;
-    }
+    #gb { border: 1px solid black; }
 
     #gb, #controls, #status {
       display: block;
       margin: 0 auto;
     }
 
-    .state {
-      font-style: italic;
-    }
-
-    #controls, #status {
-      text-align: center;
-    }
+    .state { font-style: italic; }
+    #controls, #status, #nochrome { text-align: center; }
 
     dl, div { overflow: auto; }
     dl { font-size: 70%; margin: 0 auto; width: 130px; }
     dt { width: 50px; clear: left; float: left; }
     dd { width: 80px; float: left; margin: 0; }
+    #nochrome { margin-top: 10px; }
   </style>
 </head>
 
@@ -98,6 +141,12 @@
         <option value='/roms/pokemon-blue.gb'>Pokemon Blue</option>
         <option value='/roms/pokemon-silver.gb'>Pokemon Silver</option>
       </select>
+
+      <span class='local'>
+        or
+        <a href='#'>Local ROM</a>
+        <input type='file' style='opacity:0;position:absolute' />
+      </span>
     </div>
 
     <div class='buttons'>
@@ -114,8 +163,13 @@
         <dt>Joypad</dt><dd>arrow keys</dd>
       </dl>
     </div>
+
+  </div>
+
+  <div id='nochrome'>
+    JBA works best in <a href='http://google.com/chrome'>Chrome</a>.
+    <div id='nofilereader'> Also, you can play your own roms in Chrome.</div>
   </div>
 
 </body>
-
 </html>

@@ -75,7 +75,7 @@ JBA.prototype = {
    * @param {string} url the url at which the rom is located.
    * @param {function()} callback invoked if the rom was successfully loaded.
    */
-  load_rom: function(url, callback) {
+  load_remote_rom: function(url, callback) {
     var options = {
       url: url,
       /* Force the browser to interpret this as binary data instead of unicode
@@ -98,6 +98,15 @@ JBA.prototype = {
     options['success'] = options.success;
 
     $.ajax(options);
+  },
+
+  /**
+   * Load a rom from a binary string.
+   *
+   * @param {string} rom the rom as a binary string
+   */
+  load_rom: function(rom) {
+    this.memory.load_cartridge(rom);
   },
 
   /**
@@ -172,12 +181,13 @@ Serializable.prototype.serialize = function(io) {};
  */
 Serializable.prototype.deserialize = function(io) {};
 
-window['JBA'] = JBA;
-JBA.prototype['load_rom']      = JBA.prototype.load_rom;
-JBA.prototype['set_canvas']    = JBA.prototype.set_canvas;
-JBA.prototype['bind_keys']     = JBA.prototype.bind_keys;
-JBA.prototype['run']           = JBA.prototype.run;
-JBA.prototype['stop']          = JBA.prototype.stop;
-JBA.prototype['frames_count']  = JBA.prototype.frames_count;
-JBA.prototype['snapshot']      = JBA.prototype.snapshot;
-JBA.prototype['load_snapshot'] = JBA.prototype.load_snapshot;
+window['JBA']                    = JBA;
+JBA.prototype['load_rom']        = JBA.prototype.load_rom;
+JBA.prototype['load_remote_rom'] = JBA.prototype.load_remote_rom;
+JBA.prototype['set_canvas']      = JBA.prototype.set_canvas;
+JBA.prototype['bind_keys']       = JBA.prototype.bind_keys;
+JBA.prototype['run']             = JBA.prototype.run;
+JBA.prototype['stop']            = JBA.prototype.stop;
+JBA.prototype['frames_count']    = JBA.prototype.frames_count;
+JBA.prototype['snapshot']        = JBA.prototype.snapshot;
+JBA.prototype['load_snapshot']   = JBA.prototype.load_snapshot;
