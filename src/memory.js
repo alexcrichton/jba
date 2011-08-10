@@ -146,6 +146,23 @@ JBA.Memory.prototype = {
   },
 
   /**
+   * Returns the name of the ROM currently loaded into memory.
+   * @return {string} the name of the loaded ROM.
+   */
+  rom_title: function() {
+    // http://nocash.emubase.de/pandocs.htm#thecartridgeheader specifies that
+    // bytes 0x134 - 0x143 are the title of the ROM
+    var title = '';
+    for (var i = 0x134; i <= 0x143; i++) {
+      if (this.rom[i] == 0) {
+        break;
+      }
+      title += String.fromCharCode(this.rom[i]);
+    }
+    return title;
+  },
+
+  /**
    * Loads a string of data as a cartridge into this memory. The data provided
    * will be used as ROM.
    *
