@@ -86,9 +86,9 @@ JBA.Memory.prototype = {
   serialize: function(io) {
     var i;
     this.input.serialize(io);
-    for (i = 0; i < this.rom.length; i++) io.wb(this.rom[i]);
-    for (i = 0; i < this.ram.length; i++) io.wb(this.ram[i]);
-    for (i = 0; i < this.wram.length; i++) io.wb(this.wram[i]);
+    for (i = 0; i < this.rom.length; i++)   io.wb(this.rom[i]);
+    for (i = 0; i < this.ram.length; i++)   io.wb(this.ram[i]);
+    for (i = 0; i < this.wram.length; i++)  io.wb(this.wram[i]);
     for (i = 0; i < this.hiram.length; i++) io.wb(this.hiram[i]);
     io.wb(this.rombank);
     io.wb(this.rambank);
@@ -99,15 +99,15 @@ JBA.Memory.prototype = {
 
   deserialize: function(io) {
     this.input.deserialize(io);
-    for (i = 0; i < this.rom.length; i++) io.wb(this.rom[i]);
-    for (i = 0; i < this.ram.length; i++) io.wb(this.ram[i]);
-    for (i = 0; i < this.wram.length; i++) io.wb(this.wram[i]);
-    for (i = 0; i < this.hiram.length; i++) io.wb(this.hiram[i]);
-    io.wb(this.rombank);
-    io.wb(this.rambank);
-    io.wb(this.wrambank);
-    io.wb(this.ramon);
-    io.wb(this.mode);
+    for (i = 0; i < this.rom.length; i++)   this.rom[i]   = io.rb();
+    for (i = 0; i < this.ram.length; i++)   this.ram[i]   = io.rb();
+    for (i = 0; i < this.wram.length; i++)  this.wram[i]  = io.rb();
+    for (i = 0; i < this.hiram.length; i++) this.hiram[i] = io.rb();
+    this.rombank  = io.rb();
+    this.rambank  = io.rb();
+    this.wrambank = io.rb();
+    this.ramon    = io.rb();
+    this.mode     = io.rb();
   },
 
   powerOn: function() {
