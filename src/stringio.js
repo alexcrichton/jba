@@ -65,7 +65,7 @@ JBA.StringIO.prototype = {
   /**
    * Returns whether we've reached the end of the string.
    *
-   * @return {bool} true if we've reached the end
+   * @return {boolean} true if we've reached the end
    */
   eof: function() {
     return this.position == this.data.length;

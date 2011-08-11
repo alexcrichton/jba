@@ -9,7 +9,13 @@ JBA.Input = function(memory) {
   this.reset();
 };
 
-// See http://nocash.emubase.de/pandocs.htm#joypadinput for codes
+/**
+ * Enum for which column of inputs is selected. See
+ * http://nocash.emubase.de/pandocs.htm#joypadinput for codes and what each
+ * column is.
+ *
+ * @enum {number}
+ */
 JBA.Input.SEL = {
   BUTTON: 0x20,
   DIRECTION: 0x10
@@ -43,7 +49,7 @@ JBA.Input.Map = {
 
 JBA.Input.prototype = {
   /** @type {JBA.Input.SEL} */
-  col: 0,
+  col: JBA.Input.SEL.DIRECTION,
   /** @type {JBA.Memory} */
   memory: null,
 
@@ -53,11 +59,9 @@ JBA.Input.prototype = {
 
   /**
    * Reset this Input device to its original state.
-   *
-   * @param {Object=} fields optional initial values for the Input fields
    */
   reset: function() {
-    this.col = 0;
+    this.col = JBA.Input.SEL.DIRECTION;
     this.buttons    = 0xf;
     this.directions = 0xf;
   },
