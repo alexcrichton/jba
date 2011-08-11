@@ -129,7 +129,7 @@ $(function() {
 
   // If we can read local files, then bind the link. Otherwise, hide the
   // link.
-  'Uint8Array' in window ? implement_load_custom_roms()
+  'FileReader' in window ? implement_load_custom_roms()
                          : $('.rom .local').hide();
 
   // Take snapshots of the GB state and load them into the GB.
