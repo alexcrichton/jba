@@ -24,7 +24,7 @@ var HIRAM_SIZE = 0x7f;    // hiram is from 0xff80 - 0xfffe
  * @enum
  */
 JBA.Memory.MBC = {
-  UNKNOWN: -1,
+  UNKNOWN: 4,
   NONE: 0,
   MBC1: 1,
   MBC2: 2,
