@@ -1,5 +1,5 @@
-require File.expand_path('../lib/jba/generator', __FILE__)
-require File.expand_path('../lib/jba/utils', __FILE__)
+require File.expand_path('../test/generator', __FILE__)
+require File.expand_path('../test/utils', __FILE__)
 
 class JBA < Thor
   include Thor::Actions
@@ -18,16 +18,13 @@ class JBA < Thor
 
   desc 'check', 'Check the js with Google closure compiler'
   def check
-    args = '--warning_level VERBOSE ' + js_args.join(' ')
-    args << ' --js_output_file /dev/null'
-
-    exec 'closure ' + args
+    exec "closure #{js_args} --warning_level VERBOSE --js_output_file /dev/null"
   end
 
   desc 'minify', 'Minify all of the JS into one file'
   def minify
-    exec "closure #{js_args.join(" ")} --js_output_file jba.min.js" \
-      " --compilation_level SIMPLE_OPTIMIZATIONS"
+    exec "closure #{js_args} --js_output_file jba.min.js" \
+         ' --compilation_level SIMPLE_OPTIMIZATIONS'
   end
 
   desc 'server', 'Run the testing server and the "guard" command'
@@ -41,6 +38,6 @@ class JBA < Thor
   protected
 
   def js_args
-    js_files.map{ |s| '--js src/' + s }
+    js_files.map{ |s| '--js src/' + s }.join(' ')
   end
 end

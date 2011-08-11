@@ -1,7 +1,7 @@
 require 'sinatra'
 require 'erb'
 
-require File.expand_path('../../lib/jba/utils', __FILE__)
+require File.expand_path('../utils', __FILE__)
 
 use Rack::Static, :urls => ['/src'],
                   :root => File.expand_path('../..', __FILE__)

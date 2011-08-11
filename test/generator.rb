@@ -1,8 +1,6 @@
 # For a list of instructions, see:
 #   http://nocash.emubase.de/pandocs.htm#cpuinstructionset
 
-require 'active_support/core_ext/string/strip'
-
 class JBA
   module Generator
     Z = 0x80
@@ -99,7 +97,7 @@ class JBA
 
       section '8 bit addition' do
         def add var, name, cycles
-          @funs["add_a#{name}"] = <<-JS.strip_heredoc
+          @funs["add_a#{name}"] = <<-JS
             var i = #{@a}, j = #{var};
             #{@f} = ((i & 0xf) + (j & 0xf) > 0xf ? #{H} : 0);
             #{@f} |= (i + j > 0xff ? #{C} : 0);
@@ -113,7 +111,7 @@ class JBA
         add "m.rb(#{@pc}++)", 'n', 2
 
         def adc var, name, cycles
-          @funs["adc_a#{name}"] = <<-JS.strip_heredoc
+          @funs["adc_a#{name}"] = <<-JS
             var i = #{@a}, j = #{var}, k = !!(#{@f} & #{C});
             #{@f} = ((i & 0xf) + (j & 0xf) + k > 0xf ? #{H} : 0);
             #{@f} |= (i + j + k > 0xff ? #{C} : 0);
@@ -129,7 +127,7 @@ class JBA
 
       section '8 bit subtraction' do
         def sub var, name, cycles
-          @funs["sub_a#{name}"] = <<-JS.strip_heredoc
+          @funs["sub_a#{name}"] = <<-JS
             var a = #{@a};
             var b = #{var};
             #{@f} = #{N} | (a < b ? #{C} : 0) |
@@ -144,7 +142,7 @@ class JBA
         sub "m.rb(#{@pc}++)", 'n', 2
 
         def sbc var, name, cycles
-          @funs["sbc_a#{name}"] = <<-JS.strip_heredoc
+          @funs["sbc_a#{name}"] = <<-JS
             var a = #{@a};
             var b = #{var} + (!!(#{@f} & #{C}));
             #{@f} = #{N} | (a < b ? #{C} : 0) |
@@ -161,7 +159,7 @@ class JBA
 
       section '8 bit bit-ops' do
         def anda var, name, cycles
-          @funs["and_a#{name}"] = <<-JS.strip_heredoc
+          @funs["and_a#{name}"] = <<-JS
             #{@a} &= #{var};
             #{@f} = (#{@a} ? 0 : #{Z}) | #{H};
             #{@m} = #{cycles};
@@ -172,7 +170,7 @@ class JBA
         anda "m.rb(#{@pc}++)", 'n', 2
 
         def xora var, name, cycles
-          @funs["xor_a#{name}"] = <<-JS.strip_heredoc
+          @funs["xor_a#{name}"] = <<-JS
             #{@a} ^= #{var};
             #{@f} = #{@a} ? 0 : #{Z};
             #{@m} = #{cycles};
@@ -183,7 +181,7 @@ class JBA
         xora "m.rb(#{@pc}++)", 'n', 2
 
         def ora var, name, cycles
-          @funs["or_a#{name}"] = <<-JS.strip_heredoc
+          @funs["or_a#{name}"] = <<-JS
             #{@a} |= #{var};
             #{@f} = #{@a} ? 0 : #{Z};
             #{@m} = #{cycles};
@@ -196,7 +194,7 @@ class JBA
 
       section '8 bit comparisons' do
         def cp var, name, cycles
-          @funs["cp_a#{name}"] = <<-JS.strip_heredoc
+          @funs["cp_a#{name}"] = <<-JS
             var a = #{@a};
             var b = #{var};
             #{@f} = #{N} | (a == b ? #{Z} : 0) | (a < b ? #{C} : 0) |
@@ -228,7 +226,7 @@ class JBA
       end
 
       section 'Miscellaneous 8 bit arithmetic' do
-        @funs['daa'] = <<-JS.strip_heredoc
+        @funs['daa'] = <<-JS
           var daa = Z80.daa_table[#{@a} | (#{@f} << 4)];
           #{@a} = daa >> 8;
           #{@f} = daa;
@@ -240,7 +238,7 @@ class JBA
 
       section '16 bit arithmetic' do
         def add_hl name, add_in, hl
-          @funs["add_hl#{name}"] = <<-JS.strip_heredoc
+          @funs["add_hl#{name}"] = <<-JS
             var a = #{hl}, b = #{add_in}, hl = a + b;
             #{@f} &= #{~N & 0xff};
             if (hl > 0xffff) #{@f} |= #{C}; else #{@f} &= #{~C & 0xff};
@@ -263,14 +261,14 @@ class JBA
         @funs['inc_sp'] = "#{@sp}++; #{@m} = 2;"
         @funs['dec_sp'] = "#{@sp}--; #{@m} = 2;"
 
-        @funs['add_spn'] = <<-JS.strip_heredoc
+        @funs['add_spn'] = <<-JS
           var i = m.rb(#{@pc}++);
           i = #{sign_fix 'i'};
           #{@sp} += i;
           #{@m} = 4;
         JS
 
-        @funs['ld_hlspn'] = <<-JS.strip_heredoc
+        @funs['ld_hlspn'] = <<-JS
           var i = m.rb(#{@pc}++);
           i = #{sign_fix 'i'};
           i += #{@sp};
@@ -282,7 +280,7 @@ class JBA
 
       section 'Rotating left' do
         def rlc name, var, cy, before='', after=''
-          @funs["rlc#{name}"] = <<-JS.strip_heredoc
+          @funs["rlc#{name}"] = <<-JS
             #{before};
             var ci = (#{var} & 0x80) ? 1 : 0;
             #{var} = ((#{var} << 1) & 0xff) | ci;
@@ -293,7 +291,7 @@ class JBA
         end
 
         def rl name, var, cy, before='', after=''
-          @funs["rl#{name}"] = <<-JS.strip_heredoc
+          @funs["rl#{name}"] = <<-JS
             #{before};
             var ci = (#{@f} & #{C}) ? 1 : 0;
             var co = #{var} & 0x80;
@@ -316,7 +314,7 @@ class JBA
 
       section 'Rotating right' do
         def rrc name, var, cy, before='', after=''
-          @funs["rrc#{name}"] = <<-JS.strip_heredoc
+          @funs["rrc#{name}"] = <<-JS
             #{before};
             var ci = #{var} & 1;
             #{var} = (#{var} >> 1) | (ci << 7);
@@ -327,7 +325,7 @@ class JBA
         end
 
         def rr name, var, cy, before='', after=''
-          @funs["rr#{name}"] = <<-JS.strip_heredoc
+          @funs["rr#{name}"] = <<-JS
             #{before};
             var ci = (#{@f} & #{C}) ? 0x80 : 0;
             var co = (#{var} & 1) ? #{C} : 0;
@@ -350,7 +348,7 @@ class JBA
 
       section 'Shifting arithmetically left' do
         def sla name, var, cy, before='', after=''
-          @funs["sla_#{name}"] = <<-JS.strip_heredoc
+          @funs["sla_#{name}"] = <<-JS
             #{before};
             var co = (#{var} >> 7) & 1;
             #{var} = #{var} << 1;
@@ -366,13 +364,13 @@ class JBA
 
       section 'Swapping' do
         regs.each do |i, il|
-          @funs["swap_#{i}"] = <<-JS.strip_heredoc
+          @funs["swap_#{i}"] = <<-JS
             var t = #{il}; #{il} = (t << 4) | ((t & 0xf0) >> 4);
             #{@f} = t ? 0 : #{Z}; #{@m} = 2;
           JS
         end
 
-        @funs['swap_hlm'] = <<-JS.strip_heredoc
+        @funs['swap_hlm'] = <<-JS
           var t = m.rb(#{hl}); m.wb(#{hl}, (t << 4) | ((t & 0xf0) >> 4));
           #{@f} = t ? 0 : #{Z}; #{@m} = 4;
         JS
@@ -381,7 +379,7 @@ class JBA
       section 'Shifting arithmetically right' do
         # shift right arithmetic (b7=b7)
         regs.each do |i, il|
-          @funs["sra_#{i}"] = <<-JS.strip_heredoc
+          @funs["sra_#{i}"] = <<-JS
             var a = #{il};
             var co = a & 1;
             a = (a >> 1) | (a & 0x80);
@@ -391,7 +389,7 @@ class JBA
           JS
         end
 
-        @funs['sra_hlm'] = <<-JS.strip_heredoc
+        @funs['sra_hlm'] = <<-JS
           var a = m.rb(#{hl});
           var co = a & 1;
           a = (a >> 1) | (a & 0x80);
@@ -404,7 +402,7 @@ class JBA
       section 'Shifting logically right' do
         # shift right logical (b7=0)
         regs.each do |i, il|
-          @funs["srl_#{i}"] = <<-JS.strip_heredoc
+          @funs["srl_#{i}"] = <<-JS
             var a = #{il};
             var co = (a & 1) ? #{C} : 0;
             a = (a >> 1) & 0x7f;
@@ -414,7 +412,7 @@ class JBA
           JS
         end
 
-        @funs['srl_hlm'] = <<-JS.strip_heredoc
+        @funs['srl_hlm'] = <<-JS
           var a = m.rb(#{hl});
           var co = (a & 1) ? #{C} : 0;
           a = (a >> 1) & 0x7f;
@@ -426,7 +424,7 @@ class JBA
 
       section 'Bit checking' do
         def bitcmp pos, name, reader, cy
-          @funs["bit_#{pos}#{name}"] = <<-JS.strip_heredoc
+          @funs["bit_#{pos}#{name}"] = <<-JS
             var b = #{reader} & #{1 << pos};
             #{@f} = (#{@f} & #{C}) | #{H} | (b ? 0 : #{Z});
             #{@m} = #{cy};
@@ -483,7 +481,7 @@ class JBA
         jp_n 'nc', "!(#{@f} & #{C})"
         jp_n 'c', "#{@f} & #{C}"
 
-        @do_jr = <<-JS.strip_heredoc
+        @do_jr = <<-JS
           var i = m.rb(#{@pc}++);
           i = #{sign_fix 'i'};
           #{@pc} += i;
