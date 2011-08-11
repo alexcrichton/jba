@@ -32,8 +32,8 @@ class JBA
 
       pairs = {'hl' => hl, 'bc' => bc, 'de' => de, 'af' => af}
 
-      hlpp = "#{@l} = (#{@l} + 1) & 0xff; if (!#{@l}) #{@h} = (#{@h} + 1) & 0xff"
-      hlmm = "#{@l} = (#{@l} - 1) & 0xff; if (#{@l} == 0xff) #{@h} = (#{@h} - 1) & 0xff"
+      hlpp = "#{@l} = (#{@l} + 1); if (!#{@l}) #{@h} = (#{@h} + 1)"
+      hlmm = "#{@l} = (#{@l} - 1); if (#{@l} == 0xff) #{@h} = (#{@h} - 1)"
 
       def sign_fix var
         "(#{var} > 127 ? ((#{var} & 127) - 128) : #{var})"
@@ -103,7 +103,7 @@ class JBA
             var i = #{@a}, j = #{var};
             #{@f} = ((i & 0xf) + (j & 0xf) > 0xf ? #{H} : 0);
             #{@f} |= (i + j > 0xff ? #{C} : 0);
-            #{@a} = (i + j) & 0xff;
+            #{@a} = i + j;
             #{@f} |= (#{@a} ? 0 : #{Z});
             #{@m} = #{cycles};
           JS
@@ -117,7 +117,7 @@ class JBA
             var i = #{@a}, j = #{var}, k = !!(#{@f} & #{C});
             #{@f} = ((i & 0xf) + (j & 0xf) + k > 0xf ? #{H} : 0);
             #{@f} |= (i + j + k > 0xff ? #{C} : 0);
-            #{@a} = (i + j + k) & 0xff;
+            #{@a} = i + j + k;
             #{@f} |= (#{@a} ? 0 : #{Z});
             #{@m} = #{cycles};
           JS
@@ -134,7 +134,7 @@ class JBA
             var b = #{var};
             #{@f} = #{N} | (a < b ? #{C} : 0) |
               (((a & 0xf) < (b & 0xf)) ? #{H} : 0);
-            #{@a} = (a - b) & 0xff;
+            #{@a} = a - b;
             #{@f} |= (#{@a} ? 0 : #{Z});
             #{@m} = #{cycles};
           JS
@@ -149,7 +149,7 @@ class JBA
             var b = #{var} + (!!(#{@f} & #{C}));
             #{@f} = #{N} | (a < b ? #{C} : 0) |
               (((a & 0xf) < (b & 0xf)) ? #{H} : 0);
-            #{@a} = (a - b) & 0xff;
+            #{@a} = a - b;
             #{@f} |= (#{@a} ? 0 : #{Z});
             #{@m} = #{cycles};
           JS
@@ -212,18 +212,18 @@ class JBA
 
       section '8 bit increments/decrements' do
         regs.each{ |i, il|
-          @funs["inc_#{i}"] = "#{il} = (#{il} + 1) & 0xff; " \
+          @funs["inc_#{i}"] = "#{il}++; " \
             "#{@f} = (#{il} ? 0 : #{Z}); #{@m} = 1;"
         }
-        @funs['inc_hlm'] = "var hl = #{hl}, k = (m.rb(hl) + 1) & 0xff;" \
+        @funs['inc_hlm'] = "var hl = #{hl}, k = m.rb(hl) + 1;" \
           " m.wb(hl, k); #{@f} = k ? 0 : #{Z}; #{@m} = 3;"
 
         regs.each{ |i, il|
-          @funs["dec_#{i}"] = "#{il} = (#{il} - 1) & 0xff; " \
+          @funs["dec_#{i}"] = "#{il}--; " \
             "#{@f} = #{@f} & 0x1f | #{N} | (#{il} ? 0 : #{Z}) | " \
               "(((#{il} & 0xf) == 0xf) << 5); #{@m} = 1;"
         }
-        @funs['dec_hlm'] = "var hl = #{hl}, k = (m.rb(hl) - 1) & 0xff;" \
+        @funs['dec_hlm'] = "var hl = #{hl}, k = m.rb(hl) - 1;" \
           " m.wb(hl, k); #{@f} = (k ? 0 : #{Z}) | #{N}; #{@m} = 3;"
       end
 
@@ -231,7 +231,7 @@ class JBA
         @funs['daa'] = <<-JS.strip_heredoc
           var daa = Z80.daa_table[#{@a} | (#{@f} << 4)];
           #{@a} = daa >> 8;
-          #{@f} = daa & 0xff;
+          #{@f} = daa;
           #{@m} = 1;
         JS
 
@@ -245,8 +245,8 @@ class JBA
             #{@f} &= #{~N & 0xff};
             if (hl > 0xffff) #{@f} |= #{C}; else #{@f} &= #{~C & 0xff};
             if ((a & 0xfff) + (b & 0xfff) > 0xfff) #{@f} |= #{H};
-            #{@l} = hl & 0xff;
-            #{@h} = (hl >> 8) & 0xff;
+            #{@l} = hl;
+            #{@h} = hl >> 8;
             #{@m} = 2;
           JS
         end
@@ -257,18 +257,16 @@ class JBA
           u = instance_variable_get '@' + p.bytes.to_a[0].chr
           l = instance_variable_get '@' + p.bytes.to_a[1].chr
 
-          @funs["inc_#{p}"] = "#{l} = (#{l} + 1) & 0xff; " \
-            "if (!#{l}) #{u} = (#{u} + 1) & 0xff; #{@m} = 2;"
-          @funs["dec_#{p}"] = "#{l} = (#{l} - 1) & 0xff; " \
-            "if (#{l} == 0xff) #{u} = (#{u} - 1) & 0xff; #{@m} = 2;"
+          @funs["inc_#{p}"] = "#{l}++; if (!#{l}) #{u}++; #{@m} = 2;"
+          @funs["dec_#{p}"] = "#{l}--; if (#{l} == 0xff) #{u}--; #{@m} = 2;"
         }
-        @funs['inc_sp'] = "#{@sp} = (#{@sp} + 1) & 0xffff; #{@m} = 2;"
-        @funs['dec_sp'] = "#{@sp} = (#{@sp} - 1) & 0xffff; #{@m} = 2;"
+        @funs['inc_sp'] = "#{@sp}++; #{@m} = 2;"
+        @funs['dec_sp'] = "#{@sp}--; #{@m} = 2;"
 
         @funs['add_spn'] = <<-JS.strip_heredoc
           var i = m.rb(#{@pc}++);
           i = #{sign_fix 'i'};
-          #{@sp} = (#{@sp} + i) & 0xffff;
+          #{@sp} += i;
           #{@m} = 4;
         JS
 
@@ -276,8 +274,8 @@ class JBA
           var i = m.rb(#{@pc}++);
           i = #{sign_fix 'i'};
           i += #{@sp};
-          #{@h} = (i >> 8) & 0xff;
-          #{@l} = i & 0xff;
+          #{@h} = i >> 8;
+          #{@l} = i;
           #{@m} = 3;
         JS
       end
@@ -355,7 +353,7 @@ class JBA
           @funs["sla_#{name}"] = <<-JS.strip_heredoc
             #{before};
             var co = (#{var} >> 7) & 1;
-            #{var} = (#{var} << 1) & 0xff;
+            #{var} = #{var} << 1;
             #{@f} = (#{var} ? 0 : #{Z}) | (co ? #{C} : 0);
             #{after};
             #{@m} = #{cy};
@@ -369,13 +367,13 @@ class JBA
       section 'Swapping' do
         regs.each do |i, il|
           @funs["swap_#{i}"] = <<-JS.strip_heredoc
-            var t = #{il}; #{il} = ((t & 0xf) << 4) | ((t & 0xf0) >> 4);
+            var t = #{il}; #{il} = (t << 4) | ((t & 0xf0) >> 4);
             #{@f} = t ? 0 : #{Z}; #{@m} = 2;
           JS
         end
 
         @funs['swap_hlm'] = <<-JS.strip_heredoc
-          var t = m.rb(#{hl}); m.wb(#{hl}, ((t & 0xf) << 4) | ((t & 0xf0) >> 4));
+          var t = m.rb(#{hl}); m.wb(#{hl}, (t << 4) | ((t & 0xf0) >> 4));
           #{@f} = t ? 0 : #{Z}; #{@m} = 4;
         JS
       end
@@ -542,11 +540,17 @@ class JBA
       end
 
       @funs.each_pair do |name, body|
-        @out.print '/** @param {Z80.Registers} r ; @param {JBA.Memory} m */ '
-        @out.print name
-        @out.print ': function(r, m, u8, u16){ '
-        @out.print body.gsub("\n", '')
-        @out.puts ' },'
+        @out.print <<-JS
+          /**
+           * @param {Z80.Registers} r
+           * @param {JBA.Memory} m
+           * @param {Uint8Array} u8
+           * @param {Uint16Array} u16
+           */
+          #{name}: function(r, m, u8, u16) {
+            #{body}
+          },
+        JS
       end
     end
 
