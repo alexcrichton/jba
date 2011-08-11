@@ -156,18 +156,18 @@ JBA.prototype = {
    */
   snapshot: function() {
     var io = new JBA.StringIO();
-    this.cpu.serialize(io);
-    this.gpu.serialize(io);
     this.memory.serialize(io);
+    this.gpu.serialize(io);
+    this.cpu.serialize(io);
     this.timer.serialize(io);
     return io.data;
   },
 
   load_snapshot: function(snapshot) {
     var io = new JBA.StringIO(snapshot);
-    this.cpu.deserialize(io);
-    this.gpu.deserialize(io);
     this.memory.deserialize(io);
+    this.gpu.deserialize(io);
+    this.cpu.deserialize(io);
     this.timer.deserialize(io);
     if (!io.eof()) {
       throw "Invalid snapshot!";

@@ -252,6 +252,7 @@ JBA.GPU.prototype = {
     this.vrambank = io.rb();
 
     this.vram = this.vrambanks[this.vrambank];
+    // Update all compiled tiles now
     this.update_palette(this._pal.bg, this.bgp);
     this.update_palette(this._pal.obp0, this.obp0);
     this.update_palette(this._pal.obp1, this.obp1);

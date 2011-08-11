@@ -15,6 +15,10 @@ JBA.Memory = function() {
   this.reset();
 };
 
+var RAM_SIZE  = 32 << 10; // 32 K max on MBC3, 8 KB * 4 banks
+var WRAM_SIZE = 32 << 10; // CGB has 32K (8 banks * 4 KB/bank), GB has 8K
+var HIRAM_SIZE = 0x7f;    // hiram is from 0xff80 - 0xfffe
+
 /**
  * Different MBCs supported
  * @enum
@@ -73,25 +77,22 @@ JBA.Memory.prototype = {
     this.ramon    = 0; // A flag whether ram is enabled or not.
     this.mode     = 0; // Flag whether in ROM banking (0) or RAM banking mode
 
-    for (var i = 0; i < 0xffff; i++) {
-      this.ram[i] = 0;
-      this.wram[i] = 0;
-    }
-
-    for (i = 0; i < 0xff; i++) {
-      this.hiram[i] = 0;
-    }
+    var i;
+    for (i = 0; i < RAM_SIZE; i++)   this.ram[i]   = 0;
+    for (i = 0; i < WRAM_SIZE; i++)  this.wram[i]  = 0;
+    for (i = 0; i < HIRAM_SIZE; i++) this.hiram[i] = 0;
   },
 
   serialize: function(io) {
     var i;
-    this.input.serialize(io);
-    // byte 0x148 is the size of the ROM, see rom_size().
-    io.wb(this.rom[0x148]);
-    for (i = 0; i < this.rom_size(); i++)   io.wb(this.rom[i]);
-    for (i = 0; i < this.ram.length; i++)   io.wb(this.ram[i]);
-    for (i = 0; i < this.wram.length; i++)  io.wb(this.wram[i]);
-    for (i = 0; i < this.hiram.length; i++) io.wb(this.hiram[i]);
+    // The cartridge header is small, only 80 bytes. We don't need to serialize
+    // the ROM because it can be large, but when reloading data, we'd want to
+    // make sure that the save state we're loading is meant for the right game.
+    // Boundaries - http://nocash.emubase.de/pandocs.htm#thecartridgeheader
+    for (i = 0x100; i <= 0x14f; i++) io.wb(this.rom[i]);
+    for (i = 0; i < RAM_SIZE; i++)   io.wb(this.ram[i]);
+    for (i = 0; i < WRAM_SIZE; i++)  io.wb(this.wram[i]);
+    for (i = 0; i < HIRAM_SIZE; i++) io.wb(this.hiram[i]);
     io.wb(this.rombank);
     io.wb(this.rambank);
     io.wb(this.wrambank);
@@ -101,15 +102,20 @@ JBA.Memory.prototype = {
     io.wb(this._if);
     io.wb(this._ie);
     io.wb(this.cgb);
+    this.input.serialize(io);
   },
 
   deserialize: function(io) {
-    this.input.deserialize(io);
-    var i, romsize = this.rom_size(io.rb());
-    for (i = 0; i < romsize; i++)           this.rom[i]   = io.rb();
-    for (i = 0; i < this.ram.length; i++)   this.ram[i]   = io.rb();
-    for (i = 0; i < this.wram.length; i++)  this.wram[i]  = io.rb();
-    for (i = 0; i < this.hiram.length; i++) this.hiram[i] = io.rb();
+    var i;
+    // See above for why we perform this initial sanity check
+    for (i = 0x100; i <= 0x14f; i++) {
+      if (io.rb() != this.rom[i]) {
+        throw 'Wrong cartridge is loaded for save state!';
+      }
+    }
+    for (i = 0; i < RAM_SIZE; i++)   this.ram[i]   = io.rb();
+    for (i = 0; i < WRAM_SIZE; i++)  this.wram[i]  = io.rb();
+    for (i = 0; i < HIRAM_SIZE; i++) this.hiram[i] = io.rb();
     this.rombank  = io.rb();
     this.rambank  = io.rb();
     this.wrambank = io.rb();
@@ -119,37 +125,7 @@ JBA.Memory.prototype = {
     this._if      = io.rb();
     this._ie      = io.rb();
     this.cgb      = io.rb();
-  },
-
-  /**
-   * Calculate the rom size based off of the value at 0x148 in the cartridge
-   * header.
-   *
-   * @param {number=} identifier if specified, this is used rather than the
-   *                  value at 0x148
-   * @return {number} the size of the ROM
-   *
-   * See http://nocash.emubase.de/pandocs.htm#thecartridgeheader
-   * @private
-   */
-  rom_size: function(identifier) {
-    if (!identifier) {
-      identifier = this.rom[0x148];
-    }
-    switch (identifier) {
-      case 0x00: return  32 << 10; // 32 KB
-      case 0x01: return  64 << 10; // 64 KB
-      case 0x02: return 128 << 10; // 128 KB
-      case 0x03: return 256 << 10; // 256 KB
-      case 0x04: return 512 << 10; // 512 KB
-      case 0x05: return   1 << 20; // 1 MB
-      case 0x06: return   2 << 20; // 2 MB
-      case 0x07: return   4 << 20; // 4 MB
-      case 0x52: return   1179648; // 1.1 MB = 72 banks * 16 KB/bank
-      case 0x53: return   1310720; // 1.2 MB = 80 banks * 16 KB/bank
-      case 0x54: return   1572864; // 1.5 MB = 96 banks * 16 KB/bank
-      default: throw "Unknown romsize type";
-    }
+    this.input.deserialize(io);
   },
 
   powerOn: function() {
@@ -226,7 +202,6 @@ JBA.Memory.prototype = {
 
     // See http://nocash.emubase.de/pandocs.htm#thecartridgeheader for
     // header information.
-
     switch (this.rom[0x0147]) {
       case 0x00:            // rom only
       case 0x08:            // rom + ram
@@ -334,7 +309,7 @@ JBA.Memory.prototype = {
         } else if (addr < 0xff80) { // I/O ports
           return this.ioreg_rb(addr);
         } else if (addr < 0xffff) { // High RAM
-          return this.hiram[addr & 0xff];
+          return this.hiram[addr & 0x7f];
         } else {
           return this._ie;
         }
@@ -438,6 +413,9 @@ JBA.Memory.prototype = {
               this.rombank = (this.rombank & 0x1f) | ((value & 0x3) << 5);
             } else { // RAM banking mode
               this.rambank = value & 0x3;
+              if (this.rambank >= 8) {
+                throw 'Need to add some more ram!';
+              }
             }
             break;
 
@@ -498,7 +476,7 @@ JBA.Memory.prototype = {
         } else if (addr < 0xff80) {
           this.ioreg_wb(addr, value);
         } else if (addr < 0xffff) {
-          this.hiram[addr & 0xff] = value;
+          this.hiram[addr & 0x7f] = value;
         } else {
           this._ie = value;
         }
@@ -554,6 +532,9 @@ JBA.Memory.prototype = {
         if (this.cgb && addr == 0xff70) {
           value &= 0x7; /* only bits 0-2 are used */
           this.wrambank = value + (!value); /* default to 1 */
+          if (this.wrambank >= 8) {
+            throw 'Need to add some more wram!';
+          }
         }
         break;
 
