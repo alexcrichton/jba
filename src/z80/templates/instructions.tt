@@ -17,7 +17,7 @@ Z80.ops = {
    * @param {Z80.Registers} r the registers to modify
    * @param {JBA.Memory} m the memory to read/write to
    */
-  xx: function(r, m) {throw "garbage instruction!";},
+  xx: function() { throw "garbage instruction!"; },
 
   /**
    * Read next byte and execute from CB table
@@ -25,10 +25,9 @@ Z80.ops = {
    * @param {Z80.Registers} r the registers to modify
    * @param {JBA.Memory} m the memory to read/write to
    */
-  map_cb: function(r, m) {
-    var fun = Z80.cbmap[m.rb(r.pc++)];
-    r.pc &= 0xffff;
-    fun(r, m);
+  map_cb: function(r, m, u8regs, u16regs) {
+    var fun = Z80.cbmap[m.rb(u16regs[Z80.PC]++)];
+    fun(r, m, u8regs, u16regs);
   },
 
   <%= @instructions.gsub(/,\s+\Z/, '') %>

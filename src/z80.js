@@ -43,21 +43,35 @@ Z80.Registers = function() {
   this.reset();
 };
 
-Z80.Registers.prototype = {
-  a: 0, b: 0, c: 0, d: 0, e: 0, f: 0, h: 0, l: 0,
+// Index of each register in the u8regs array
+Z80.A = 0;
+Z80.B = 1;
+Z80.C = 2;
+Z80.D = 3;
+Z80.E = 4;
+Z80.F = 5;
+Z80.H = 6;
+Z80.L = 7;
+Z80.M = 8;
 
-  sp: 0, // Stack pointer
-  pc: 0, // Program counter
+// Index of each register in u16regs array
+Z80.SP = 0;
+Z80.PC = 1;
+
+Z80.Registers.prototype = {
   m: 0, // Cycles of last instruction
 
   ime: 0, // Interrupts enabled flag
   halt: 0, // Halt until interrupt occurs
   stop: 0, // kill processor ?
 
-  af: function() { return (this.a << 8) | this.f; },
-  bc: function() { return (this.b << 8) | this.c; },
-  de: function() { return (this.d << 8) | this.e; },
-  hl: function() { return (this.h << 8) | this.l; },
+  u8regs:  new Uint8Array(9),
+  u16regs: new Uint16Array(2),
+
+  af: function() { return (this.u8regs[Z80.A] << 8) | this.u8regs[Z80.F]; },
+  bc: function() { return (this.u8regs[Z80.B] << 8) | this.u8regs[Z80.C]; },
+  de: function() { return (this.u8regs[Z80.D] << 8) | this.u8regs[Z80.E]; },
+  hl: function() { return (this.u8regs[Z80.H] << 8) | this.u8regs[Z80.L]; },
 
   /**
    * Resets the registers to a know value from which emulation can possibly
@@ -72,38 +86,31 @@ Z80.Registers.prototype = {
     // See: http://nocash.emubase.de/pandocs.htm#powerupsequence
     // We initialize A to 0x11 instead of 0x01 because we're emulating CGB
     // hardware and this is how the difference is detected
-    this.a = 0x11; this.f = 0xb0;
-    this.b = 0x00; this.c = 0x13;
-    this.d = 0x00; this.e = 0xd8;
-    this.h = 0x01; this.l = 0x4d;
+    var u8 = this.u8regs, u16 = this.u16regs;
+    u8[Z80.A] = 0x11; u8[Z80.F] = 0xb0;
+    u8[Z80.B] = 0x00; u8[Z80.C] = 0x13;
+    u8[Z80.D] = 0x00; u8[Z80.E] = 0xd8;
+    u8[Z80.H] = 0x01; u8[Z80.L] = 0x4d;
 
-    this.sp = 0xfffe;
-    this.pc = 0x0100;
+    u16[Z80.SP] = 0xfffe;
+    u16[Z80.PC] = 0x0100;
   },
 
   serialize: function(io) {
     io.wb(this.ime);
     io.wb(this.halt);
     io.wb(this.stop);
-    io.wb(this.m);
-    io.wb(this.a); io.wb(this.f);
-    io.wb(this.b); io.wb(this.c);
-    io.wb(this.d); io.wb(this.e);
-    io.wb(this.h); io.wb(this.l);
-    io.ww(this.sp);
-    io.ww(this.pc);
+    var i;
+    for (i = 0; i < this.u8regs.length;  i++) io.wb(this.u8regs[i]);
+    for (i = 0; i < this.u16regs.length; i++) io.ww(this.u16regs[i]);
   },
 
   deserialize: function(io) {
     this.ime  = io.rb();
     this.halt = io.rb();
     this.stop = io.rb();
-    this.m = io.rb();
-    this.a = io.rb(); this.f = io.rb();
-    this.b = io.rb(); this.c = io.rb();
-    this.d = io.rb(); this.e = io.rb();
-    this.h = io.rb(); this.l = io.rb();
-    this.sp = io.rw();
-    this.pc = io.rw();
+    var i;
+    for (i = 0; i < this.u8regs.length;  i++) this.u8regs[i]  = io.rb();
+    for (i = 0; i < this.u16regs.length; i++) this.u16regs[i] = io.rw();
   }
 };

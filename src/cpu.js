@@ -16,11 +16,11 @@ JBA.CPU.Interrupts = [];
 
 (function() {
   function deliver_interrupt(mask, rst) {
-    return function(r, m) {
+    return function(r, m, u8regs, u16regs) {
       r.ime = 0;
       r.halt = 0;
       m._if &= (~mask) & 0xff;
-      rst(r, m);
+      rst(r, m, u8regs, u16regs);
     };
   }
 
@@ -62,7 +62,7 @@ JBA.CPU.prototype = {
    * @return {number} the number of cycles the instruction took to run.
    */
   exec: function() {
-    var r = this.registers, m = this.memory;
+    var r = this.registers, m = this.memory, u8 = r.u8regs, u16 = r.u16regs;
 
     /* When the CPU halts, it simply goes into a "low power mode" that doesn't
        execute any more instructions until an interrupt comes in. Deferring
@@ -71,22 +71,24 @@ JBA.CPU.prototype = {
        continuously happens until an interrupt comes in which will disable the
        halt flag */
     if (r.halt == 0) {
-      var instruction = m.rb(r.pc++);
-      Z80.map[instruction](r, m);
+      var instruction = m.rb(u16[Z80.PC]++);
+      Z80.map[instruction](r, m, u8, u16);
     } else {
-      r.m = 1;
+      u8[Z80.M] = 1;
     }
 
-    var ticks = r.m * 4;
-    r.m = 0;
+    var ticks = u8[Z80.M] * 4;
+    u8[Z80.M] = 0;
 
     // See http://nocash.emubase.de/pandocs.htm#interrupts
     if (r.ime) {
       var interrupts = m._if & m._ie;
 
-      JBA.CPU.Interrupts[interrupts](r, m);
+      if (interrupts) {
+        JBA.CPU.Interrupts[interrupts](r, m, u8, u16);
 
-      ticks += r.m * 4;
+        ticks += u8[Z80.M] * 4;
+      }
     }
 
     this.ticks += ticks;

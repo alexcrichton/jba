@@ -13,17 +13,17 @@ class JBA
     def generate_z80 out = nil
       @out = out || STDOUT
 
-      @a = "r.a"
-      @b = "r.b"
-      @c = "r.c"
-      @d = "r.d"
-      @e = "r.e"
-      @f = "r.f"
-      @h = "r.h"
-      @l = "r.l"
-      @m = "r.m"
-      @sp = 'r.sp'
-      @pc = 'r.pc'
+      @a = "u8[Z80.A]"
+      @b = "u8[Z80.B]"
+      @c = "u8[Z80.C]"
+      @d = "u8[Z80.D]"
+      @e = "u8[Z80.E]"
+      @f = "u8[Z80.F]"
+      @h = "u8[Z80.H]"
+      @l = "u8[Z80.L]"
+      @m = "u8[Z80.M]"
+      @sp = 'u16[Z80.SP]'
+      @pc = 'u16[Z80.PC]'
       regs = {:b => @b, :c => @c, :d => @d, :e => @e, :h => @h, :l => @l, :a => @a}
       hl = "(#{@h} << 8) | #{@l}"
       bc = "(#{@b} << 8) | #{@c}"
@@ -544,7 +544,7 @@ class JBA
       @funs.each_pair do |name, body|
         @out.print '/** @param {Z80.Registers} r ; @param {JBA.Memory} m */ '
         @out.print name
-        @out.print ': function(r, m){ '
+        @out.print ': function(r, m, u8, u16){ '
         @out.print body.gsub("\n", '')
         @out.puts ' },'
       end

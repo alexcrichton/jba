@@ -24,20 +24,21 @@ module('Z80 - Instructions', {
 });
 
 function opcode_test(opcode, pc_diff, cycles, callback) {
-  var prev = reg.pc;
-  mem.wb(reg.pc, opcode);
+  var prev = reg.u16regs[Z80.PC];
+  mem.wb(reg.u16regs[Z80.PC], opcode);
   var ret = cpu.exec();
   callback();
-  equals(reg.pc - prev, pc_diff, "Program counter changed by " + pc_diff);
+  equals(reg.u16regs[Z80.PC] - prev, pc_diff,
+         "Program counter changed by " + pc_diff);
   equals(ret, 4 * cycles, "Cycles taken by instruction: " + (4 * cycles));
 }
 
 function stub_next_word(val) {
-  mem.ww(reg.pc + 1, val);
+  mem.ww(reg.u16regs[Z80.PC] + 1, val);
 }
 
 function stub_next_byte(val) {
-  mem.wb(reg.pc + 1, val);
+  mem.wb(reg.u16regs[Z80.PC] + 1, val);
 }
 
 /******************************************************************************/
@@ -45,22 +46,22 @@ function stub_next_byte(val) {
 /******************************************************************************/
 test('nop', function() {
   // Just making sure the pc changed by 1
-  opcode_test(0x00, 1, 1, function(){});
+  opcode_test(0x00, 1, 1, function() {});
 });
 
 test('ld BC, nn', function() {
   stub_next_word(0xf892);
 
   opcode_test(0x01, 3, 3, function() {
-    equals(reg.b, 0xf8);
-    equals(reg.c, 0x92);
+    equals(reg.u8regs[Z80.B], 0xf8);
+    equals(reg.u8regs[Z80.C], 0x92);
   });
 });
 
 test('ld (BC), A', function() {
-  reg.a = 0xf3;
-  reg.b = 0x42;
-  reg.c = 0x02;
+  reg.u8regs[Z80.A] = 0xf3;
+  reg.u8regs[Z80.B] = 0x42;
+  reg.u8regs[Z80.C] = 0x02;
 
   opcode_test(0x02, 1, 2, function() {
     equals(mem.rb(0x4202), 0xf3);
@@ -68,97 +69,97 @@ test('ld (BC), A', function() {
 });
 
 test('inc BC', function() {
-  reg.b = 0x33;
-  reg.c = 0x48;
+  reg.u8regs[Z80.B] = 0x33;
+  reg.u8regs[Z80.C] = 0x48;
 
   opcode_test(0x03, 1, 2, function() {
-    equals(reg.b, 0x33);
-    equals(reg.c, 0x49);
+    equals(reg.u8regs[Z80.B], 0x33);
+    equals(reg.u8regs[Z80.C], 0x49);
   });
 });
 
 test('inc B', function() {
   // Generic incrementing
-  // reg.b = 0x33;
-  // reg.f = 0x10;
+  // reg.u8regs[Z80.B] = 0x33;
+  // reg.u8regs[Z80.F] = 0x10;
   // opcode_test(0x04, 1, 1, function() {
-  //   equals(reg.b, 0x34);
-  //   equals(reg.f, 0x10);
+  //   equals(reg.u8regs[Z80.B], 0x34);
+  //   equals(reg.u8regs[Z80.F], 0x10);
   // });
 
   // Low 4 bits carry
-  // reg.b = 0x3f;
-  // reg.f = 0x10;
+  // reg.u8regs[Z80.B] = 0x3f;
+  // reg.u8regs[Z80.F] = 0x10;
   // opcode_test(0x04, 1, 1, function() {
-  //   equals(reg.f, 0x30);
+  //   equals(reg.u8regs[Z80.F], 0x30);
   // });
 
   // Zero Flag
-  reg.b = 0xff;
-  reg.f = 0x00;
+  reg.u8regs[Z80.B] = 0xff;
+  reg.u8regs[Z80.F] = 0x00;
   opcode_test(0x04, 1, 1, function() {
-    equals(reg.b, 0x00);
-    // equals(reg.f, 0xa0);
+    equals(reg.u8regs[Z80.B], 0x00);
+    // equals(reg.u8regs[Z80.F], 0xa0);
   });
 });
 
 test('dec B', function() {
   // Generic decrementing
-  reg.b = 0x33;
-  reg.f = 0x10;
+  reg.u8regs[Z80.B] = 0x33;
+  reg.u8regs[Z80.F] = 0x10;
   opcode_test(0x05, 1, 1, function() {
-    equals(reg.b, 0x32);
-    equals(reg.f, 0x50);
+    equals(reg.u8regs[Z80.B], 0x32);
+    equals(reg.u8regs[Z80.F], 0x50);
   });
 
   // Low 4 bits carry
-  reg.b = 0x30;
-  reg.f = 0x10;
+  reg.u8regs[Z80.B] = 0x30;
+  reg.u8regs[Z80.F] = 0x10;
   opcode_test(0x05, 1, 1, function() {
-    equals(reg.b, 0x2f);
-    equals(reg.f, 0x70);
+    equals(reg.u8regs[Z80.B], 0x2f);
+    equals(reg.u8regs[Z80.F], 0x70);
   });
 
   // Zero flag
-  reg.b = 0x01;
-  reg.f = 0x00;
+  reg.u8regs[Z80.B] = 0x01;
+  reg.u8regs[Z80.F] = 0x00;
   opcode_test(0x05, 1, 1, function() {
-    equals(reg.b, 0x00);
-    equals(reg.f, 0xc0);
+    equals(reg.u8regs[Z80.B], 0x00);
+    equals(reg.u8regs[Z80.F], 0xc0);
   });
 
   // Wrap around
-  reg.b = 0x00;
-  reg.f = 0x10;
+  reg.u8regs[Z80.B] = 0x00;
+  reg.u8regs[Z80.F] = 0x10;
   opcode_test(0x05, 1, 1, function() {
-    equals(reg.b, 0xff);
-    equals(reg.f, 0x70);
+    equals(reg.u8regs[Z80.B], 0xff);
+    equals(reg.u8regs[Z80.F], 0x70);
   });
 });
 
 test('ld B, n', function() {
   stub_next_byte(0x36);
 
-  opcode_test(0x06, 2, 2, function() { equals(reg.b, 0x36); });
+  opcode_test(0x06, 2, 2, function() { equals(reg.u8regs[Z80.B], 0x36); });
 });
 
 test('rlca', function() {
-  reg.a = 0x01;
+  reg.u8regs[Z80.A] = 0x01;
   opcode_test(0x07, 1, 1, function() {
-    equals(reg.a, 0x02);
-    equals(reg.f, 0x00);
+    equals(reg.u8regs[Z80.A], 0x02);
+    equals(reg.u8regs[Z80.F], 0x00);
   });
 
-  reg.a = 0x8f;
+  reg.u8regs[Z80.A] = 0x8f;
   opcode_test(0x07, 1, 1, function() {
-    equals(reg.a, 0x1f);
-    equals(reg.f, 0x10);
+    equals(reg.u8regs[Z80.A], 0x1f);
+    equals(reg.u8regs[Z80.F], 0x10);
   });
 });
 
 test('ld (n), SP', function() {
   stub_next_word(0xf0f0);
-  reg.sp = 0x7893;
+  reg.u16regs[Z80.SP] = 0x7893;
 
   opcode_test(0x08, 3, 4, function() {
     equals(mem.rw(0xf0f0), 0x7893);
@@ -166,53 +167,53 @@ test('ld (n), SP', function() {
 });
 
 test('add HL, BC', function() {
-  reg.b = 0xf0;
-  reg.c = 0xe0;
-  reg.h = 0x87;
-  reg.l = 0x10;
-  reg.f = 0;
+  reg.u8regs[Z80.B] = 0xf0;
+  reg.u8regs[Z80.C] = 0xe0;
+  reg.u8regs[Z80.H] = 0x87;
+  reg.u8regs[Z80.L] = 0x10;
+  reg.u8regs[Z80.F] = 0;
 
   // Carry, no half carry
   opcode_test(0x09, 1, 2, function() {
-    equals(reg.l, 0xf0);
-    equals(reg.h, 0x77);
-    equals(reg.f, 0x10);
+    equals(reg.u8regs[Z80.L], 0xf0);
+    equals(reg.u8regs[Z80.H], 0x77);
+    equals(reg.u8regs[Z80.F], 0x10);
   });
 });
 
 test('ld A, (BC)', function() {
-  reg.b = 0x78;
-  reg.c = 0x80;
+  reg.u8regs[Z80.B] = 0x78;
+  reg.u8regs[Z80.C] = 0x80;
   mem.wb(0x7880, 0x93);
 
   opcode_test(0x0a, 1, 2, function() {
-    equals(reg.a, 0x93);
+    equals(reg.u8regs[Z80.A], 0x93);
   });
 });
 
 test('dec BC', function() {
   // Generic decrementing
-  reg.b = 0x20;
-  reg.c = 0x33;
+  reg.u8regs[Z80.B] = 0x20;
+  reg.u8regs[Z80.C] = 0x33;
   opcode_test(0x0b, 1, 2, function() {
-    equals(reg.c, 0x32);
-    equals(reg.b, 0x20);
+    equals(reg.u8regs[Z80.C], 0x32);
+    equals(reg.u8regs[Z80.B], 0x20);
   });
 
   // Wrap around
-  reg.b = 0x01;
-  reg.c = 0x00;
+  reg.u8regs[Z80.B] = 0x01;
+  reg.u8regs[Z80.C] = 0x00;
   opcode_test(0x0b, 1, 2, function() {
-    equals(reg.b, 0x00);
-    equals(reg.c, 0xff);
+    equals(reg.u8regs[Z80.B], 0x00);
+    equals(reg.u8regs[Z80.C], 0xff);
   });
 
   // Total wrap
-  reg.b = 0x00;
-  reg.c = 0x00;
+  reg.u8regs[Z80.B] = 0x00;
+  reg.u8regs[Z80.C] = 0x00;
   opcode_test(0x0b, 1, 2, function() {
-    equals(reg.b, 0xff);
-    equals(reg.c, 0xff);
+    equals(reg.u8regs[Z80.B], 0xff);
+    equals(reg.u8regs[Z80.C], 0xff);
   });
 });
 
@@ -222,21 +223,21 @@ test('dec BC', function() {
 
 test('ld C, n', function() {
   stub_next_byte(0x20);
-  opcode_test(0x0e, 2, 2, function() { equals(reg.c, 0x20); });
+  opcode_test(0x0e, 2, 2, function() { equals(reg.u8regs[Z80.C], 0x20); });
 });
 
 test('rrca', function() {
-  reg.a = 0x02;
-  reg.f = 0;
+  reg.u8regs[Z80.A] = 0x02;
+  reg.u8regs[Z80.F] = 0;
   opcode_test(0x0f, 1, 1, function() {
-    equals(reg.a, 0x01);
-    equals(reg.f, 0x00);
+    equals(reg.u8regs[Z80.A], 0x01);
+    equals(reg.u8regs[Z80.F], 0x00);
   });
 
-  reg.a = 0x01;
+  reg.u8regs[Z80.A] = 0x01;
   opcode_test(0x0f, 1, 1, function() {
-    equals(reg.a, 0x80);
-    equals(reg.f, 0x10);
+    equals(reg.u8regs[Z80.A], 0x80);
+    equals(reg.u8regs[Z80.F], 0x10);
   });
 });
 
@@ -246,15 +247,15 @@ test('rrca', function() {
 test('ld DE, nn', function() {
   stub_next_word(0x8739);
   opcode_test(0x11, 3, 3, function() {
-    equals(reg.d, 0x87);
-    equals(reg.e, 0x39);
+    equals(reg.u8regs[Z80.D], 0x87);
+    equals(reg.u8regs[Z80.E], 0x39);
   });
 });
 
 test('ld (DE), A', function() {
-  reg.a = 0x22;
-  reg.d = 0x39;
-  reg.e = 0x88;
+  reg.u8regs[Z80.A] = 0x22;
+  reg.u8regs[Z80.D] = 0x39;
+  reg.u8regs[Z80.E] = 0x88;
   opcode_test(0x12, 1, 2, function() {
     equals(mem.rb(0x3988), 0x22);
   });
@@ -269,17 +270,17 @@ test('ld (DE), A', function() {
 // test('ld D, n', function() { });
 
 test('rla', function() {
-  reg.a = 0x01;
-  reg.f = 0x10;
+  reg.u8regs[Z80.A] = 0x01;
+  reg.u8regs[Z80.F] = 0x10;
   opcode_test(0x17, 1, 1, function() {
-    equals(reg.a, 0x03);
-    equals(reg.f, 0x00);
+    equals(reg.u8regs[Z80.A], 0x03);
+    equals(reg.u8regs[Z80.F], 0x00);
   });
 
-  reg.a = 0x8f;
+  reg.u8regs[Z80.A] = 0x8f;
   opcode_test(0x17, 1, 1, function() {
-    equals(reg.a, 0x1e);
-    equals(reg.f, 0x10);
+    equals(reg.u8regs[Z80.A], 0x1e);
+    equals(reg.u8regs[Z80.F], 0x10);
   });
 });
 
@@ -299,33 +300,33 @@ test('jr n', function() {
 /******************************************************************************/
 
 test('ld a, n', function() {
-  reg.a = 0x01;
+  reg.u8regs[Z80.A] = 0x01;
   stub_next_byte(0x20);
   opcode_test(0x3e, 2, 2, function() {
-    equals(reg.a, 0x20);
+    equals(reg.u8regs[Z80.A], 0x20);
   });
 });
 
 test('scf', function() {
-  reg.f = 0x10;
-  opcode_test(0x37, 1, 1, function() { equals(reg.f, 0x10); });
+  reg.u8regs[Z80.F] = 0x10;
+  opcode_test(0x37, 1, 1, function() { equals(reg.u8regs[Z80.F], 0x10); });
 
-  reg.f = 0x60;
-  opcode_test(0x37, 1, 1, function() { equals(reg.f, 0x10); });
+  reg.u8regs[Z80.F] = 0x60;
+  opcode_test(0x37, 1, 1, function() { equals(reg.u8regs[Z80.F], 0x10); });
 
-  reg.f = 0x80;
-  opcode_test(0x37, 1, 1, function() { equals(reg.f, 0x90); });
+  reg.u8regs[Z80.F] = 0x80;
+  opcode_test(0x37, 1, 1, function() { equals(reg.u8regs[Z80.F], 0x90); });
 });
 
 test('ccf', function() {
-  reg.f = 0x10;
-  opcode_test(0x3f, 1, 1, function() { equals(reg.f, 0x00); });
+  reg.u8regs[Z80.F] = 0x10;
+  opcode_test(0x3f, 1, 1, function() { equals(reg.u8regs[Z80.F], 0x00); });
 
-  reg.f = 0x60;
-  opcode_test(0x3f, 1, 1, function() { equals(reg.f, 0x10); });
+  reg.u8regs[Z80.F] = 0x60;
+  opcode_test(0x3f, 1, 1, function() { equals(reg.u8regs[Z80.F], 0x10); });
 
-  reg.f = 0x80;
-  opcode_test(0x3f, 1, 1, function() { equals(reg.f, 0x90); });
+  reg.u8regs[Z80.F] = 0x80;
+  opcode_test(0x3f, 1, 1, function() { equals(reg.u8regs[Z80.F], 0x90); });
 });
 
 /******************************************************************************/
@@ -333,31 +334,31 @@ test('ccf', function() {
 /******************************************************************************/
 test('cp b', function() {
   // zero flag
-  reg.a = 0x1;
-  reg.b = 0x1;
+  reg.u8regs[Z80.A] = 0x1;
+  reg.u8regs[Z80.B] = 0x1;
   opcode_test(0xb8, 1, 1, function() {
-    equals(reg.f, Z | N);
+    equals(reg.u8regs[Z80.F], Z | N);
   });
 
   // no flags other than N
-  reg.a = 0x2;
-  reg.b = 0x1;
+  reg.u8regs[Z80.A] = 0x2;
+  reg.u8regs[Z80.B] = 0x1;
   opcode_test(0xb8, 1, 1, function() {
-    equals(reg.f, N);
+    equals(reg.u8regs[Z80.F], N);
   });
 
   // H and C flags
-  reg.a = 0x0;
-  reg.b = 0x1;
+  reg.u8regs[Z80.A] = 0x0;
+  reg.u8regs[Z80.B] = 0x1;
   opcode_test(0xb8, 1, 1, function() {
-    equals(reg.f, N | H | C);
+    equals(reg.u8regs[Z80.F], N | H | C);
   });
 
   // just carry flag
-  reg.a = 0x00;
-  reg.b = 0x10;
+  reg.u8regs[Z80.A] = 0x00;
+  reg.u8regs[Z80.B] = 0x10;
   opcode_test(0xb8, 1, 1, function() {
-    equals(reg.f, N | C);
+    equals(reg.u8regs[Z80.F], N | C);
   });
 });
 
@@ -366,149 +367,149 @@ test('cp b', function() {
 /******************************************************************************/
 
 test('pop bc', function() {
-  reg.b = 0x01;
-  reg.c = 0x01;
-  reg.sp = 0x1111;
+  reg.u8regs[Z80.B] = 0x01;
+  reg.u8regs[Z80.C] = 0x01;
+  reg.u16regs[Z80.SP] = 0x1111;
   mem.ww(0x1111, 0x1234);
   opcode_test(0xc1, 1, 3, function() {
-    equals(reg.b, 0x12);
-    equals(reg.c, 0x34);
-    equals(reg.sp, 0x1113);
+    equals(reg.u8regs[Z80.B], 0x12);
+    equals(reg.u8regs[Z80.C], 0x34);
+    equals(reg.u16regs[Z80.SP], 0x1113);
   });
 });
 
 test('rlc b', function() {
   // Regular shift
-  reg.b = 0x01;
+  reg.u8regs[Z80.B] = 0x01;
   stub_next_byte(0x00);
   opcode_test(0xcb, 2, 2, function() {
-    equals(reg.b, 0x02);
-    equals(reg.f, 0x00);
+    equals(reg.u8regs[Z80.B], 0x02);
+    equals(reg.u8regs[Z80.F], 0x00);
   });
 
   // Zero flag
-  reg.b = 0x00;
+  reg.u8regs[Z80.B] = 0x00;
   stub_next_byte(0x00);
   opcode_test(0xcb, 2, 2, function() {
-    equals(reg.b, 0x00);
-    equals(reg.f, 0x80);
+    equals(reg.u8regs[Z80.B], 0x00);
+    equals(reg.u8regs[Z80.F], 0x80);
   });
 
   // Carry flag
-  reg.b = 0x81;
+  reg.u8regs[Z80.B] = 0x81;
   stub_next_byte(0x00);
   opcode_test(0xcb, 2, 2, function() {
-    equals(reg.b, 0x03);
-    equals(reg.f, 0x10);
+    equals(reg.u8regs[Z80.B], 0x03);
+    equals(reg.u8regs[Z80.F], 0x10);
   });
 });
 
 test('rl b', function() {
   // Regular shift
-  reg.b = 0x01;
-  reg.f = 0x00;
+  reg.u8regs[Z80.B] = 0x01;
+  reg.u8regs[Z80.F] = 0x00;
   stub_next_byte(0x10);
   opcode_test(0xcb, 2, 2, function() {
-    equals(reg.b, 0x02);
-    equals(reg.f, 0x00);
+    equals(reg.u8regs[Z80.B], 0x02);
+    equals(reg.u8regs[Z80.F], 0x00);
   });
 
   // Zero flag
-  reg.b = 0x00;
+  reg.u8regs[Z80.B] = 0x00;
   stub_next_byte(0x10);
   opcode_test(0xcb, 2, 2, function() {
-    equals(reg.b, 0x00);
-    equals(reg.f, 0x80);
+    equals(reg.u8regs[Z80.B], 0x00);
+    equals(reg.u8regs[Z80.F], 0x80);
   });
 
   // Carry flag
-  reg.b = 0x81;
-  reg.f = 0;
+  reg.u8regs[Z80.B] = 0x81;
+  reg.u8regs[Z80.F] = 0;
   stub_next_byte(0x10);
   opcode_test(0xcb, 2, 2, function() {
-    equals(reg.b, 0x02);
-    equals(reg.f, 0x10);
+    equals(reg.u8regs[Z80.B], 0x02);
+    equals(reg.u8regs[Z80.F], 0x10);
   });
-  reg.b = 0x81;
-  reg.f = 0x10;
+  reg.u8regs[Z80.B] = 0x81;
+  reg.u8regs[Z80.F] = 0x10;
   stub_next_byte(0x10);
   opcode_test(0xcb, 2, 2, function() {
-    equals(reg.b, 0x03);
-    equals(reg.f, 0x10);
+    equals(reg.u8regs[Z80.B], 0x03);
+    equals(reg.u8regs[Z80.F], 0x10);
   });
 });
 
 test('sla e', function() {
   // Regular shift
-  reg.e = 0x01;
+  reg.u8regs[Z80.E] = 0x01;
   stub_next_byte(0x23);
   opcode_test(0xcb, 2, 2, function() {
-    equals(reg.e, 0x02);
-    equals(reg.f, 0x00);
+    equals(reg.u8regs[Z80.E], 0x02);
+    equals(reg.u8regs[Z80.F], 0x00);
   });
 
   // Zero flag
-  reg.e = 0x00;
+  reg.u8regs[Z80.E] = 0x00;
   stub_next_byte(0x23);
   opcode_test(0xcb, 2, 2, function() {
-    equals(reg.e, 0x00);
-    equals(reg.f, 0x80);
+    equals(reg.u8regs[Z80.E], 0x00);
+    equals(reg.u8regs[Z80.F], 0x80);
   });
 
   // Carry flag
-  reg.e = 0x81;
+  reg.u8regs[Z80.E] = 0x81;
   stub_next_byte(0x23);
   opcode_test(0xcb, 2, 2, function() {
-    equals(reg.e, 0x02);
-    equals(reg.f, 0x10);
+    equals(reg.u8regs[Z80.E], 0x02);
+    equals(reg.u8regs[Z80.F], 0x10);
   });
 });
 
 test('sra a', function() {
-  reg.a = 0x81;
+  reg.u8regs[Z80.A] = 0x81;
   stub_next_byte(0x2f);
   opcode_test(0xcb, 2, 2, function() {
-    equals(reg.a, 0xc0);
-    equals(reg.f, 0x10);
+    equals(reg.u8regs[Z80.A], 0xc0);
+    equals(reg.u8regs[Z80.F], 0x10);
   });
 
-  reg.a = 0x00;
+  reg.u8regs[Z80.A] = 0x00;
   stub_next_byte(0x2f);
   opcode_test(0xcb, 2, 2, function() {
-    equals(reg.a, 0x00);
-    equals(reg.f, 0x80);
+    equals(reg.u8regs[Z80.A], 0x00);
+    equals(reg.u8regs[Z80.F], 0x80);
   });
 });
 
 test('srl a', function() {
-  reg.a = 0x81;
+  reg.u8regs[Z80.A] = 0x81;
   stub_next_byte(0x3f);
   opcode_test(0xcb, 2, 2, function() {
-    equals(reg.a, 0x40);
-    equals(reg.f, 0x10);
+    equals(reg.u8regs[Z80.A], 0x40);
+    equals(reg.u8regs[Z80.F], 0x10);
   });
 
-  reg.a = 0x00;
+  reg.u8regs[Z80.A] = 0x00;
   stub_next_byte(0x3f);
   opcode_test(0xcb, 2, 2, function() {
-    equals(reg.a, 0x00);
-    equals(reg.f, 0x80);
+    equals(reg.u8regs[Z80.A], 0x00);
+    equals(reg.u8regs[Z80.F], 0x80);
   });
 });
 
 test('bit 0, b', function() {
-  reg.b = 0x01;
-  reg.f = 0;
+  reg.u8regs[Z80.B] = 0x01;
+  reg.u8regs[Z80.F] = 0;
   stub_next_byte(0x40);
   opcode_test(0xcb, 2, 2, function() {
-    equals(reg.f, 0x20);
+    equals(reg.u8regs[Z80.F], 0x20);
   });
 
-  reg.b = 0x00;
-  reg.f = 0x10;
+  reg.u8regs[Z80.B] = 0x00;
+  reg.u8regs[Z80.F] = 0x10;
   stub_next_byte(0x40);
   opcode_test(0xcb, 2, 2, function() {
-    equals(reg.f, 0xb0);
+    equals(reg.u8regs[Z80.F], 0xb0);
   });
 });
 
@@ -517,55 +518,55 @@ test('bit 0, b', function() {
 /******************************************************************************/
 
 test('add a, b', function() {
-  reg.a = 0x02;
-  reg.b = 0x01;
-  reg.f = Z | N | H | C;
+  reg.u8regs[Z80.A] = 0x02;
+  reg.u8regs[Z80.B] = 0x01;
+  reg.u8regs[Z80.F] = Z | N | H | C;
   opcode_test(0x80, 1, 1, function() {
-    equals(reg.a, 0x3);
-    equals(reg.f, 0); // all flags cleared
+    equals(reg.u8regs[Z80.A], 0x3);
+    equals(reg.u8regs[Z80.F], 0); // all flags cleared
   });
 
   // half carry
-  reg.a = 0x0f;
-  reg.b = 0x01;
+  reg.u8regs[Z80.A] = 0x0f;
+  reg.u8regs[Z80.B] = 0x01;
   opcode_test(0x80, 1, 1, function() {
-    equals(reg.a, 0x10);
-    equals(reg.f & H, H);
+    equals(reg.u8regs[Z80.A], 0x10);
+    equals(reg.u8regs[Z80.F] & H, H);
   });
 
   // carry, zero
-  reg.a = 0xf0;
-  reg.b = 0x10;
+  reg.u8regs[Z80.A] = 0xf0;
+  reg.u8regs[Z80.B] = 0x10;
   opcode_test(0x80, 1, 1, function() {
-    equals(reg.a, 0x00);
-    equals(reg.f & C, C);
-    equals(reg.f & Z, Z);
+    equals(reg.u8regs[Z80.A], 0x00);
+    equals(reg.u8regs[Z80.F] & C, C);
+    equals(reg.u8regs[Z80.F] & Z, Z);
   });
 });
 
 test('adc a, b', function() {
-  reg.a = 0x02;
-  reg.b = 0x01;
-  reg.f = Z | N | H | C;
+  reg.u8regs[Z80.A] = 0x02;
+  reg.u8regs[Z80.B] = 0x01;
+  reg.u8regs[Z80.F] = Z | N | H | C;
   opcode_test(0x88, 1, 1, function() {
-    equals(reg.a, 0x4); // C carried through
-    equals(reg.f, 0); // all flags cleared
+    equals(reg.u8regs[Z80.A], 0x4); // C carried through
+    equals(reg.u8regs[Z80.F], 0); // all flags cleared
   });
 
   // half carry
-  reg.a = 0x0f;
-  reg.b = 0x01;
+  reg.u8regs[Z80.A] = 0x0f;
+  reg.u8regs[Z80.B] = 0x01;
   opcode_test(0x80, 1, 1, function() {
-    equals(reg.a, 0x10);
-    equals(reg.f, H);
+    equals(reg.u8regs[Z80.A], 0x10);
+    equals(reg.u8regs[Z80.F], H);
   });
 
   // carry, zero
-  reg.a = 0xf0;
-  reg.b = 0x10;
+  reg.u8regs[Z80.A] = 0xf0;
+  reg.u8regs[Z80.B] = 0x10;
   opcode_test(0x80, 1, 1, function() {
-    equals(reg.a, 0x00);
-    equals(reg.f, C | Z);
+    equals(reg.u8regs[Z80.A], 0x00);
+    equals(reg.u8regs[Z80.F], C | Z);
   });
 });
 
@@ -574,70 +575,70 @@ test('adc a, b', function() {
 /******************************************************************************/
 
 test('sub a, b', function() {
-  reg.a = 0x02;
-  reg.b = 0x01;
-  reg.f = Z | N | H | C;
+  reg.u8regs[Z80.A] = 0x02;
+  reg.u8regs[Z80.B] = 0x01;
+  reg.u8regs[Z80.F] = Z | N | H | C;
   opcode_test(0x90, 1, 1, function() {
-    equals(reg.a, 0x1);
-    equals(reg.f, N); // all flags cleared
+    equals(reg.u8regs[Z80.A], 0x1);
+    equals(reg.u8regs[Z80.F], N); // all flags cleared
   });
 
   // half carry
-  reg.a = 0xf1;
-  reg.b = 0x02;
+  reg.u8regs[Z80.A] = 0xf1;
+  reg.u8regs[Z80.B] = 0x02;
   opcode_test(0x90, 1, 1, function() {
-    equals(reg.a, 0xef);
-    equals(reg.f, N | H);
+    equals(reg.u8regs[Z80.A], 0xef);
+    equals(reg.u8regs[Z80.F], N | H);
   });
 
   // zero
-  reg.a = 0x10;
-  reg.b = 0x10;
+  reg.u8regs[Z80.A] = 0x10;
+  reg.u8regs[Z80.B] = 0x10;
   opcode_test(0x90, 1, 1, function() {
-    equals(reg.a, 0x00);
-    equals(reg.f, N | Z);
+    equals(reg.u8regs[Z80.A], 0x00);
+    equals(reg.u8regs[Z80.F], N | Z);
   });
 
   // carry
-  reg.a = 0x10;
-  reg.b = 0x20;
+  reg.u8regs[Z80.A] = 0x10;
+  reg.u8regs[Z80.B] = 0x20;
   opcode_test(0x90, 1, 1, function() {
-    equals(reg.a, 0xf0);
-    equals(reg.f, N | C);
+    equals(reg.u8regs[Z80.A], 0xf0);
+    equals(reg.u8regs[Z80.F], N | C);
   });
 });
 
 test('sbc a, b', function() {
-  reg.a = 0x02;
-  reg.b = 0x01;
-  reg.f = Z | N | H | C;
+  reg.u8regs[Z80.A] = 0x02;
+  reg.u8regs[Z80.B] = 0x01;
+  reg.u8regs[Z80.F] = Z | N | H | C;
   opcode_test(0x98, 1, 1, function() {
-    equals(reg.a, 0x0); // carry flag also subtracted
-    equals(reg.f, N | Z); // all flags cleared
+    equals(reg.u8regs[Z80.A], 0x0); // carry flag also subtracted
+    equals(reg.u8regs[Z80.F], N | Z); // all flags cleared
   });
 
   // half carry
-  reg.a = 0xf1;
-  reg.b = 0x02;
+  reg.u8regs[Z80.A] = 0xf1;
+  reg.u8regs[Z80.B] = 0x02;
   opcode_test(0x98, 1, 1, function() {
-    equals(reg.a, 0xef);
-    equals(reg.f, N | H);
+    equals(reg.u8regs[Z80.A], 0xef);
+    equals(reg.u8regs[Z80.F], N | H);
   });
 
   // zero
-  reg.a = 0x10;
-  reg.b = 0x10;
+  reg.u8regs[Z80.A] = 0x10;
+  reg.u8regs[Z80.B] = 0x10;
   opcode_test(0x98, 1, 1, function() {
-    equals(reg.a, 0x00);
-    equals(reg.f, N | Z);
+    equals(reg.u8regs[Z80.A], 0x00);
+    equals(reg.u8regs[Z80.F], N | Z);
   });
 
   // carry
-  reg.a = 0x10;
-  reg.b = 0x20;
+  reg.u8regs[Z80.A] = 0x10;
+  reg.u8regs[Z80.B] = 0x20;
   opcode_test(0x98, 1, 1, function() {
-    equals(reg.a, 0xf0);
-    equals(reg.f, N | C);
+    equals(reg.u8regs[Z80.A], 0xf0);
+    equals(reg.u8regs[Z80.F], N | C);
   });
 });
 
@@ -646,7 +647,7 @@ test('sbc a, b', function() {
 /******************************************************************************/
 
 test('ld (nn), a', function() {
-  reg.a = 0x01;
+  reg.u8regs[Z80.A] = 0x01;
   stub_next_word(0x2020);
   mem.wb(0x2020, 0x02);
 
@@ -660,11 +661,11 @@ test('ld (nn), a', function() {
 /******************************************************************************/
 
 test('ld a, (nn)', function() {
-  reg.a = 0x01;
+  reg.u8regs[Z80.A] = 0x01;
   stub_next_word(0x2020);
   mem.wb(0x2020, 0x44);
 
   opcode_test(0xfa, 3, 4, function() {
-    equals(reg.a, 0x44);
+    equals(reg.u8regs[Z80.A], 0x44);
   });
 });
