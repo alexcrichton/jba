@@ -4,143 +4,7 @@
   <script src="http://code.jquery.com/jquery.min.js"></script>
   <script src='http://cdnjs.cloudflare.com/ajax/libs/modernizr/2.0.6/modernizr.min.js'></script>
   <%= @js_include %>
-
-  <script type='text/javascript'>
-    window.gb = new JBA();
-
-    // Run the gameboy, doing some UI tweaks as well
-    function run() {
-      gb.run();
-      $('button').prop('disabled', false);
-      $('button.run').text('Stop');
-      $('.state').text('running');
-    }
-
-    $(function() {
-      // If we don't have a canvas, then this entire project is just flat out
-      // useless
-      if (!Modernizr.canvas) {
-        $('#gb, #status, #controls').hide();
-        return;
-      }
-      // Integrate the GB with the current window
-      gb.set_canvas($('#gb')[0]);
-      gb.bind_keys(window);
-
-      // Callback for selecting new ROMs in the dropdown menu.
-      $('.rom select').change(function() {
-        $('button').prop('disabled', true);
-        $(this).blur();
-        gb.stop();
-        gb.reset();
-
-        if ($(this).val() == '') {
-          $('.state').text('waiting');
-          return;
-        }
-        $('.state').text('loading');
-        gb.load_remote_rom($(this).val(), run);
-      });
-
-      // If we can read local files, then bind the link. Otherwise, hide the
-      // link.
-      if (typeof FileReader == 'function') {
-        $('.rom a').click(function() {
-          gb.stop();
-          $('input[type=file]').click();
-          return false;
-        });
-
-        $('.rom input[type=file]').change(function() {
-          var file = this.files[0];
-          var reader = new FileReader();
-          reader.readAsBinaryString(file);
-          reader.onloadend = function() {
-            gb.reset();
-            try {
-              gb.load_rom(reader.result);
-              run();
-            } catch (e) {
-              alert("Invalid ROM!");
-            }
-          };
-        });
-        $('#nofilereader').hide();
-      } else {
-        $('.rom .local').hide();
-      }
-
-      // Take snapshots of the GB state and load them into the GB.
-      if (Modernizr.localstorage) {
-        function keyFor(num) { return 'gbSnapshot' + num; }
-
-        $('.snapshot').each(function(i, el) {
-          var key = keyFor($(el).data('num'));
-          if (window.localStorage[key]) {
-            $(el).find('.load').text(window.localStorage[key + 'Name']);
-            $(el).find('.missing').hide();
-          } else {
-            $(el).find('.load').hide();
-          }
-        });
-
-        $('.snapshot a.save').click(function() {
-          var key = keyFor($(this).closest('li').data('num'));
-          window.localStorage[key] = gb.snapshot();
-          window.localStorage[key + 'Name'] = gb.rom_title();
-          $(this).siblings('.missing').hide();
-          $(this).siblings('.load').text(gb.rom_title()).show();
-          return false;
-        });
-
-        $('.snapshot a.load').click(function() {
-          var key = keyFor($(this).closest('li').data('num'));
-          gb.stop();
-          try {
-            gb.load_snapshot(window.localStorage[key]);
-            run();
-          } catch (e) {
-            alert(e);
-          }
-          return false;
-        });
-      } else {
-        $('#snapshots').hide();
-      }
-
-      // Callback for the start/stop emulation button.
-      $('button.run').click(function() {
-        if ($(this).text() == 'Stop') {
-          gb.stop();
-          $(this).text('Run');
-          $('.state').text('stopped');
-        } else {
-          gb.run();
-          $(this).text('Stop');
-          $('.state').text('running');
-        }
-      });
-
-      // Callback for reset to the beginning of the rom (power on/off).
-      $('button.reset').click(function() { $('.rom select').change(); });
-      // Callback for the slider to resize the gameboy window.
-      $('input[type=range]').change(function() {
-        $('#gb').width($(this).val() * 160).height($(this).val() * 144);
-      });
-      // FPS updater
-      setInterval(function() { $('.fps').text(gb.frames_count()); }, 1000);
-
-      // Don't show non-pretty slider range unless it's supported
-      if (!Modernizr.inputtypes.range) {
-        $('input[type=range]').hide();
-      }
-
-      // Please use chrome
-      if (navigator.userAgent.match(/chrome/i)) {
-        $('#nochrome').hide();
-      }
-    });
-  </script>
+  <script src="/src/jba-browser.js"></script>
 
   <style type="text/css">
     #gb { border: 1px solid black; }
@@ -214,7 +78,7 @@
 
   <div id='snapshots'>
     <ul>
-      <% 5.times do |i| %>
+      <% 3.times do |i| %>
         <li class='snapshot' data-num='<%= i %>'>
           <a href='#' class='save' title='Save Snapshot'>>></a>
           <a href='#' class='load'>Snapshot <%= i %></a>

@@ -75,37 +75,6 @@ JBA.prototype = {
   },
 
   /**
-   * Load a rom from a server. This assumes that jQuery is available.
-   *
-   * @param {string} url the url at which the rom is located.
-   * @param {function()} callback invoked if the rom was successfully loaded.
-   */
-  load_remote_rom: function(url, callback) {
-    var options = {
-      url: url,
-      /* Force the browser to interpret this as binary data instead of unicode
-         which produces incorrect charCodeAt() return values */
-      beforeSend: function(xhr) {
-        xhr.overrideMimeType('text/plain; charset=x-user-defined');
-      },
-      context: this,
-      success: function(data) {
-        this.memory.load_cartridge(data);
-
-        if (callback) {
-          callback();
-        }
-      }
-    };
-
-    // Needed to preserve the symbols for the closure compiler
-    options['beforeSend'] = options.beforeSend;
-    options['success'] = options.success;
-
-    $.ajax(options);
-  },
-
-  /**
    * Load a rom from a binary string.
    *
    * @param {string} rom the rom as a binary string
@@ -172,9 +141,7 @@ JBA.prototype = {
     if (!io.eof()) {
       throw "Invalid snapshot!";
     }
-  },
-
-  rom_title: function() { return this.memory.rom_title(); }
+  }
 };
 
 /**
@@ -191,14 +158,12 @@ Serializable.prototype.serialize = function(io) {};
  */
 Serializable.prototype.deserialize = function(io) {};
 
-window['JBA']                    = JBA;
-JBA.prototype['load_rom']        = JBA.prototype.load_rom;
-JBA.prototype['load_remote_rom'] = JBA.prototype.load_remote_rom;
-JBA.prototype['set_canvas']      = JBA.prototype.set_canvas;
-JBA.prototype['bind_keys']       = JBA.prototype.bind_keys;
-JBA.prototype['run']             = JBA.prototype.run;
-JBA.prototype['stop']            = JBA.prototype.stop;
-JBA.prototype['frames_count']    = JBA.prototype.frames_count;
-JBA.prototype['snapshot']        = JBA.prototype.snapshot;
-JBA.prototype['load_snapshot']   = JBA.prototype.load_snapshot;
-JBA.prototype['rom_title']       = JBA.prototype.rom_title;
+window['JBA']                  = JBA;
+JBA.prototype['load_rom']      = JBA.prototype.load_rom;
+JBA.prototype['set_canvas']    = JBA.prototype.set_canvas;
+JBA.prototype['bind_keys']     = JBA.prototype.bind_keys;
+JBA.prototype['run']           = JBA.prototype.run;
+JBA.prototype['stop']          = JBA.prototype.stop;
+JBA.prototype['frames_count']  = JBA.prototype.frames_count;
+JBA.prototype['snapshot']      = JBA.prototype.snapshot;
+JBA.prototype['load_snapshot'] = JBA.prototype.load_snapshot;
