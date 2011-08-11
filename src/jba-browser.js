@@ -2,10 +2,6 @@
  * Adapter to run JBA in a browser. Binds UI elements and performs necessary
  * persistent storage of snapshots/battery saves.
  */
-
-// Global JBA instance
-window.gb = new JBA();
-
 $(function() {
   var storage = window.localStorage;
   var current_filename;
@@ -119,18 +115,21 @@ $(function() {
 
   // If we don't have a canvas, then this entire project is just flat out
   // useless
-  if (!Modernizr.canvas) {
+  if (!Modernizr.canvas || !('Uint8Array' in window)) {
     $('#gb, #status, #controls').hide();
     return;
   }
+  // Global JBA instance
+  window.gb = new JBA();
+
   // Integrate the GB with the current window
   gb.set_canvas($('#gb')[0]);
   gb.bind_keys(window);
 
   // If we can read local files, then bind the link. Otherwise, hide the
   // link.
-  typeof FileReader == 'function' ? implement_load_custom_roms()
-                                  : $('.rom .local').hide();
+  'Uint8Array' in window ? implement_load_custom_roms()
+                         : $('.rom .local').hide();
 
   // Take snapshots of the GB state and load them into the GB.
   Modernizr.localstorage ? implement_snapshots() : $('#snapshots').hide();

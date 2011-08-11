@@ -10,10 +10,10 @@ JBA.GPU = function() {
   this.reset();
 };
 
-var VRAM_SIZE   = (8 << 10); // 8k
-var OAM_SIZE    = 0xa0;      // 0xffe00 - 0xffe9f is OAM
-var CGB_BP_SIZE = 64;        // 64 bytes of extra memory
-var NUM_TILES   = 384;       // number of in-memory tiles
+var VRAM_SIZE   = 8 << 10; // 8k
+var OAM_SIZE    = 0xa0;    // 0xffe00 - 0xffe9f is OAM
+var CGB_BP_SIZE = 64;      // 64 bytes of extra memory
+var NUM_TILES   = 384;     // number of in-memory tiles
 
 /**
  * Current mode the GPU is in
@@ -123,8 +123,8 @@ JBA.GPU.prototype = {
    * and defines 8 palettes of 4 colors each */
   cgb: {
     /* Raw memory */
-    bgp: [],
-    obp: [],
+    bgp: new Uint8Array(CGB_BP_SIZE),
+    obp: new Uint8Array(CGB_BP_SIZE),
     /* Index registers into memory */
     bgpi: 0,
     obpi: 0,
@@ -139,9 +139,10 @@ JBA.GPU.prototype = {
    */
   reset: function() {
     var i, j;
+     /* CGB supports only 2 banks of VRAM */
     this.vrambank  = 0;
-    this.vrambanks = [[], []]; /* CGB supports only 2 banks of VRAM */
-    this.oam = [];
+    this.vrambanks = [new Uint8Array(VRAM_SIZE), new Uint8Array(VRAM_SIZE)];
+    this.oam = new Uint8Array(OAM_SIZE);
 
     /* 8K of vram, 2 banks */
     for (i = 0; i < VRAM_SIZE; i++) {
