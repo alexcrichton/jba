@@ -347,13 +347,12 @@ JBA.GPU.prototype = {
   step: function(clocks) {
     // Timings located here:
     //    http://nocash.emubase.de/pandocs.htm#lcdstatusregister
-
-    this.clock += clocks;
+    var clock = this.clock + clocks;
 
     /* If clock >= 456, then we've completed an entire line. This line might
        have been part of a vblank or part of a scanline. */
-    if (this.clock >= 456) {
-      this.clock -= 456;
+    if (clock >= 456) {
+      clock -= 456;
       this.ly = (this.ly + 1) % 154; /* 144 lines tall, 10 for a vblank */
 
       if (this.ly >= 144 && this.mode != JBA.GPU.Mode.VBLANK) {
@@ -367,14 +366,16 @@ JBA.GPU.prototype = {
 
     /* Hop between modes if we're not in vblank */
     if (this.ly < 144) {
-      if (this.clock <= 80) { /* RDOAM takes 80 cycles */
+      if (clock <= 80) { /* RDOAM takes 80 cycles */
         if (this.mode != JBA.GPU.Mode.RDOAM) { this.switch_mode2(); }
-      } else if (this.clock <= 252) { /* RDVRAM takes 172 cycles */
+      } else if (clock <= 252) { /* RDVRAM takes 172 cycles */
         if (this.mode != JBA.GPU.Mode.RDVRAM) { this.switch_mode3(); }
       } else { /* HBLANK takes rest of time before line rendered */
         if (this.mode != JBA.GPU.Mode.HBLANK) { this.switch_mode0(); }
       }
     }
+
+    this.clock = clock;
   },
 
   /**
@@ -448,7 +449,8 @@ JBA.GPU.prototype = {
   /** @private */
   render_background: function(scanline) {
     var data  = this.image.data,
-        banks = this.vrambanks,
+        bank0 = this.vrambanks[0],
+        bank1 = this.vrambanks[1],
         bgp   = this._pal.bg,
         cgb   = this.mem.cgb,
         tiles = this._tiles.data;
@@ -484,14 +486,14 @@ JBA.GPU.prototype = {
       /* Backgrounds wrap around, so calculate the offset into the bgmap each
          loop to check for wrapping */
       var mapoff = ((i + this.scx) & 0xff) >> 3;
-      var tilei = banks[0][mapbase + mapoff];
+      var tilei = bank0[mapbase + mapoff];
 
       /* tiledata = 0 => tilei is a signed byte, so fix it here */
       if (this.tiledata == 0) {
         tilei = (tilei + 128) & 0xff;
       }
 
-      var row, bgpri = false, hflip = false;
+      var row, bgpri = 0, hflip = 0;
       if (cgb) {
         // See http://nocash.emubase.de/pandocs.htm#vrambackgroundmaps for what
         // the attribute byte all maps to
@@ -505,7 +507,7 @@ JBA.GPU.prototype = {
             Bit 7    BG-to-OAM Priority    (0=Use OAM priority, 1=BG Priority)
          */
 
-        var attrs = banks[1][mapbase + mapoff];
+        var attrs = bank1[mapbase + mapoff];
 
         var tile = tiles[tilebase + tilei + ((attrs >> 3) & 1) * NUM_TILES];
         bgp   = this.cgb._bgp[attrs & 0x7];
@@ -522,7 +524,7 @@ JBA.GPU.prototype = {
         var colori  = row[hflip ? 7 - x : x];
         var color   = bgp[colori];
         /* To indicate bg priority, list a color >= 4 */
-        scanline[i] = bgpri ? 4 : row[colori];
+        scanline[i] = bgpri ? 4 : colori;
 
         data[coff]     = color[0];
         data[coff + 1] = color[1];

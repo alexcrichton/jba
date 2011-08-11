@@ -67,7 +67,8 @@ JBA.Timer.prototype = {
 
   // Details: http://imrannazar.com/GameBoy-Emulation-in-JavaScript:-Timers
   step: function(ticks) {
-    this._clock.div += ticks;
+    var clock = this._clock;
+    clock.div += ticks;
 
     /* CPU runs on a 4,194,304 Hz clock, although the argument to this
        function runs at 1/4 that rate, so 1,048,576 Hz. The div register is a
@@ -85,22 +86,22 @@ JBA.Timer.prototype = {
        */
 
     /* Increment the DIV timer as necessary (1/64th the speed) */
-    while (this._clock.div >= 64) {
+    while (clock.div >= 64) {
       this.div = (this.div + 1) & 0xff;
-      this._clock.div -= 64;
+      clock.div -= 64;
     }
 
     /* Increment the TIMA timer as necessary (variable speed) */
     var enabled = this.tac & 0x4;
     if (enabled) {
-      this._clock.tima += ticks;
-      while (this._clock.tima >= this._tima_speed) {
+      clock.tima += ticks;
+      while (clock.tima >= this._tima_speed) {
         this.tima++;
         if (this.tima >= 0xff) {
           this.tima = this.tma;
           this.memory._if |= 0x4; /* Request a timer interrupt */
         }
-        this._clock.tima -= this._tima_speed;
+        clock.tima -= this._tima_speed;
       }
     }
   }

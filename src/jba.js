@@ -43,14 +43,15 @@ JBA.prototype = {
   },
 
   frame: function() {
+    var cpu = this.cpu, gpu = this.gpu;
     // See http://imrannazar.com/GameBoy-Emulation-in-JavaScript:-GPU-Timings
     // for the timing for this constant
     try {
-      var cycles_left = 70224, t;
+      var cycles_left = 70224, t = 0;
       do {
-        t = this.cpu.exec();
+        t = cpu.exec();
+        gpu.step(t);
         cycles_left -= t;
-        this.gpu.step(t);
       } while (cycles_left > 0);
 
       this.fps++;
