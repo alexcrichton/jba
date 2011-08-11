@@ -30,15 +30,11 @@ class JBA < Thor
       " --compilation_level SIMPLE_OPTIMIZATIONS"
   end
 
-  desc 'server [--shotgun]', 'Run the testing server and the "guard" command'
-  method_options :shotgun => :boolean
+  desc 'server', 'Run the testing server and the "guard" command'
   def server
     pids = []
     pids << fork { exec 'guard' }
-    pids << fork {
-      exec "#{options[:shotgun] ? 'shotgun -p 4567' : 'ruby'} test/server.rb"
-    }
-
+    pids << fork { exec 'ruby test/server.rb' }
     pids.each{ |p| begin; Process.waitpid p; rescue Interrupt; end }
   end
 
