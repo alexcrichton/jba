@@ -17,6 +17,8 @@
     }
 
     $(function() {
+      // If we don't have a canvas, then this entire project is just flat out
+      // useless
       if (!Modernizr.canvas) {
         $('#gb, #status, #controls').hide();
         return;
