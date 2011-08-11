@@ -12,17 +12,28 @@ class JBA
 
     def generate_z80 out = nil
       @out = out || STDOUT
-      regs = %w(b c d e h l a)
 
-      hl = "(r.h << 8) | r.l"
-      bc = "(r.b << 8) | r.c"
-      de = "(r.d << 8) | r.e"
-      af = "(r.a << 8) | r.f"
+      @a = "r.a"
+      @b = "r.b"
+      @c = "r.c"
+      @d = "r.d"
+      @e = "r.e"
+      @f = "r.f"
+      @h = "r.h"
+      @l = "r.l"
+      @m = "r.m"
+      @sp = 'r.sp'
+      @pc = 'r.pc'
+      regs = {:b => @b, :c => @c, :d => @d, :e => @e, :h => @h, :l => @l, :a => @a}
+      hl = "(#{@h} << 8) | #{@l}"
+      bc = "(#{@b} << 8) | #{@c}"
+      de = "(#{@d} << 8) | #{@e}"
+      af = "(#{@a} << 8) | #{@f}"
 
       pairs = {'hl' => hl, 'bc' => bc, 'de' => de, 'af' => af}
 
-      hlpp = "r.l = (r.l + 1) & 0xff; if (!r.l) r.h = (r.h + 1) & 0xff"
-      hlmm = "r.l = (r.l - 1) & 0xff; if (r.l == 0xff) r.h = (r.h - 1) & 0xff"
+      hlpp = "#{@l} = (#{@l} + 1) & 0xff; if (!#{@l}) #{@h} = (#{@h} + 1) & 0xff"
+      hlmm = "#{@l} = (#{@l} - 1) & 0xff; if (#{@l} == 0xff) #{@h} = (#{@h} - 1) & 0xff"
 
       def sign_fix var
         "(#{var} > 127 ? ((#{var} & 127) - 128) : #{var})"
@@ -31,242 +42,243 @@ class JBA
       @funs = {}
 
       section '8 bit loading' do
-        regs.each{ |i|
-          regs.each{ |j|
+        regs.each{ |i, il|
+          regs.each{ |j, jl|
             @funs["ld_#{i}#{j}"] = if i != j
-              "r.#{i} = r.#{j}; r.m = 1;"
+              "#{il} = #{jl}; #{@m} = 1;"
             else
-              "r.m = 1;"
+              "#{@m} = 1;"
             end
           }
         }
 
-        regs.each{ |i| @funs["ld_#{i}n"] =  "r.#{i} = m.rb(r.pc++); r.m = 2;" }
-        regs.each{ |i| @funs["ld_#{i}hlm"] = "r.#{i} = m.rb(#{hl}); r.m = 2;" }
-        regs.each{ |i| @funs["ld_hlm#{i}"] = "m.wb(#{hl}, r.#{i}); r.m = 2;" }
+        regs.each{ |i, il| @funs["ld_#{i}n"] =  "#{il} = m.rb(#{@pc}++); #{@m} = 2;" }
+        regs.each{ |i, il| @funs["ld_#{i}hlm"] = "#{il} = m.rb(#{hl}); #{@m} = 2;" }
+        regs.each{ |i, il| @funs["ld_hlm#{i}"] = "m.wb(#{hl}, #{il}); #{@m} = 2;" }
 
-        @funs['ld_hlmn'] = "m.wb(#{hl}, m.rb(r.pc++)); r.m = 3;"
-        @funs['ld_abc'] = "r.a = m.rb(#{bc}); r.m = 2;"
-        @funs['ld_ade'] = "r.a = m.rb(#{de}); r.m = 2;"
-        @funs['ld_ann'] = "r.a = m.rb(m.rw(r.pc)); r.pc += 2; r.m = 4;"
+        @funs['ld_hlmn'] = "m.wb(#{hl}, m.rb(#{@pc}++)); #{@m} = 3;"
+        @funs['ld_abc'] = "#{@a} = m.rb(#{bc}); #{@m} = 2;"
+        @funs['ld_ade'] = "#{@a} = m.rb(#{de}); #{@m} = 2;"
+        @funs['ld_ann'] = "#{@a} = m.rb(m.rw(#{@pc})); #{@pc} += 2; #{@m} = 4;"
 
-        @funs['ld_bca'] = "m.wb(#{bc}, r.a); r.m = 2;"
-        @funs['ld_dea'] = "m.wb(#{de}, r.a); r.m = 2;"
-        @funs['ld_nna'] = "m.wb(m.rw(r.pc), r.a); r.pc += 2; r.m = 4;"
-        @funs['ld_nnsp'] = "m.ww(m.rw(r.pc), r.sp); r.pc += 2; r.m = 4;"
+        @funs['ld_bca'] = "m.wb(#{bc}, #{@a}); #{@m} = 2;"
+        @funs['ld_dea'] = "m.wb(#{de}, #{@a}); #{@m} = 2;"
+        @funs['ld_nna'] = "m.wb(m.rw(#{@pc}), #{@a}); #{@pc} += 2; #{@m} = 4;"
+        @funs['ld_nnsp'] = "m.ww(m.rw(#{@pc}), #{@sp}); #{@pc} += 2; #{@m} = 4;"
 
-        @funs['ld_aIOn'] = "r.a = m.rb(0xff00 | m.rb(r.pc++)); r.m = 3;"
-        @funs['ld_IOan'] = "m.wb(0xff00 | m.rb(r.pc++), r.a); r.m = 3;"
-        @funs['ld_aIOc'] = "r.a = m.rb(0xff00 | r.c); r.m = 2;"
-        @funs['ld_IOca'] = "m.wb(0xff00 | r.c, r.a); r.m = 2;"
+        @funs['ld_aIOn'] = "#{@a} = m.rb(0xff00 | m.rb(#{@pc}++)); #{@m} = 3;"
+        @funs['ld_IOan'] = "m.wb(0xff00 | m.rb(#{@pc}++), #{@a}); #{@m} = 3;"
+        @funs['ld_aIOc'] = "#{@a} = m.rb(0xff00 | #{@c}); #{@m} = 2;"
+        @funs['ld_IOca'] = "m.wb(0xff00 | #{@c}, #{@a}); #{@m} = 2;"
 
-        @funs['ldi_hlma'] = "m.wb(#{hl}, r.a); #{hlpp}; r.m = 2;"
-        @funs['ldi_ahlm'] = "r.a = m.rb(#{hl}); #{hlpp}; r.m = 2;"
-        @funs['ldd_hlma'] = "m.wb(#{hl}, r.a); #{hlmm}; r.m = 2;"
-        @funs['ldd_ahlm'] = "r.a = m.rb(#{hl}); #{hlmm}; r.m = 2;"
+        @funs['ldi_hlma'] = "m.wb(#{hl}, #{@a}); #{hlpp}; #{@m} = 2;"
+        @funs['ldi_ahlm'] = "#{@a} = m.rb(#{hl}); #{hlpp}; #{@m} = 2;"
+        @funs['ldd_hlma'] = "m.wb(#{hl}, #{@a}); #{hlmm}; #{@m} = 2;"
+        @funs['ldd_ahlm'] = "#{@a} = m.rb(#{hl}); #{hlmm}; #{@m} = 2;"
       end
 
       section '16 bit loading commands' do
         %w(bc de hl).each do |p|
-          u = p.bytes.to_a[0].chr
-          l = p.bytes.to_a[1].chr
-          @funs["ld_#{p}nn"] = "r.#{l} = m.rb(r.pc++); " \
-            "r.#{u} = m.rb(r.pc++); r.m = 3;"
+          u = instance_variable_get '@' + p.bytes.to_a[0].chr
+          l = instance_variable_get '@' + p.bytes.to_a[1].chr
+          @funs["ld_#{p}nn"] = "#{l} = m.rb(#{@pc}++); " \
+            "#{u} = m.rb(#{@pc}++); #{@m} = 3;"
         end
-        @funs['ld_spnn'] = "r.sp = m.rw(r.pc); r.pc += 2; r.m = 3;"
-        @funs['ld_sphl'] = "r.sp = #{hl}; r.m = 2;"
+        @funs['ld_spnn'] = "#{@sp} = m.rw(#{@pc}); #{@pc} += 2; #{@m} = 3;"
+        @funs['ld_sphl'] = "#{@sp} = #{hl}; #{@m} = 2;"
 
         %w(bc de hl af).each do |p|
-          u = p.bytes.to_a[0].chr
-          l = p.bytes.to_a[1].chr
-          @funs["push_#{p}"] = "m.wb(--r.sp, r.#{u}); " \
-            "m.wb(--r.sp, r.#{l}); r.m = 4;"
-          @funs["pop_#{p}"] = "r.#{l} = m.rb(r.sp++); " \
-            "r.#{u} = m.rb(r.sp++); r.m = 3;"
+          u = instance_variable_get '@' + p.bytes.to_a[0].chr
+          l = instance_variable_get '@' + p.bytes.to_a[1].chr
+          @funs["push_#{p}"] = "m.wb(--#{@sp}, #{u}); " \
+            "m.wb(--#{@sp}, #{l}); #{@m} = 4;"
+          @funs["pop_#{p}"] = "#{l} = m.rb(#{@sp}++); " \
+            "#{u} = m.rb(#{@sp}++); #{@m} = 3;"
         end
       end
 
       section '8 bit addition' do
         def add var, name, cycles
           @funs["add_a#{name}"] = <<-JS.strip_heredoc
-            var i = r.a, j = #{var};
-            r.f = ((i & 0xf) + (j & 0xf) > 0xf ? #{H} : 0);
-            r.f |= (i + j > 0xff ? #{C} : 0);
-            r.a = (i + j) & 0xff;
-            r.f |= (r.a ? 0 : #{Z});
-            r.m = #{cycles};
+            var i = #{@a}, j = #{var};
+            #{@f} = ((i & 0xf) + (j & 0xf) > 0xf ? #{H} : 0);
+            #{@f} |= (i + j > 0xff ? #{C} : 0);
+            #{@a} = (i + j) & 0xff;
+            #{@f} |= (#{@a} ? 0 : #{Z});
+            #{@m} = #{cycles};
           JS
         end
-        regs.each{ |i| add "r.#{i}", i, 1 }
+        regs.each{ |i, il| add il, i, 1 }
         add "m.rb(#{hl})", 'hlm', 2
-        add 'm.rb(r.pc++)', 'n', 2
+        add "m.rb(#{@pc}++)", 'n', 2
 
         def adc var, name, cycles
           @funs["adc_a#{name}"] = <<-JS.strip_heredoc
-            var i = r.a, j = #{var}, k = !!(r.f & #{C});
-            r.f = ((i & 0xf) + (j & 0xf) + k > 0xf ? #{H} : 0);
-            r.f |= (i + j + k > 0xff ? #{C} : 0);
-            r.a = (i + j + k) & 0xff;
-            r.f |= (r.a ? 0 : #{Z});
-            r.m = #{cycles};
+            var i = #{@a}, j = #{var}, k = !!(#{@f} & #{C});
+            #{@f} = ((i & 0xf) + (j & 0xf) + k > 0xf ? #{H} : 0);
+            #{@f} |= (i + j + k > 0xff ? #{C} : 0);
+            #{@a} = (i + j + k) & 0xff;
+            #{@f} |= (#{@a} ? 0 : #{Z});
+            #{@m} = #{cycles};
           JS
         end
-        regs.each{ |i| adc "r.#{i}", i, 1 }
+        regs.each{ |i, il| adc il, i, 1 }
         adc "m.rb(#{hl})", 'hlm', 2
-        adc 'm.rb(r.pc++)', 'n', 2
+        adc "m.rb(#{@pc}++)", 'n', 2
       end
 
       section '8 bit subtraction' do
         def sub var, name, cycles
           @funs["sub_a#{name}"] = <<-JS.strip_heredoc
-            var a = r.a;
+            var a = #{@a};
             var b = #{var};
-            r.f = #{N} | (a < b ? #{C} : 0) |
+            #{@f} = #{N} | (a < b ? #{C} : 0) |
               (((a & 0xf) < (b & 0xf)) ? #{H} : 0);
-            r.a = (a - b) & 0xff;
-            r.f |= (r.a ? 0 : #{Z});
-            r.m = #{cycles};
+            #{@a} = (a - b) & 0xff;
+            #{@f} |= (#{@a} ? 0 : #{Z});
+            #{@m} = #{cycles};
           JS
         end
-        regs.each{ |i| sub "r.#{i}", i, 1 }
+        regs.each{ |i, il| sub il, i, 1 }
         sub "m.rb(#{hl})", 'hlm', 2
-        sub 'm.rb(r.pc++)', 'n', 2
+        sub "m.rb(#{@pc}++)", 'n', 2
 
         def sbc var, name, cycles
           @funs["sbc_a#{name}"] = <<-JS.strip_heredoc
-            var a = r.a;
-            var b = #{var} + (!!(r.f & #{C}));
-            r.f = #{N} | (a < b ? #{C} : 0) |
+            var a = #{@a};
+            var b = #{var} + (!!(#{@f} & #{C}));
+            #{@f} = #{N} | (a < b ? #{C} : 0) |
               (((a & 0xf) < (b & 0xf)) ? #{H} : 0);
-            r.a = (a - b) & 0xff;
-            r.f |= (r.a ? 0 : #{Z});
-            r.m = #{cycles};
+            #{@a} = (a - b) & 0xff;
+            #{@f} |= (#{@a} ? 0 : #{Z});
+            #{@m} = #{cycles};
           JS
         end
-        regs.each{ |i| sbc "r.#{i}", i, 1 }
+        regs.each{ |i, il| sbc il, i, 1 }
         sbc "m.rb(#{hl})", 'hlm', 2
-        sbc 'm.rb(r.pc++)', 'n', 2
+        sbc "m.rb(#{@pc}++)", 'n', 2
       end
 
       section '8 bit bit-ops' do
         def anda var, name, cycles
           @funs["and_a#{name}"] = <<-JS.strip_heredoc
-            r.a &= #{var};
-            r.f = (r.a ? 0 : #{Z}) | #{H};
-            r.m = #{cycles};
+            #{@a} &= #{var};
+            #{@f} = (#{@a} ? 0 : #{Z}) | #{H};
+            #{@m} = #{cycles};
           JS
         end
-        regs.each{ |i| anda "r.#{i}", i, 1 }
+        regs.each{ |i, il| anda il, i, 1 }
         anda "m.rb(#{hl})", 'hlm', 2
-        anda 'm.rb(r.pc++)', 'n', 2
+        anda "m.rb(#{@pc}++)", 'n', 2
 
         def xora var, name, cycles
           @funs["xor_a#{name}"] = <<-JS.strip_heredoc
-            r.a ^= #{var};
-            r.f = r.a ? 0 : #{Z};
-            r.m = #{cycles};
+            #{@a} ^= #{var};
+            #{@f} = #{@a} ? 0 : #{Z};
+            #{@m} = #{cycles};
           JS
         end
-        regs.each{ |i| xora "r.#{i}", i, 1 }
+        regs.each{ |i, il| xora il, i, 1 }
         xora "m.rb(#{hl})", 'hlm', 2
-        xora 'm.rb(r.pc++)', 'n', 2
+        xora "m.rb(#{@pc}++)", 'n', 2
 
         def ora var, name, cycles
           @funs["or_a#{name}"] = <<-JS.strip_heredoc
-            r.a |= #{var};
-            r.f = r.a ? 0 : #{Z};
-            r.m = #{cycles};
+            #{@a} |= #{var};
+            #{@f} = #{@a} ? 0 : #{Z};
+            #{@m} = #{cycles};
           JS
         end
-        regs.each{ |i| ora "r.#{i}", i, 1 }
+        regs.each{ |i, il| ora il, i, 1 }
         ora "m.rb(#{hl})", 'hlm', 2
-        ora 'm.rb(r.pc++)', 'n', 2
+        ora "m.rb(#{@pc}++)", 'n', 2
       end
 
       section '8 bit comparisons' do
         def cp var, name, cycles
           @funs["cp_a#{name}"] = <<-JS.strip_heredoc
-            var a = r.a;
+            var a = #{@a};
             var b = #{var};
-            r.f = #{N} | (a == b ? #{Z} : 0) | (a < b ? #{C} : 0) |
+            #{@f} = #{N} | (a == b ? #{Z} : 0) | (a < b ? #{C} : 0) |
               ((a & 0xf) < (b & 0xf) ? #{H} : 0);
-            r.m = #{cycles};
+            #{@m} = #{cycles};
           JS
         end
 
-        regs.each{ |i| cp "r.#{i}", i, 1 }
+        regs.each{ |i, il| cp il, i, 1 }
         cp "m.rb(#{hl})", 'hlm', 2
-        cp 'm.rb(r.pc++)', 'n', 2
+        cp "m.rb(#{@pc}++)", 'n', 2
       end
 
       section '8 bit increments/decrements' do
-        regs.each{ |i|
-          @funs["inc_#{i}"] = "r.#{i} = (r.#{i} + 1) & 0xff; " \
-            "r.f = (r.#{i} ? 0 : #{Z}); r.m = 1;"
+        regs.each{ |i, il|
+          @funs["inc_#{i}"] = "#{il} = (#{il} + 1) & 0xff; " \
+            "#{@f} = (#{il} ? 0 : #{Z}); #{@m} = 1;"
         }
         @funs['inc_hlm'] = "var hl = #{hl}, k = (m.rb(hl) + 1) & 0xff;" \
-          " m.wb(hl, k); r.f = k ? 0 : #{Z}; r.m = 3;"
+          " m.wb(hl, k); #{@f} = k ? 0 : #{Z}; #{@m} = 3;"
 
-        regs.each{ |i|
-          @funs["dec_#{i}"] = "r.#{i} = (r.#{i} - 1) & 0xff; " \
-            "r.f = r.f & 0x1f | #{N} | (r.#{i} ? 0 : #{Z}) | " \
-              "(((r.#{i} & 0xf) == 0xf) << 5); r.m = 1;"
+        regs.each{ |i, il|
+          @funs["dec_#{i}"] = "#{il} = (#{il} - 1) & 0xff; " \
+            "#{@f} = #{@f} & 0x1f | #{N} | (#{il} ? 0 : #{Z}) | " \
+              "(((#{il} & 0xf) == 0xf) << 5); #{@m} = 1;"
         }
         @funs['dec_hlm'] = "var hl = #{hl}, k = (m.rb(hl) - 1) & 0xff;" \
-          " m.wb(hl, k); r.f = (k ? 0 : #{Z}) | #{N}; r.m = 3;"
+          " m.wb(hl, k); #{@f} = (k ? 0 : #{Z}) | #{N}; #{@m} = 3;"
       end
 
       section 'Miscellaneous 8 bit arithmetic' do
         @funs['daa'] = <<-JS.strip_heredoc
-          var daa = Z80.daa_table[r.a | (r.f << 4)];
-          r.a = daa >> 8;
-          r.f = daa & 0xff;
-          r.m = 1;
+          var daa = Z80.daa_table[#{@a} | (#{@f} << 4)];
+          #{@a} = daa >> 8;
+          #{@f} = daa & 0xff;
+          #{@m} = 1;
         JS
 
-        @funs['cpl'] = "r.a ^= 0xff; r.f |= #{N} | #{H}; r.m = 1;"
+        @funs['cpl'] = "#{@a} ^= 0xff; #{@f} |= #{N} | #{H}; #{@m} = 1;"
       end
 
       section '16 bit arithmetic' do
         def add_hl name, add_in, hl
           @funs["add_hl#{name}"] = <<-JS.strip_heredoc
             var a = #{hl}, b = #{add_in}, hl = a + b;
-            r.f &= #{~N & 0xff};
-            if (hl > 0xffff) r.f |= #{C}; else r.f &= #{~C & 0xff};
-            if ((a & 0xfff) + (b & 0xfff) > 0xfff) r.f |= #{H};
-            r.l = hl & 0xff;
-            r.h = (hl >> 8) & 0xff;
-            r.m = 2;
+            #{@f} &= #{~N & 0xff};
+            if (hl > 0xffff) #{@f} |= #{C}; else #{@f} &= #{~C & 0xff};
+            if ((a & 0xfff) + (b & 0xfff) > 0xfff) #{@f} |= #{H};
+            #{@l} = hl & 0xff;
+            #{@h} = (hl >> 8) & 0xff;
+            #{@m} = 2;
           JS
         end
         %w(hl bc de).each{ |p| add_hl p, pairs[p], hl }
-        add_hl 'sp', 'r.sp', hl
+        add_hl 'sp', @sp, hl
 
         %w(bc de hl).each{ |p|
-          u, l = p.split('')
+          u = instance_variable_get '@' + p.bytes.to_a[0].chr
+          l = instance_variable_get '@' + p.bytes.to_a[1].chr
 
-          @funs["inc_#{p}"] = "r.#{l} = (r.#{l} + 1) & 0xff; " \
-            "if (!r.#{l}) r.#{u} = (r.#{u} + 1) & 0xff; r.m = 2;"
-          @funs["dec_#{p}"] = "r.#{l} = (r.#{l} - 1) & 0xff; " \
-            "if (r.#{l} == 0xff) r.#{u} = (r.#{u} - 1) & 0xff; r.m = 2;"
+          @funs["inc_#{p}"] = "#{l} = (#{l} + 1) & 0xff; " \
+            "if (!#{l}) #{u} = (#{u} + 1) & 0xff; #{@m} = 2;"
+          @funs["dec_#{p}"] = "#{l} = (#{l} - 1) & 0xff; " \
+            "if (#{l} == 0xff) #{u} = (#{u} - 1) & 0xff; #{@m} = 2;"
         }
-        @funs['inc_sp'] = "r.sp = (r.sp + 1) & 0xffff; r.m = 2;"
-        @funs['dec_sp'] = 'r.sp = (r.sp - 1) & 0xffff; r.m = 2;'
+        @funs['inc_sp'] = "#{@sp} = (#{@sp} + 1) & 0xffff; #{@m} = 2;"
+        @funs['dec_sp'] = "#{@sp} = (#{@sp} - 1) & 0xffff; #{@m} = 2;"
 
         @funs['add_spn'] = <<-JS.strip_heredoc
-          var i = m.rb(r.pc++);
+          var i = m.rb(#{@pc}++);
           i = #{sign_fix 'i'};
-          r.sp = (r.sp + i) & 0xffff;
-          r.m = 4;
+          #{@sp} = (#{@sp} + i) & 0xffff;
+          #{@m} = 4;
         JS
 
         @funs['ld_hlspn'] = <<-JS.strip_heredoc
-          var i = m.rb(r.pc++);
+          var i = m.rb(#{@pc}++);
           i = #{sign_fix 'i'};
-          i += r.sp;
-          r.h = (i >> 8) & 0xff;
-          r.l = i & 0xff;
-          r.m = 3;
+          i += #{@sp};
+          #{@h} = (i >> 8) & 0xff;
+          #{@l} = i & 0xff;
+          #{@m} = 3;
         JS
       end
 
@@ -276,29 +288,29 @@ class JBA
             #{before};
             var ci = (#{var} & 0x80) ? 1 : 0;
             #{var} = ((#{var} << 1) & 0xff) | ci;
-            r.f = (#{var} ? 0 : #{Z}) | (ci ? #{C} : 0);
+            #{@f} = (#{var} ? 0 : #{Z}) | (ci ? #{C} : 0);
             #{after};
-            r.m = #{cy};
+            #{@m} = #{cy};
           JS
         end
 
         def rl name, var, cy, before='', after=''
           @funs["rl#{name}"] = <<-JS.strip_heredoc
             #{before};
-            var ci = (r.f & #{C}) ? 1 : 0;
+            var ci = (#{@f} & #{C}) ? 1 : 0;
             var co = #{var} & 0x80;
             #{var} = ((#{var} << 1) & 0xff) | ci;
-            r.f = (#{var} ? 0 : #{Z}) | (co ? #{C} : 0);
+            #{@f} = (#{var} ? 0 : #{Z}) | (co ? #{C} : 0);
             #{after};
-            r.m = #{cy};
+            #{@m} = #{cy};
           JS
         end
 
-        rlc 'a', 'r.a', 1
-        rl 'a', 'r.a', 1
-        regs.each{ |r|
-          rlc "_#{r}", "r.#{r}", 2
-          rl "_#{r}", "r.#{r}", 2
+        rlc 'a', @a, 1
+        rl 'a', @a, 1
+        regs.each{ |i, il|
+          rlc "_#{i}", il, 2
+          rl "_#{i}", il, 2
         }
         rlc '_hlm', 'hl', 4, "var hl = m.rb(#{hl})", "m.wb(#{hl}, hl)"
         rl '_hlm', 'hl', 4, "var hl = m.rb(#{hl})", "m.wb(#{hl}, hl)"
@@ -310,29 +322,29 @@ class JBA
             #{before};
             var ci = #{var} & 1;
             #{var} = (#{var} >> 1) | (ci << 7);
-            r.f = (#{var} ? 0 : #{Z}) | (ci ? #{C} : 0);
+            #{@f} = (#{var} ? 0 : #{Z}) | (ci ? #{C} : 0);
             #{after};
-            r.m = #{cy};
+            #{@m} = #{cy};
           JS
         end
 
         def rr name, var, cy, before='', after=''
           @funs["rr#{name}"] = <<-JS.strip_heredoc
             #{before};
-            var ci = (r.f & #{C}) ? 0x80 : 0;
+            var ci = (#{@f} & #{C}) ? 0x80 : 0;
             var co = (#{var} & 1) ? #{C} : 0;
             #{var} = (#{var} >> 1) | ci;
-            r.f = (#{var} ? 0 : #{Z}) | co;
+            #{@f} = (#{var} ? 0 : #{Z}) | co;
             #{after};
-            r.m = #{cy};
+            #{@m} = #{cy};
           JS
         end
 
-        rrc 'a', 'r.a', 1
-        rr 'a', 'r.a', 1
-        regs.each{ |r|
-          rrc "_#{r}", "r.#{r}", 2
-          rr "_#{r}", "r.#{r}", 2
+        rrc 'a', @a, 1
+        rr 'a', @a, 1
+        regs.each{ |i, il|
+          rrc "_#{i}", il, 2
+          rr "_#{i}", il, 2
         }
         rrc '_hlm', 'hl', 4, "var hl = m.rb(#{hl})", "m.wb(#{hl}, hl)"
         rr '_hlm', 'hl', 4, "var hl = m.rb(#{hl})", "m.wb(#{hl}, hl)"
@@ -344,40 +356,40 @@ class JBA
             #{before};
             var co = (#{var} >> 7) & 1;
             #{var} = (#{var} << 1) & 0xff;
-            r.f = (#{var} ? 0 : #{Z}) | (co ? #{C} : 0);
+            #{@f} = (#{var} ? 0 : #{Z}) | (co ? #{C} : 0);
             #{after};
-            r.m = #{cy};
+            #{@m} = #{cy};
           JS
         end
 
-        regs.each { |reg| sla reg, "r.#{reg}", 2 }
+        regs.each { |i, il| sla i, il, 2 }
         sla 'hlm', 'hl', 4, "var hl = m.rb(#{hl})", "m.wb(#{hl}, hl)"
       end
 
       section 'Swapping' do
-        regs.each do |reg|
-          @funs["swap_#{reg}"] = <<-JS.strip_heredoc
-            var t = r.#{reg}; r.#{reg} = ((t & 0xf) << 4) | ((t & 0xf0) >> 4);
-            r.f = t ? 0 : #{Z}; r.m = 2;
+        regs.each do |i, il|
+          @funs["swap_#{i}"] = <<-JS.strip_heredoc
+            var t = #{il}; #{il} = ((t & 0xf) << 4) | ((t & 0xf0) >> 4);
+            #{@f} = t ? 0 : #{Z}; #{@m} = 2;
           JS
         end
 
         @funs['swap_hlm'] = <<-JS.strip_heredoc
           var t = m.rb(#{hl}); m.wb(#{hl}, ((t & 0xf) << 4) | ((t & 0xf0) >> 4));
-          r.f = t ? 0 : #{Z}; r.m = 4;
+          #{@f} = t ? 0 : #{Z}; #{@m} = 4;
         JS
       end
 
       section 'Shifting arithmetically right' do
         # shift right arithmetic (b7=b7)
-        regs.each do |reg|
-          @funs["sra_#{reg}"] = <<-JS.strip_heredoc
-            var a = r.#{reg};
+        regs.each do |i, il|
+          @funs["sra_#{i}"] = <<-JS.strip_heredoc
+            var a = #{il};
             var co = a & 1;
             a = (a >> 1) | (a & 0x80);
-            r.f = (a ? 0 : #{Z}) | (co ? #{C} : 0);
-            r.#{reg} = a;
-            r.m = 2;
+            #{@f} = (a ? 0 : #{Z}) | (co ? #{C} : 0);
+            #{il} = a;
+            #{@m} = 2;
           JS
         end
 
@@ -385,22 +397,22 @@ class JBA
           var a = m.rb(#{hl});
           var co = a & 1;
           a = (a >> 1) | (a & 0x80);
-          r.f = (a ? 0 : #{Z}) | (co ? #{C} : 0);
+          #{@f} = (a ? 0 : #{Z}) | (co ? #{C} : 0);
           m.wb(#{hl}, a);
-          r.m = 4;
+          #{@m} = 4;
         JS
       end
 
       section 'Shifting logically right' do
         # shift right logical (b7=0)
-        regs.each do |reg|
-          @funs["srl_#{reg}"] = <<-JS.strip_heredoc
-            var a = r.#{reg};
+        regs.each do |i, il|
+          @funs["srl_#{i}"] = <<-JS.strip_heredoc
+            var a = #{il};
             var co = (a & 1) ? #{C} : 0;
             a = (a >> 1) & 0x7f;
-            r.f = (a ? 0 : #{Z}) | co;
-            r.#{reg} = a;
-            r.m = 2;
+            #{@f} = (a ? 0 : #{Z}) | co;
+            #{il} = a;
+            #{@m} = 2;
           JS
         end
 
@@ -408,9 +420,9 @@ class JBA
           var a = m.rb(#{hl});
           var co = (a & 1) ? #{C} : 0;
           a = (a >> 1) & 0x7f;
-          r.f = (a ? 0 : #{Z}) | co;
+          #{@f} = (a ? 0 : #{Z}) | co;
           m.wb(#{hl}, a);
-          r.m = 4;
+          #{@m} = 4;
         JS
       end
 
@@ -418,114 +430,114 @@ class JBA
         def bitcmp pos, name, reader, cy
           @funs["bit_#{pos}#{name}"] = <<-JS.strip_heredoc
             var b = #{reader} & #{1 << pos};
-            r.f = (r.f & #{C}) | #{H} | (b ? 0 : #{Z});
-            r.m = #{cy};
+            #{@f} = (#{@f} & #{C}) | #{H} | (b ? 0 : #{Z});
+            #{@m} = #{cy};
           JS
         end
 
         (0..7).each do |pos|
-          regs.each{ |reg| bitcmp pos, reg, "r.#{reg}", 2 }
+          regs.each{ |i, il| bitcmp pos, i, il, 2 }
           bitcmp pos, 'hlm', "m.rb(#{hl})", 3
         end
       end
 
       section 'Bit setting/resetting' do
         (0..7).each do |pos|
-          regs.each{ |reg|
-            @funs["set_#{pos}#{reg}"] = "r.#{reg} |= #{1 << pos}; r.m = 2;"
+          regs.each{ |i, il|
+            @funs["set_#{pos}#{i}"] = "#{il} |= #{1 << pos}; #{@m} = 2;"
           }
           @funs["set_#{pos}hlm"] = "m.wb(#{hl}, m.rb(#{hl}) | " \
-            " #{1 << pos}); r.m = 4;"
+            " #{1 << pos}); #{@m} = 4;"
         end
 
         (0..7).each do |pos|
           mask = (~(1 << pos) & 0xff)
-          regs.each{ |reg|
-            @funs["res_#{pos}#{reg}"] = "r.#{reg} &= #{mask}; r.m = 2;"
+          regs.each{ |i, il|
+            @funs["res_#{pos}#{i}"] = "#{il} &= #{mask}; #{@m} = 2;"
           }
           @funs["res_#{pos}hlm"] = \
-            "m.wb(#{hl}, m.rb(#{hl}) & #{mask}); r.m = 4;"
+            "m.wb(#{hl}, m.rb(#{hl}) & #{mask}); #{@m} = 4;"
         end
       end
 
       section 'CPU control commands' do
-        @funs['ccf'] = "r.f = (r.f & #{Z}) | ((r.f & #{C}) ^ #{C}); r.m = 1;"
-        @funs['scf'] = "r.f = (r.f & #{Z}) | #{C}; r.m = 1;"
-        @funs['nop'] = "r.m = 1;"
-        @funs['halt'] = "r.halt = 1; r.m = 1;"
-        @funs['stop'] = "r.stop = 1; r.m = 1; throw 'stop';"
-        @funs['di'] = "r.ime = 0; r.m = 1;"
-        @funs['ei'] = "r.ime = 1; r.m = 1;"
+        @funs['ccf'] = "#{@f} = (#{@f} & #{Z}) | ((#{@f} & #{C}) ^ #{C}); #{@m} = 1;"
+        @funs['scf'] = "#{@f} = (#{@f} & #{Z}) | #{C}; #{@m} = 1;"
+        @funs['nop'] = "#{@m} = 1;"
+        @funs['halt'] = "r.halt = 1; #{@m} = 1;"
+        @funs['stop'] = "r.stop = 1; #{@m} = 1; throw 'stop';"
+        @funs['di'] = "r.ime = 0; #{@m} = 1;"
+        @funs['ei'] = "r.ime = 1; #{@m} = 1;"
       end
 
       section 'Jump commands' do
-        @do_jp = "r.pc = m.rw(r.pc); r.m = 4;"
+        @do_jp = "#{@pc} = m.rw(#{@pc}); #{@m} = 4;"
         @funs['jp_nn'] = @do_jp
-        @funs['jp_hl'] = "r.pc = #{hl}; r.m = 1;"
+        @funs['jp_hl'] = "#{@pc} = #{hl}; #{@m} = 1;"
 
         def jp_n name, cond
           @funs["jp_#{name}_nn"] =
-            "if (#{cond}) { #{@do_jp} } else { r.pc += 2; r.m = 3; }"
+            "if (#{cond}) { #{@do_jp} } else { #{@pc} += 2; #{@m} = 3; }"
         end
 
-        jp_n 'nz', "!(r.f & #{Z})"
-        jp_n 'z', "r.f & #{Z}"
-        jp_n 'nc', "!(r.f & #{C})"
-        jp_n 'c', "r.f & #{C}"
+        jp_n 'nz', "!(#{@f} & #{Z})"
+        jp_n 'z', "#{@f} & #{Z}"
+        jp_n 'nc', "!(#{@f} & #{C})"
+        jp_n 'c', "#{@f} & #{C}"
 
         @do_jr = <<-JS.strip_heredoc
-          var i = m.rb(r.pc++);
+          var i = m.rb(#{@pc}++);
           i = #{sign_fix 'i'};
-          r.pc += i;
-          r.m = 3;
+          #{@pc} += i;
+          #{@m} = 3;
         JS
         @funs['jr_n'] = @do_jr
 
         def jr_n name, cond
           @funs["jr_#{name}_n"] =
-            "if (#{cond}) { #{@do_jr} } else { r.pc++; r.m = 2; }"
+            "if (#{cond}) { #{@do_jr} } else { #{@pc}++; #{@m} = 2; }"
         end
 
-        jr_n 'nz', "!(r.f & #{Z})"
-        jr_n 'z', "r.f & #{Z}"
-        jr_n 'nc', "!(r.f & #{C})"
-        jr_n 'c', "r.f & #{C}"
+        jr_n 'nz', "!(#{@f} & #{Z})"
+        jr_n 'z', "#{@f} & #{Z}"
+        jr_n 'nc', "!(#{@f} & #{C})"
+        jr_n 'c', "#{@f} & #{C}"
       end
 
       section 'Call/return commands' do
-        @do_call = "r.sp -= 2; m.ww(r.sp, r.pc + 2); r.pc = m.rw(r.pc); r.m = 6;"
+        @do_call = "#{@sp} -= 2; m.ww(#{@sp}, #{@pc} + 2); #{@pc} = m.rw(#{@pc}); #{@m} = 6;"
         @funs['call_nn'] = @do_call
 
         def call_f_n name, cond
           @funs["call_#{name}_nn"] = "if (#{cond}) { #{@do_call} } " \
-            "else { r.m = 3; r.pc += 2; }"
+            "else { #{@m} = 3; #{@pc} += 2; }"
         end
 
-        call_f_n 'nz', "!(r.f & #{Z})"
-        call_f_n 'z', "r.f & #{Z}"
-        call_f_n 'nc', "!(r.f & #{C})"
-        call_f_n 'c', "r.f & #{C}"
+        call_f_n 'nz', "!(#{@f} & #{Z})"
+        call_f_n 'z', "#{@f} & #{Z}"
+        call_f_n 'nc', "!(#{@f} & #{C})"
+        call_f_n 'c', "#{@f} & #{C}"
 
-        @do_ret = "r.pc = m.rw(r.sp); r.sp += 2;"
-        @funs['ret'] = "#{@do_ret} r.m = 4;"
+        @do_ret = "#{@pc} = m.rw(#{@sp}); #{@sp} += 2;"
+        @funs['ret'] = "#{@do_ret} #{@m} = 4;"
 
         def ret_f name, cond
           @funs["ret_#{name}"] =
-            "if (#{cond}) { #{@do_ret} r.m = 5; } else { r.m = 2; }"
+            "if (#{cond}) { #{@do_ret} #{@m} = 5; } else { #{@m} = 2; }"
         end
 
-        ret_f 'nz', "!(r.f & #{Z})"
-        ret_f 'z', "r.f & #{Z}"
-        ret_f 'nc', "!(r.f & #{C})"
-        ret_f 'c', "r.f & #{C}"
+        ret_f 'nz', "!(#{@f} & #{Z})"
+        ret_f 'z', "#{@f} & #{Z}"
+        ret_f 'nc', "!(#{@f} & #{C})"
+        ret_f 'c', "#{@f} & #{C}"
 
-        @funs['reti'] = "r.ime = 1; #{@do_ret} r.m = 4;"
+        @funs['reti'] = "r.ime = 1; #{@do_ret} #{@m} = 4;"
       end
 
       section 'Resetting' do
         %w(00 08 10 18 20 28 30 38 40 48 50 58 60).each do |code|
-          @funs["rst_#{code}"] = "r.sp -= 2; " +
-            "m.ww(r.sp, r.pc); r.pc = 0x#{code}; r.m = 4;"
+          @funs["rst_#{code}"] = "#{@sp} -= 2; " +
+            "m.ww(#{@sp}, #{@pc}); #{@pc} = 0x#{code}; #{@m} = 4;"
         end
       end
 
