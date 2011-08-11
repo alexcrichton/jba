@@ -132,6 +132,42 @@ JBA.prototype = {
     return io.data;
   },
 
+  /**
+   * Returns the current image of ram for the loaded cartridge. This is meant to
+   * be the "battery-saved" data persisted between cartridge loads.
+   *
+   * @return {string} the ram image in binary forms
+   */
+  ram_image: function() {
+    if (!this.memory.battery) {
+      return "";
+    }
+    var io = new JBA.StringIO(),
+       ram = this.memory.ram,
+         l = this.memory.ram_size();
+    for (var i = 0; i < l; i++) io.wb(ram[i]);
+    return io.data;
+  },
+
+  /**
+   * Loads an image of ram back into ram. This image should have been previously
+   * returned by ram_image()
+   *
+   * @param {string} image the binary ram image to load
+   */
+  load_ram_image: function(image) {
+    if (!this.memory.battery) {
+      return "";
+    }
+    var io = new JBA.StringIO(image),
+       ram = this.memory.ram,
+         l = this.memory.ram_size();
+    for (var i = 0; i < l; i++) ram[i] = io.rb();
+    if (!io.eof()) {
+      throw "Bad ram image";
+    }
+  },
+
   load_snapshot: function(snapshot) {
     var io = new JBA.StringIO(snapshot);
     this.memory.deserialize(io);

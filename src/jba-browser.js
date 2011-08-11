@@ -7,17 +7,22 @@
 window.gb = new JBA();
 
 $(function() {
-  var current_filename, current_source;
+  var storage = window.localStorage;
+  var current_filename;
   var update_snapshots = function() {};
 
   // Run the gameboy, doing some UI tweaks as well
-  function run(filename, rom, source) {
+  function run(filename, rom) {
+    save_ram_image();
     gb.stop();
-    if (filename && rom && source) {
+    if (filename && rom) {
       gb.reset();
       gb.load_rom(rom);
+      var image = storage[filename + 'Battery'];
+      if (image) {
+        gb.load_ram_image(image);
+      }
       current_filename = filename;
-      current_source   = source;
       update_snapshots();
     }
     gb.run();
@@ -37,9 +42,15 @@ $(function() {
       context: this,
       success: function(data) {
         var segments = url.split('/');
-        run(segments[segments.length - 1], data, url);
+        run(segments[segments.length - 1], data);
       }
     });
+  }
+
+  function save_ram_image() {
+    if (current_filename) {
+      storage[current_filename + 'Battery'] = gb.ram_image();
+    }
   }
 
   function implement_snapshots() {
@@ -49,8 +60,8 @@ $(function() {
       $('.snapshot').each(function(_, el) {
         var key = current_filename + $(el).data('num');
         $(el).find('.load, .missing').show();
-        if (window.localStorage[key]) {
-          $(el).find('.load').text(window.localStorage[key + 'Date']);
+        if (storage[key]) {
+          $(el).find('.load').text(storage[key + 'Date']);
           $(el).find('.missing').hide();
         } else {
           $(el).find('.load').hide();
@@ -62,8 +73,8 @@ $(function() {
     $('.snapshot a.save').click(function() {
       var key = current_filename + $(this).closest('li').data('num');
       var date = new Date().toString();
-      window.localStorage[key] = gb.snapshot();
-      window.localStorage[key + 'Date'] = date;
+      storage[key] = gb.snapshot();
+      storage[key + 'Date'] = date;
       $(this).siblings('.missing').hide();
       $(this).siblings('.load').show().text(date);
       return false;
@@ -73,13 +84,15 @@ $(function() {
       var key = current_filename + $(this).closest('li').data('num');
       gb.stop();
       try {
-        gb.load_snapshot(window.localStorage[key]);
+        gb.load_snapshot(storage[key]);
         run();
       } catch (e) {
         alert(e);
       }
       return false;
     });
+
+    setInterval(save_ram_image, 1000);
   }
 
   function implement_load_custom_roms() {
@@ -94,7 +107,7 @@ $(function() {
       var reader = new FileReader();
       reader.onloadend = function() {
         try {
-          run(file.name, reader.result, file.name);
+          run(file.name, reader.result);
         } catch (e) {
           alert("Invalid ROM: " + e);
         }

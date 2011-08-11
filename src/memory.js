@@ -43,7 +43,8 @@ JBA.Memory.prototype = {
 
   /** @type {JBA.Memory.MBC} */
   mbc: JBA.Memory.MBC.UNKNOWN,
-
+  /* Flag if this cartridge uses a battery or not */
+  battery: 0,
   /* Flag if this is a CGB cartridge or not */
   cgb: 0,
 
@@ -83,6 +84,24 @@ JBA.Memory.prototype = {
     for (i = 0; i < HIRAM_SIZE; i++) this.hiram[i] = 0;
   },
 
+  /**
+   * Returns the cartridge's listed amount of ram that it should have. This
+   * doesn't represent the actual size of the ram array internally, but just to
+   * what extent the cartridge will use it.
+   *
+   * @return {number} the size of ram which the cartridge can use.
+   */
+  ram_size: function() {
+    // See http://nocash.emubase.de/pandocs.htm#thecartridgeheader
+    switch (this.rom[0x149]) {
+      case 0x00: return        0;
+      case 0x01: return  2 << 10; // 2 KB
+      case 0x02: return  8 << 10; // 8 KB
+      case 0x03: return 32 << 10; // 32 KB
+      default: throw 'Unknown ram size';
+    }
+  },
+
   serialize: function(io) {
     var i;
     // The cartridge header is small, only 80 bytes. We don't need to serialize
@@ -102,6 +121,7 @@ JBA.Memory.prototype = {
     io.wb(this._if);
     io.wb(this._ie);
     io.wb(this.cgb);
+    io.wb(this.battery);
     this.input.serialize(io);
   },
 
@@ -125,6 +145,7 @@ JBA.Memory.prototype = {
     this._if      = io.rb();
     this._ie      = io.rb();
     this.cgb      = io.rb();
+    this.battery  = io.rb();
     this.input.deserialize(io);
   },
 
@@ -185,28 +206,37 @@ JBA.Memory.prototype = {
 
     // See http://nocash.emubase.de/pandocs.htm#thecartridgeheader for
     // header information.
+    this.battery = 1;
     switch (this.rom[0x0147]) {
       case 0x00:            // rom only
       case 0x08:            // rom + ram
+        this.battery = 0;
+        // fall through
       case 0x09:            // rom + ram + battery
         this.mbc = JBA.Memory.MBC.NONE;
         break;
 
       case 0x01:            // rom + mbc1
       case 0x02:            // rom + mbc1 + ram
+        this.battery = 0;
+        // fall through
       case 0x03:            // rom + mbc1 + ram + batt
         this.mbc = JBA.Memory.MBC.MBC1;
         break;
 
       case 0x05:            // rom + mbc2
+        this.battery = 0;
+        // fall through
       case 0x06:            // rom + mbc2 + battery
         this.mbc = JBA.Memory.MBC.MBC2;
         break;
 
-      case 0x0f:            // rom + mbc3 + timer + batt
-      case 0x10:            // rom + mbc3 + timer + ram + batt
       case 0x11:            // rom + mbc3
       case 0x12:            // rom + mbc3 + ram
+        this.battery = 0;
+        // fall through
+      case 0x0f:            // rom + mbc3 + timer + batt
+      case 0x10:            // rom + mbc3 + timer + ram + batt
       case 0x13:            // rom + mbc3 + ram + batt
         this.mbc = JBA.Memory.MBC.MBC3;
         break;
