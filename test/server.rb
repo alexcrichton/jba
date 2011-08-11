@@ -1,10 +1,10 @@
 require 'sinatra'
-require 'active_support/json'
-require 'active_support/ordered_hash'
 require 'erb'
 
 require File.expand_path('../../lib/jba/utils', __FILE__)
 
+use Rack::Static, :urls => ['/src'],
+                  :root => File.expand_path('../..', __FILE__)
 set :public, File.expand_path('../public', __FILE__)
 mime_type :gb, 'application/octet-stream'
 
@@ -21,12 +21,12 @@ get '/roms' do
   erb :roms
 end
 
-get '/min' do
-  @js_include = javascript_include_tag 'jba.min.js'
+get '/jba' do
+  @js_include = javascript_include_tag 'jba/jba.min.js'
   erb :roms
 end
 
-get '/jba.min.js' do
+get '/jba/jba.min.js' do
   content_type :js
   file = File.expand_path('../../jba.min.js', __FILE__)
 
@@ -45,8 +45,7 @@ helpers do
   end
 
   def js_test_includes
-    js = Dir[File.expand_path('../public', __FILE__) + '/**/*.js']
-    js = js.select{ |s| s !~ /\/src\// }
+    js = Dir[File.expand_path('../public/test', __FILE__) + '/**/*.js']
     js = js.map{ |s| s.gsub(/^.+?public\//, '') }
     javascript_include_tag js
   end

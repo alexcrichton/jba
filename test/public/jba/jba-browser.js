@@ -45,7 +45,8 @@ $(function() {
 
   function save_ram_image() {
     if (current_filename) {
-      storage[current_filename + 'Battery'] = gb.ram_image();
+      var image = gb.ram_image();
+      if (image.length > 0) storage[current_filename + 'Battery'] = image;
     }
   }
 
