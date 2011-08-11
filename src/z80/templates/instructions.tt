@@ -13,9 +13,6 @@
 Z80.ops = {
   /**
    * Garbage instruction
-   *
-   * @param {Z80.Registers} r the registers to modify
-   * @param {JBA.Memory} m the memory to read/write to
    */
   xx: function() { throw "garbage instruction!"; },
 
