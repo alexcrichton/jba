@@ -199,14 +199,3 @@ Serializable.prototype.serialize = function(io) {};
  * @param {JBA.StringIO} io the IO object to read from
  */
 Serializable.prototype.deserialize = function(io) {};
-
-window['JBA']                  = JBA;
-JBA.prototype['load_rom']      = JBA.prototype.load_rom;
-JBA.prototype['set_canvas']    = JBA.prototype.set_canvas;
-JBA.prototype['keydown']       = JBA.prototype.keydown;
-JBA.prototype['keyup']         = JBA.prototype.keyup;
-JBA.prototype['run']           = JBA.prototype.run;
-JBA.prototype['stop']          = JBA.prototype.stop;
-JBA.prototype['frames_count']  = JBA.prototype.frames_count;
-JBA.prototype['snapshot']      = JBA.prototype.snapshot;
-JBA.prototype['load_snapshot'] = JBA.prototype.load_snapshot;
