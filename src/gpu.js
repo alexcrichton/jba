@@ -103,18 +103,19 @@ JBA.GPU.prototype = {
   hdma5: 0,
 
   /* Compiled palettes. These are updated when writing to BGP/OBP0/OBP1. Meant
-     for non CGB use only */
+     for non CGB use only. Each palette is an array of 4 color schemes. Each
+     color scheme is one in JBA.GPU.Palette. */
   _pal: {
-    bg: [],
-    obp0: [],
-    obp1: []
+    bg: new Array(4),
+    obp0: new Array(4),
+    obp1: new Array(4)
   },
 
   /* Compiled tiles */
   _tiles: {
-    data: [],           /* Actual compiled tiles */
-    need_update: false, /* Do we need to recompile any tiles? */
-    to_update: []       /* Which tiles we specifically need to update */
+    data: new Array(NUM_TILES * 2),     /* Actual compiled tiles */
+    need_update: false,                 /* Do we need to recompile any tiles? */
+    to_update: new Array(NUM_TILES * 2) /* Which tiles we need to update */
   },
 
   /* When in CGB mode, the BGP and OBP memory is stored internally and is only
@@ -534,10 +535,10 @@ JBA.GPU.prototype = {
 
   /** @private */
   render_window: function(scanline) {
+    // TODO: much less duplication
     if (this.wy >= 144 || this.wx >= 160) {
       return;
     }
-    // console.log('hello world');
     var data  = this.image.data,
         banks = this.vrambanks,
         bgp   = this._pal.bg,

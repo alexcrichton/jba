@@ -68,9 +68,9 @@ JBA.Memory.prototype = {
     this.input.reset();
 
     this.rom      = [];
-    this.ram      = [];
-    this.wram     = []; // Special 'Work' ram
-    this.hiram    = []; // 256 bytes of ram at the end of the address space
+    this.ram      = new Array(RAM_SIZE);
+    this.wram     = new Array(WRAM_SIZE);  // Special 'Work' ram
+    this.hiram    = new Array(HIRAM_SIZE); // ram at the end of address space
     this.rombank  = 1; // The number of the rom bank currently swapped in
     this.rambank  = 0; // The number of the ram bank currently swapped in
     this.wrambank = 1; // The number of the wram bank currently swapped in
