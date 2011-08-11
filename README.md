@@ -4,6 +4,10 @@ An emulator for the Gameboy and Gameboy Color written in Javascript.
 
 Nowhere close to working yet and is very much a work in progress. Will keep notes here as necessary
 
+## Demo
+
+You can view a live demo at http://alexcrichton.com/jba/
+
 ## Development
 
 ### Prerequisites
