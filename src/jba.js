@@ -45,14 +45,19 @@ JBA.prototype = {
   frame: function() {
     // See http://imrannazar.com/GameBoy-Emulation-in-JavaScript:-GPU-Timings
     // for the timing for this constant
-    var cycles_left = 70224, t;
-    do {
-      t = this.cpu.exec();
-      cycles_left -= t;
-      this.gpu.step(t);
-    } while (cycles_left > 0);
+    try {
+      var cycles_left = 70224, t;
+      do {
+        t = this.cpu.exec();
+        cycles_left -= t;
+        this.gpu.step(t);
+      } while (cycles_left > 0);
 
-    this.fps++;
+      this.fps++;
+    } catch (e) {
+      this.stop();
+      throw e;
+    }
   },
 
   run: function(interval) {
@@ -164,7 +169,12 @@ JBA.prototype = {
     this.gpu.deserialize(io);
     this.memory.deserialize(io);
     this.timer.deserialize(io);
-  }
+    if (!io.eof()) {
+      throw "Invalid snapshot!";
+    }
+  },
+
+  rom_title: function() { return this.memory.rom_title(); }
 };
 
 /**
@@ -191,3 +201,4 @@ JBA.prototype['stop']            = JBA.prototype.stop;
 JBA.prototype['frames_count']    = JBA.prototype.frames_count;
 JBA.prototype['snapshot']        = JBA.prototype.snapshot;
 JBA.prototype['load_snapshot']   = JBA.prototype.load_snapshot;
+JBA.prototype['rom_title']       = JBA.prototype.rom_title;

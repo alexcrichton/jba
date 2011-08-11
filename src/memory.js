@@ -86,6 +86,9 @@ JBA.Memory.prototype = {
   serialize: function(io) {
     var i;
     this.input.serialize(io);
+    // http://nocash.emubase.de/pandocs.htm#thecartridgeheader specifies that
+    // byte 0x148 is the size of the ROM.
+    io.wb(this.rom[0x148]);
     for (i = 0; i < this.rom.length; i++)   io.wb(this.rom[i]);
     for (i = 0; i < this.ram.length; i++)   io.wb(this.ram[i]);
     for (i = 0; i < this.wram.length; i++)  io.wb(this.wram[i]);
@@ -95,11 +98,30 @@ JBA.Memory.prototype = {
     io.wb(this.wrambank);
     io.wb(this.ramon);
     io.wb(this.mode);
+    io.wb(this.mbc);
+    io.wb(this._if);
+    io.wb(this._ie);
   },
 
   deserialize: function(io) {
+    var romsize, i;
     this.input.deserialize(io);
-    for (i = 0; i < this.rom.length; i++)   this.rom[i]   = io.rb();
+    // For specifics on romsize, see comment above in serialize()
+    switch (io.rb()) {
+      case 0x00: romsize =  32 << 10; break; // 32 KB
+      case 0x01: romsize =  64 << 10; break; // 64 KB
+      case 0x02: romsize = 128 << 10; break; // 128 KB
+      case 0x03: romsize = 256 << 10; break; // 256 KB
+      case 0x04: romsize = 512 << 10; break; // 512 KB
+      case 0x05: romsize =   1 << 20; break; // 1 MB
+      case 0x06: romsize =   2 << 20; break; // 2 MB
+      case 0x07: romsize =   4 << 20; break; // 4 MB
+      case 0x52: romsize =   1179648; break; // 1.1 MB = 72 banks * 16 KB/bank
+      case 0x53: romsize =   1310720; break; // 1.2 MB = 80 banks * 16 KB/bank
+      case 0x54: romsize =   1572864; break; // 1.5 MB = 96 banks * 16 KB/bank
+      default: throw "Unknown romsize type";
+    }
+    for (i = 0; i < romsize; i++)           this.rom[i]   = io.rb();
     for (i = 0; i < this.ram.length; i++)   this.ram[i]   = io.rb();
     for (i = 0; i < this.wram.length; i++)  this.wram[i]  = io.rb();
     for (i = 0; i < this.hiram.length; i++) this.hiram[i] = io.rb();
@@ -108,6 +130,9 @@ JBA.Memory.prototype = {
     this.wrambank = io.rb();
     this.ramon    = io.rb();
     this.mode     = io.rb();
+    this.mbc      = io.rb();
+    this._if      = io.rb();
+    this._ie      = io.rb();
   },
 
   powerOn: function() {

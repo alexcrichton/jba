@@ -206,6 +206,7 @@ JBA.GPU.prototype = {
     io.wb(this.bgmap); io.wb(this.tiledata);
     io.wb(this.winon); io.wb(this.winmap);
     io.wb(this.lcdon);
+    io.ww(this.clock);
   },
 
   deserialize: function(io) {
@@ -223,6 +224,11 @@ JBA.GPU.prototype = {
     this.bgmap = io.rb(); this.tiledata = io.rb();
     this.winon = io.rb(); this.winmap = io.rb();
     this.lcdon = io.rb();
+    this.clock = io.rw();
+
+    this.update_palette(this._pal.bg, this.bgp);
+    this.update_palette(this._pal.obp0, this.obp0);
+    this.update_palette(this._pal.obp1, this.obp1);
   },
 
   /**

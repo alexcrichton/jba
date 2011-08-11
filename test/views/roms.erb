@@ -68,6 +68,40 @@
         $('.rom .local').hide();
       }
 
+      // Take snapshots of the GB state and load them into the GB.
+      if (Modernizr.localstorage) {
+        function keyFor(num) { return 'gbSnapshot' + num; }
+
+        $('.snapshot').each(function(i, el) {
+          var key = keyFor($(el).data('num'));
+          if (window.localStorage[key]) {
+            $(el).find('.load').text(window.localStorage[key + 'Name']);
+            $(el).find('.missing').hide();
+          } else {
+            $(el).find('.load').hide();
+          }
+        });
+
+        $('.snapshot a.save').click(function() {
+          var key = keyFor($(this).closest('li').data('num'));
+          window.localStorage[key] = gb.snapshot();
+          window.localStorage[key + 'Name'] = gb.rom_title();
+          $(this).siblings('.missing').hide();
+          $(this).siblings('.load').text(gb.rom_title());
+          return false;
+        });
+
+        $('.snapshot a.load').click(function() {
+          var key = keyFor($(this).closest('li').data('num'));
+          gb.stop();
+          gb.load_snapshot(window.localStorage[key]);
+          run();
+          return false;
+        });
+      } else {
+        $('#snapshots').hide();
+      }
+
       // Callback for the start/stop emulation button.
       $('button.run').click(function() {
         if ($(this).text() == 'Stop') {
@@ -118,6 +152,7 @@
     dt { width: 50px; clear: left; float: left; }
     dd { width: 80px; float: left; margin: 0; }
     #nochrome { margin-top: 10px; }
+    #snapshots { position: absolute; right: 20px; top: 20px }
   </style>
 </head>
 
@@ -169,6 +204,18 @@
   <div id='nochrome'>
     JBA works best in <a href='http://google.com/chrome'>Chrome</a>.
     <div id='nofilereader'> Also, you can play your own roms in Chrome.</div>
+  </div>
+
+  <div id='snapshots'>
+    <ul>
+      <% 5.times do |i| %>
+        <li class='snapshot' data-num='<%= i %>'>
+          <a href='#' class='save' title='Save Snapshot'>>></a>
+          <a href='#' class='load'>Snapshot <%= i %></a>
+          <span class='missing'>No save state</span>
+        </li>
+      <% end %>
+    </ul>
   </div>
 
 </body>
