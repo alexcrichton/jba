@@ -109,7 +109,7 @@ test('writing the GPU registers', function() {
   gpu.wb(0xff4a, 0x42);
   gpu.wb(0xff4b, 0x93);
   equals(gpu.wy, 0x42);
-  equals(gpu.wx, 0x93);
+  equals(gpu.wx, 0x93 - 7); // Should automatically take the -7 into account
 });
 
 test('DMA transfers', function() {

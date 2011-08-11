@@ -12,7 +12,7 @@ JBA.GPU = function() {
 
 var VRAM_SIZE   = (8 << 10); // 8k
 var OAM_SIZE    = 0xa0;      // 0xffe00 - 0xffe9f is OAM
-var CGB_BP_SIZE = 0xa0;      // 64 bytes of extra memory
+var CGB_BP_SIZE = 64;        // 64 bytes of extra memory
 var NUM_TILES   = 384;       // number of in-memory tiles
 
 /**
