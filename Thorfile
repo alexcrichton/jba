@@ -41,8 +41,6 @@ class JBA < Thor
   protected
 
   def js_args
-    js_files.map{ |s|
-      '--js src/' + s
-    } << '--externs lib/jba/jquery-1.4.3.externs.js'
+    js_files.map{ |s| '--js src/' + s }
   end
 end

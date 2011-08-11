@@ -125,7 +125,8 @@ $(function() {
 
   // Integrate the GB with the current window
   gb.set_canvas($('#gb')[0]);
-  gb.bind_keys(window);
+  $(window).keydown(function(e) { gb.keydown(e.keyCode); });
+  $(window).keyup(function(e) { gb.keyup(e.keyCode); });
 
   // If we can read local files, then bind the link. Otherwise, hide the
   // link.

@@ -85,17 +85,16 @@ JBA.prototype = {
   },
 
   /**
-   * Set the element which will supply input events to this GB instance. This
-   * function assumes that jQuery is available.
-   *
-   * @param {Element} element the element to receive key events from.
+   * Handler for when a key is pressed down
+   * @param {number} code the code for the key which was pressed
    */
-  bind_keys: function(element) {
-    /* See frame() for why there's this hack */
-    var input = this.memory.input;
-    $(element).keydown(function(e) { return input.keydown(e.keyCode); });
-    $(element).keyup(function(e) { return input.keyup(e.keyCode); });
-  },
+  keydown: function(code) { this.memory.input.keydown(code); },
+
+  /**
+   * Handler for when a key is released
+   * @param {number} code the code for the key which was released
+   */
+  keyup: function(code) { this.memory.input.keyup(code); },
 
   /**
    * Set the canvas element to paint the screen to
@@ -204,7 +203,8 @@ Serializable.prototype.deserialize = function(io) {};
 window['JBA']                  = JBA;
 JBA.prototype['load_rom']      = JBA.prototype.load_rom;
 JBA.prototype['set_canvas']    = JBA.prototype.set_canvas;
-JBA.prototype['bind_keys']     = JBA.prototype.bind_keys;
+JBA.prototype['keydown']       = JBA.prototype.keydown;
+JBA.prototype['keyup']         = JBA.prototype.keyup;
 JBA.prototype['run']           = JBA.prototype.run;
 JBA.prototype['stop']          = JBA.prototype.stop;
 JBA.prototype['frames_count']  = JBA.prototype.frames_count;
