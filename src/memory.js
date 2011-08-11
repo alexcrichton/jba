@@ -100,6 +100,7 @@ JBA.Memory.prototype = {
     io.wb(this.mbc);
     io.wb(this._if);
     io.wb(this._ie);
+    io.wb(this.cgb);
   },
 
   deserialize: function(io) {
@@ -117,6 +118,7 @@ JBA.Memory.prototype = {
     this.mbc      = io.rb();
     this._if      = io.rb();
     this._ie      = io.rb();
+    this.cgb      = io.rb();
   },
 
   /**

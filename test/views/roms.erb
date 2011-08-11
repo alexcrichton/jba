@@ -89,7 +89,7 @@
           window.localStorage[key] = gb.snapshot();
           window.localStorage[key + 'Name'] = gb.rom_title();
           $(this).siblings('.missing').hide();
-          $(this).siblings('.load').text(gb.rom_title());
+          $(this).siblings('.load').text(gb.rom_title()).show();
           return false;
         });
 

@@ -10,8 +10,10 @@ JBA.GPU = function() {
   this.reset();
 };
 
-var VRAM_SIZE = (8 << 10); // 8k
-var OAM_SIZE  = 0xa0;      // 0xffe00 - 0xffe9f is OAM
+var VRAM_SIZE   = (8 << 10); // 8k
+var OAM_SIZE    = 0xa0;      // 0xffe00 - 0xffe9f is OAM
+var CGB_BP_SIZE = 0xa0;      // 64 bytes of extra memory
+var NUM_TILES   = 384;       // number of in-memory tiles
 
 /**
  * Current mode the GPU is in
@@ -153,7 +155,7 @@ JBA.GPU.prototype = {
     }
 
     // 384 tile/bank of VRAM, 2 banks = 384*2 tiles in total
-    for (i = 0; i < 384*2; i++) {
+    for (i = 0; i < NUM_TILES * 2; i++) {
       this._tiles.data[i] = [];
       this._tiles.to_update[i] = false;
       for (j = 0; j < 8; j++) {
@@ -162,13 +164,15 @@ JBA.GPU.prototype = {
     }
     this._tiles.need_update = false;
 
-    for (i = 0; i < 64; i++) {
+    for (i = 0; i < CGB_BP_SIZE; i++) {
       this.cgb.bgp[i] = 255; // Background colors all initially white
       this.cgb.obp[i] = 0;
     }
+    // 8 compiled palettes of colors
     for (i = 0; i < 8; i++) {
       this.cgb._bgp[i] = [];
       this.cgb._obp[i] = [];
+      // Each palette has 4 colors, each of 4 components
       for (j = 0; j < 4; j++) {
         this.cgb._bgp[i][j] = [255, 255, 255, 255];
         this.cgb._obp[i][j] = [0, 0, 0, 255];
@@ -194,10 +198,15 @@ JBA.GPU.prototype = {
 
   serialize: function(io) {
     var i;
-    for (i = 0; i < VRAM_SIZE; i++) io.wb(this.vram[i]);
+    for (i = 0; i < VRAM_SIZE; i++) io.wb(this.vrambanks[0][i]);
+    for (i = 0; i < VRAM_SIZE; i++) io.wb(this.vrambanks[1][i]);
     for (i = 0; i < OAM_SIZE;  i++) io.wb(this.oam[i]);
+    for (i = 0; i < CGB_BP_SIZE; i++) {
+      io.wb(this.cgb.bgp[i]);
+      io.wb(this.cgb.obp[i]);
+    }
     io.wb(this.mode);
-    io.wb(this.wx); io.wb(this.wy);
+    io.wb(this.wx + 7); io.wb(this.wy);
     io.wb(this.obp0); io.wb(this.obp1); io.wb(this.bgp);
     io.wb(this.scx); io.wb(this.scy);
     io.wb(this.ly); io.wb(this.lyc); io.wb(this.lycly);
@@ -207,15 +216,25 @@ JBA.GPU.prototype = {
     io.wb(this.winon); io.wb(this.winmap);
     io.wb(this.lcdon);
     io.ww(this.clock);
+    io.ww(this.hdma_src);
+    io.ww(this.hdma_dst);
+    io.wb(this.hdma5);
+    io.wb(this.cgb.bgpi);
+    io.wb(this.cgb.obpi);
+    io.wb(this.vrambank);
   },
 
   deserialize: function(io) {
-    // TODO: compiled palettes?
     var i;
-    for (i = 0; i < VRAM_SIZE; i++) this.vram[i] = io.rb();
-    for (i = 0; i < OAM_SIZE;  i++) this.oam[i]  = io.rb();
+    for (i = 0; i < VRAM_SIZE; i++) this.vrambanks[0][i] = io.rb();
+    for (i = 0; i < VRAM_SIZE; i++) this.vrambanks[1][i] = io.rb();
+    for (i = 0; i < OAM_SIZE;  i++) this.oam[i] = io.rb();
+    for (i = 0; i < CGB_BP_SIZE; i++) {
+      this.cgb.bgp[i] = io.rb();
+      this.cgb.obp[i] = io.rb();
+    }
     this.mode = io.rb();
-    this.wx = io.rb(); this.wy = io.rb();
+    this.wx = io.rb() - 7; this.wy = io.rb();
     this.obp0 = io.rb(); this.obp1 = io.rb(); this.bgp = io.rb();
     this.scx = io.rb(); this.scy = io.rb();
     this.ly = io.rb(); this.lyc = io.rb(); this.lycly = io.rb();
@@ -225,10 +244,24 @@ JBA.GPU.prototype = {
     this.winon = io.rb(); this.winmap = io.rb();
     this.lcdon = io.rb();
     this.clock = io.rw();
+    this.hdma_src = io.rw();
+    this.hdma_dst = io.rw();
+    this.hdma5 = io.rb();
+    this.cgb.bgpi = io.rb();
+    this.cgb.obpi = io.rb();
+    this.vrambank = io.rb();
 
+    this.vram = this.vrambanks[this.vrambank];
     this.update_palette(this._pal.bg, this.bgp);
     this.update_palette(this._pal.obp0, this.obp0);
     this.update_palette(this._pal.obp1, this.obp1);
+    this.update_cgb_palette(this.cgb._bgp, this.cgb.bgp, this.cgb.bgpi);
+    this.update_cgb_palette(this.cgb._obp, this.cgb.obp, this.cgb.obpi);
+    for (i = 0; i < NUM_TILES * 2; i++) {
+      this._tiles.to_update[i] = true;
+    }
+    this._tiles.needs_update = true;
+    this.update_tileset();
   },
 
   /**
@@ -376,7 +409,7 @@ JBA.GPU.prototype = {
         tiles     = this._tiles.data,
         vram      = this.vram;
 
-    for (var i = 0; i < 384; i++) {
+    for (var i = 0; i < NUM_TILES; i++) {
       if (!to_update[i]) {
         continue;
       }
@@ -471,7 +504,7 @@ JBA.GPU.prototype = {
 
         var attrs = banks[1][mapbase + mapoff];
 
-        var tile = tiles[tilebase + tilei + ((attrs >> 3) & 1) * 384];
+        var tile = tiles[tilebase + tilei + ((attrs >> 3) & 1) * NUM_TILES];
         bgp   = this.cgb._bgp[attrs & 0x7];
         bgpri = attrs & 0x80;
         row   = tile[attrs & 0x40 ? 7 - y : y];
@@ -542,7 +575,7 @@ JBA.GPU.prototype = {
       if (cgb) {
         var attrs = banks[1][mapbase + mapoff];
 
-        var tile = tiles[tilebase + tilei + ((attrs >> 3) & 1) * 384];
+        var tile = tiles[tilebase + tilei + ((attrs >> 3) & 1) * NUM_TILES];
         bgp   = this.cgb._bgp[attrs & 0x7];
         bgpri = attrs & 0x80;
         row   = tile[attrs & 0x40 ? 7 - y : y];
@@ -623,7 +656,7 @@ JBA.GPU.prototype = {
          Otherwise, we just use the tile index as a raw index. */
       var pal, tiled;
       if (cgb) {
-        tiled = tiles[((flags >> 3) & 1 * 384) + tile];
+        tiled = tiles[((flags >> 3) & 1 * NUM_TILES) + tile];
         pal   = this.cgb._obp[flags & 0x3];
       } else {
         /* bit4 is the palette number. 0 = obp0, 1 = obp1 */
@@ -804,7 +837,7 @@ JBA.GPU.prototype = {
    */
   update_tile: function(addr) {
     var tilei = (addr & 0x1fff) >> 4; /* each tile is 16 bytes, divide by 16 */
-    tilei += this.vrambank * 384;
+    tilei += this.vrambank * NUM_TILES;
     this._tiles.need_update = true;
     this._tiles.to_update[tilei] = true;
   },
