@@ -86,10 +86,9 @@ JBA.Memory.prototype = {
   serialize: function(io) {
     var i;
     this.input.serialize(io);
-    // http://nocash.emubase.de/pandocs.htm#thecartridgeheader specifies that
-    // byte 0x148 is the size of the ROM.
+    // byte 0x148 is the size of the ROM, see rom_size().
     io.wb(this.rom[0x148]);
-    for (i = 0; i < this.rom.length; i++)   io.wb(this.rom[i]);
+    for (i = 0; i < this.rom_size(); i++)   io.wb(this.rom[i]);
     for (i = 0; i < this.ram.length; i++)   io.wb(this.ram[i]);
     for (i = 0; i < this.wram.length; i++)  io.wb(this.wram[i]);
     for (i = 0; i < this.hiram.length; i++) io.wb(this.hiram[i]);
@@ -104,23 +103,8 @@ JBA.Memory.prototype = {
   },
 
   deserialize: function(io) {
-    var romsize, i;
     this.input.deserialize(io);
-    // For specifics on romsize, see comment above in serialize()
-    switch (io.rb()) {
-      case 0x00: romsize =  32 << 10; break; // 32 KB
-      case 0x01: romsize =  64 << 10; break; // 64 KB
-      case 0x02: romsize = 128 << 10; break; // 128 KB
-      case 0x03: romsize = 256 << 10; break; // 256 KB
-      case 0x04: romsize = 512 << 10; break; // 512 KB
-      case 0x05: romsize =   1 << 20; break; // 1 MB
-      case 0x06: romsize =   2 << 20; break; // 2 MB
-      case 0x07: romsize =   4 << 20; break; // 4 MB
-      case 0x52: romsize =   1179648; break; // 1.1 MB = 72 banks * 16 KB/bank
-      case 0x53: romsize =   1310720; break; // 1.2 MB = 80 banks * 16 KB/bank
-      case 0x54: romsize =   1572864; break; // 1.5 MB = 96 banks * 16 KB/bank
-      default: throw "Unknown romsize type";
-    }
+    var i, romsize = this.rom_size(io.rb());
     for (i = 0; i < romsize; i++)           this.rom[i]   = io.rb();
     for (i = 0; i < this.ram.length; i++)   this.ram[i]   = io.rb();
     for (i = 0; i < this.wram.length; i++)  this.wram[i]  = io.rb();
@@ -133,6 +117,37 @@ JBA.Memory.prototype = {
     this.mbc      = io.rb();
     this._if      = io.rb();
     this._ie      = io.rb();
+  },
+
+  /**
+   * Calculate the rom size based off of the value at 0x148 in the cartridge
+   * header.
+   *
+   * @param {number=} identifier if specified, this is used rather than the
+   *                  value at 0x148
+   * @return {number} the size of the ROM
+   *
+   * See http://nocash.emubase.de/pandocs.htm#thecartridgeheader
+   * @private
+   */
+  rom_size: function(identifier) {
+    if (!identifier) {
+      identifier = this.rom[0x148];
+    }
+    switch (identifier) {
+      case 0x00: return  32 << 10; // 32 KB
+      case 0x01: return  64 << 10; // 64 KB
+      case 0x02: return 128 << 10; // 128 KB
+      case 0x03: return 256 << 10; // 256 KB
+      case 0x04: return 512 << 10; // 512 KB
+      case 0x05: return   1 << 20; // 1 MB
+      case 0x06: return   2 << 20; // 2 MB
+      case 0x07: return   4 << 20; // 4 MB
+      case 0x52: return   1179648; // 1.1 MB = 72 banks * 16 KB/bank
+      case 0x53: return   1310720; // 1.2 MB = 80 banks * 16 KB/bank
+      case 0x54: return   1572864; // 1.5 MB = 96 banks * 16 KB/bank
+      default: throw "Unknown romsize type";
+    }
   },
 
   powerOn: function() {
