@@ -96,8 +96,12 @@
         $('.snapshot a.load').click(function() {
           var key = keyFor($(this).closest('li').data('num'));
           gb.stop();
-          gb.load_snapshot(window.localStorage[key]);
-          run();
+          try {
+            gb.load_snapshot(window.localStorage[key]);
+            run();
+          } catch (e) {
+            alert(e);
+          }
           return false;
         });
       } else {
