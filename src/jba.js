@@ -133,6 +133,23 @@ JBA.prototype = {
   },
 
   /**
+   * Load a snapshot previously returned by snapshot() back into memory. The
+   * snapshot's original cartridge should already be loaded.
+   *
+   * @param {string} snapshot the previous binary snapshot image
+   */
+  load_snapshot: function(snapshot) {
+    var io = new JBA.StringIO(snapshot);
+    this.memory.deserialize(io);
+    this.gpu.deserialize(io);
+    this.cpu.deserialize(io);
+    this.timer.deserialize(io);
+    if (!io.eof()) {
+      throw "Invalid snapshot!";
+    }
+  },
+
+  /**
    * Returns the current image of ram for the loaded cartridge. This is meant to
    * be the "battery-saved" data persisted between cartridge loads.
    *
@@ -165,17 +182,6 @@ JBA.prototype = {
     for (var i = 0; i < l; i++) ram[i] = io.rb();
     if (!io.eof()) {
       throw "Bad ram image";
-    }
-  },
-
-  load_snapshot: function(snapshot) {
-    var io = new JBA.StringIO(snapshot);
-    this.memory.deserialize(io);
-    this.gpu.deserialize(io);
-    this.cpu.deserialize(io);
-    this.timer.deserialize(io);
-    if (!io.eof()) {
-      throw "Invalid snapshot!";
     }
   }
 };
