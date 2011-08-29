@@ -45,7 +45,7 @@ offline = Rack::Offline.configure(:cache_interval => 1) do
   cache 'http://cdnjs.cloudflare.com/ajax/libs/modernizr/2.0.6/modernizr.min.js'
 
   public_path = File.expand_path('../public', __FILE__)
-  Dir[public_path + '/roms/*'].each do |file|
+  Dir[public_path + '/jba/roms/*'].each do |file|
     cache file.gsub(public_path, '')
   end
 
