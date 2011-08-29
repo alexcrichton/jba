@@ -1,106 +1,64 @@
+
 <!DOCTYPE html>
-<html>
+<html manifest="/jba/jba.manifest">
 <head>
-  <title>JBA</title>
+  <title>JBA - Javascript Gameoy</title>
   <script src="http://code.jquery.com/jquery.min.js"></script>
-
-  <script type="text/javascript" src="/jba/js/jba.min.js"></script>
-
-  <script type="text/javascript">
-    window.gb = new JBA();
-
-    $(function() {
-      gb.set_canvas($('#gb')[0]);
-      gb.bind_keys(window);
-
-      $('.rom select').change(function() {
-        $('button').prop('disabled', true);
-        $(this).blur();
-        gb.stop();
-        gb.reset();
-
-        if ($(this).val() == '') {
-          $('.state').text('waiting');
-          return;
-        }
-        $('.state').text('loading');
-        gb.load_rom($(this).val(), function() {
-          gb.run();
-          $('button').prop('disabled', false);
-          $('button.run').text('Stop');
-          $('.state').text('running');
-        });
-      });
-
-      $('button.run').click(function() {
-        if ($(this).text() == 'Stop') {
-          gb.stop();
-          $(this).text('Run');
-          $('.state').text('stopped');
-        } else {
-          gb.run();
-          $(this).text('Stop');
-          $('.state').text('running');
-        }
-      });
-
-      $('button.reset').click(function() { $('.rom select').change() });
-
-      $('input[type=range]').change(function() {
-        $('#gb').width($(this).val() * 160).height($(this).val() * 144);
-      });
-
-      setInterval(function() { $('.fps').text(gb.frames_count()); }, 1000);
-    });
-  </script>
+  <script src='http://cdnjs.cloudflare.com/ajax/libs/modernizr/2.0.6/modernizr.min.js'></script>
+  <script type='text/javascript' src='/jba/jba.min.js'></script>
+  <script src="/jba/jba-browser.js"></script>
 
   <style type="text/css">
-    #gb {
-      border: 1px solid black;
-    }
+    #gb { border: 1px solid black; }
 
     #gb, #controls, #status {
       display: block;
       margin: 0 auto;
     }
 
-    .state {
-      font-style: italic;
-    }
-
-    #controls, #status {
-      text-align: center;
-    }
+    .state { font-style: italic; }
+    #controls, #status, #nochrome { text-align: center; }
 
     dl, div { overflow: auto; }
     dl { font-size: 70%; margin: 0 auto; width: 130px; }
     dt { width: 50px; clear: left; float: left; }
     dd { width: 80px; float: left; margin: 0; }
+    #nochrome { margin-top: 10px; }
+    #snapshots { position: absolute; right: 20px; top: 20px }
   </style>
 </head>
 
 <body>
-  <div id="status">
-    <span class="state">stopped</span> | fps: <span class="fps">0</span><br>
-    <input type="range" min="1" max="4" step="0.25" value="1">
+  <div id='status'>
+    <span class='state'>waiting</span> | fps: <span class='fps'>0</span><br/>
+    <input type='range' min='1' max='4' step='0.25' value='1' />
   </div>
-  <canvas id="gb" height="144" width="160"></canvas>
-  <div id="controls">
-    <div class="rom">
+  <canvas id='gb' height='144' width='160'></canvas>
+  <div id='controls'>
+    <div class='rom'>
       <select>
         <option></option>
-        <option value="/jba/roms/opus5.gb">Opus5</option>
-        <option value="/jba/roms/ttt.gb">Tic-Tac-Toe</option>
-        <option value="/jba/roms/tetris.gb">Tetris</option>
-        <option value="/jba/roms/hangman.gb">Hangman</option>
-        <option value="/jba/roms/adjtris.gb">Adjtris</option>
-        <option value="/jba/roms/mario.gb">MarioLand</option>
+        <option value='/roms/opus5.gb'>Opus5</option>
+        <option value='/roms/ttt.gb'>Tic-Tac-Toe</option>
+        <option value='/roms/tetris.gb'>Tetris</option>
+        <option value='/roms/hangman.gb'>Hangman</option>
+        <option value='/roms/adjtris.gb'>Adjtris</option>
+        <option value='/roms/mario.gb'>MarioLand</option>
+        <option value='/roms/pokemon-red.gb'>Pokemon Red</option>
+        <option value='/roms/pokemon-blue.gb'>Pokemon Blue</option>
+        <option value='/roms/pokemon-silver.gb'>Pokemon Silver</option>
       </select>
+
+      <span class='local'>
+        or
+        <a href='#'>Local ROM</a>
+        <input type='file' style='opacity:0;position:absolute' />
+      </span>
     </div>
 
-    <div class="buttons">
-      <button class="run">Run</button>
-      <button class="reset">Reset</button>
+    <div class='buttons'>
+      <button class='run' disabled='disabled'>Run</button>
+      <button class='reset' disabled='disabled'>Reset</button>
     </div>
 
     <div>
@@ -112,6 +70,37 @@
         <dt>Joypad</dt><dd>arrow keys</dd>
       </dl>
     </div>
+
   </div>
 
+  <div id='nochrome'>
+    JBA works best in <a href='http://google.com/chrome'>Chrome</a>.
+    <div id='nofilereader'> Also, you can play your own roms in Chrome.</div>
+  </div>
+
+  <div id='snapshots'>
+    <ul>
+      
+        <li class='snapshot' data-num='0'>
+          <a href='#' class='save' title='Save Snapshot'>>></a>
+          <a href='#' class='load'>Snapshot 0</a>
+          <span class='missing'>No save state</span>
+        </li>
+      
+        <li class='snapshot' data-num='1'>
+          <a href='#' class='save' title='Save Snapshot'>>></a>
+          <a href='#' class='load'>Snapshot 1</a>
+          <span class='missing'>No save state</span>
+        </li>
+      
+        <li class='snapshot' data-num='2'>
+          <a href='#' class='save' title='Save Snapshot'>>></a>
+          <a href='#' class='load'>Snapshot 2</a>
+          <span class='missing'>No save state</span>
+        </li>
+      
+    </ul>
+  </div>
+
+</body>
 </html>
