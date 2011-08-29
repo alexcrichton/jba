@@ -40,7 +40,7 @@ end
 
 offline = Rack::Offline.configure(:cache_interval => 1) do
   cache '/jba/jba.min.js'
-  # cache '/jba/jba-browser.js'
+  cache '/jba/jba-browser.js'
   cache 'http://code.jquery.com/jquery.min.js'
   cache 'http://cdnjs.cloudflare.com/ajax/libs/modernizr/2.0.6/modernizr.min.js'
 
