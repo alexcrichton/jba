@@ -2,6 +2,7 @@ source :rubygems
 
 gem 'sinatra'
 gem 'thor'
+gem 'rack-offline'
 
 gem 'guard'
 gem 'guard-shell'

@@ -1,5 +1,6 @@
 require 'sinatra'
 require 'erb'
+require 'rack/offline'
 
 require File.expand_path('../utils', __FILE__)
 
@@ -35,6 +36,24 @@ get '/jba/jba.min.js' do
   else
     "alert('please run `thor jba:minify` \\nfrom: #{File.dirname(file)}');"
   end
+end
+
+offline = Rack::Offline.configure(:cache_interval => 1) do
+  cache '/jba/jba.min.js'
+  # cache '/jba/jba-browser.js'
+  cache 'http://code.jquery.com/jquery.min.js'
+  cache 'http://cdnjs.cloudflare.com/ajax/libs/modernizr/2.0.6/modernizr.min.js'
+
+  public_path = File.expand_path('../public', __FILE__)
+  Dir[public_path + '/roms/*'].each do |file|
+    cache file.gsub(public_path, '')
+  end
+
+  network "/"
+end
+
+get '/jba/jba.manifest' do
+  offline.call env
 end
 
 helpers do

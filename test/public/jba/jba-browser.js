@@ -165,8 +165,9 @@ $(function() {
   // Callback for reset to the beginning of the rom (power on/off).
   $('button.reset').click(function() { $('.rom select').change(); });
   // Callback for the slider to resize the gameboy window.
-  $('input[type=range]').change(function() {
+  $('.size input[type=range]').change(function() {
     $('#gb').width($(this).val() * 160).height($(this).val() * 144);
+    $('.size .val').text($(this).val());
   });
   // FPS updater
   setInterval(function() { $('.fps').text(gb.frames_count()); }, 1000);
