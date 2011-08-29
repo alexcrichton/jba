@@ -732,7 +732,7 @@ JBA.GPU.prototype = {
       case 0x48: return this.obp0;
       case 0x49: return this.obp1;
       case 0x4a: return this.wy;
-      case 0x4b: return this.wx;
+      case 0x4b: return this.wx + 7;
       case 0x4f: return this.vrambank;
 
       // See http://nocash.emubase.de/pandocs.htm#lcdvramdmatransferscgbonly
