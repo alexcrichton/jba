@@ -46,33 +46,14 @@ JBA.prototype = {
     var cpu = this.cpu, gpu = this.gpu;
     // See http://imrannazar.com/GameBoy-Emulation-in-JavaScript:-GPU-Timings
     // for the timing for this constant
-    try {
-      var cycles_left = 70224, t = 0;
-      do {
-        t = cpu.exec();
-        gpu.step(t);
-        cycles_left -= t;
-      } while (cycles_left > 0);
+    var cycles_left = 70224, t = 0;
+    do {
+      t = cpu.exec();
+      gpu.step(t);
+      cycles_left -= t;
+    } while (cycles_left > 0);
 
-      this.fps++;
-    } catch (e) {
-      this.stop();
-      throw e;
-    }
-  },
-
-  run: function(interval) {
-    if (typeof interval == 'undefined') {
-      interval = 16;
-    }
-    /* I'd like to use this.frame.bind(this) instead of this t=this hack, but
-       apparently the bind function doesn't exist in safari */
-    var t = this;
-    this._interval = setInterval(function() { t.frame(); }, interval);
-  },
-
-  stop: function() {
-    clearInterval(this._interval);
+    this.fps++;
   },
 
   /**

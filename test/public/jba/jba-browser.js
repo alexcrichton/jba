@@ -6,11 +6,30 @@ $(function() {
   var storage = window.localStorage;
   var current_filename;
   var update_snapshots = function() {};
+  var frame_interval = null;
+
+  function start_frames() {
+    var interval = 16; // 16ms between frames ~ 60fps
+    interval /= $('.slider.speed input[type=range]').val();
+    frame_interval = setInterval(function() {
+      try {
+        gb.frame();
+      } catch (e) {
+        stop_frames();
+        throw e;
+      }
+    }, interval);
+  }
+
+  function stop_frames() {
+    clearInterval(frame_interval);
+    frame_interval = null;
+  }
 
   // Run the gameboy, doing some UI tweaks as well
   function run(filename, rom) {
     save_ram_image();
-    gb.stop();
+    stop_frames();
     if (filename && rom) {
       gb.reset();
       gb.load_rom(rom);
@@ -21,7 +40,7 @@ $(function() {
       current_filename = filename;
       update_snapshots();
     }
-    gb.run();
+    start_frames();
     $('button').prop('disabled', false);
     $('button.run').text('Stop');
     $('.state').text('running');
@@ -79,7 +98,7 @@ $(function() {
 
     $('.snapshot a.load').click(function() {
       var key = current_filename + $(this).closest('li').data('num');
-      gb.stop();
+      stop_frames();
       try {
         gb.load_snapshot(storage[key]);
         run();
@@ -152,11 +171,11 @@ $(function() {
   // Callback for the start/stop emulation button.
   $('button.run').click(function() {
     if ($(this).text() == 'Stop') {
-      gb.stop();
+      stop_frames();
       $(this).text('Run');
       $('.state').text('stopped');
     } else {
-      gb.run();
+      start_frames();
       $(this).text('Stop');
       $('.state').text('running');
     }
@@ -169,12 +188,19 @@ $(function() {
     $('#gb').width($(this).val() * 160).height($(this).val() * 144);
     $('.size .val').text($(this).val());
   });
+  $('.speed input[type=range]').change(function() {
+    $('.speed .val').text($(this).val());
+    if (frame_interval) {
+      stop_frames();
+      start_frames();
+    }
+  });
   // FPS updater
   setInterval(function() { $('.fps').text(gb.frames_count()); }, 1000);
 
   // Don't show non-pretty slider range unless it's supported
   if (!Modernizr.inputtypes.range) {
-    $('input[type=range]').hide();
+    $('.slider').hide();
   }
 
   // Please use chrome
