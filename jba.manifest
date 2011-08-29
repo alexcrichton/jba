@@ -1,24 +1,18 @@
 CACHE MANIFEST
-
-# Landing page
-/jba
+# 163ab362f88a7a4ec1cc54e1709d22923b14bd837368744f46d1496685bb61a8
 /jba/jba.min.js
 /jba/jba-browser.js
-
-# External JS from CDNs
 http://code.jquery.com/jquery.min.js
 http://cdnjs.cloudflare.com/ajax/libs/modernizr/2.0.6/modernizr.min.js
-
-# Miscellaneous roms
-/roms/opus5.gb
-/roms/ttt.gb
-/roms/tetris.gb
-/roms/hangman.gb
 /roms/adjtris.gb
+/roms/hangman.gb
 /roms/mario.gb
-/roms/pokemon-red.gb
+/roms/opus5.gb
 /roms/pokemon-blue.gb
+/roms/pokemon-red.gb
 /roms/pokemon-silver.gb
+/roms/tetris.gb
+/roms/ttt.gb
 
 NETWORK:
-*
+/
