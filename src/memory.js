@@ -47,6 +47,8 @@ JBA.Memory.prototype = {
   battery: 0,
   /* Flag if this is a CGB cartridge or not */
   cgb: 0,
+  /* Flag if this is a SGB cartridge or not */
+  sgb: 0,
 
   // See reset() for descriptions
   rom: [],
@@ -77,6 +79,8 @@ JBA.Memory.prototype = {
     this.wrambank = 1; // The number of the wram bank currently swapped in
     this.ramon    = 0; // A flag whether ram is enabled or not.
     this.mode     = 0; // Flag whether in ROM banking (0) or RAM banking mode
+
+    this.cgb = this.sgb = 0;
 
     var i;
     for (i = 0; i < RAM_SIZE; i++)   this.ram[i]   = 0;
@@ -121,6 +125,7 @@ JBA.Memory.prototype = {
     io.wb(this._if);
     io.wb(this._ie);
     io.wb(this.cgb);
+    io.wb(this.sgb);
     io.wb(this.battery);
     this.input.serialize(io);
   },
@@ -145,6 +150,7 @@ JBA.Memory.prototype = {
     this._if      = io.rb();
     this._ie      = io.rb();
     this.cgb      = io.rb();
+    this.sgb      = io.rb();
     this.battery  = io.rb();
     this.input.deserialize(io);
   },
@@ -245,6 +251,7 @@ JBA.Memory.prototype = {
     }
 
     this.cgb = this.rom[0x0143] & 0x80;
+    this.sgb = this.rom[0x0146] == 0x03;
   },
 
   /**
