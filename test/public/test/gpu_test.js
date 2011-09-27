@@ -68,7 +68,7 @@ test('reading from GPU registers', function() {
   gpu.wy = 0x42;
   gpu.wx = 0x93;
   equals(gpu.rb(0xff4a), 0x42);
-  equals(gpu.rb(0xff4b), 0x93);
+  equals(gpu.rb(0xff4b), 0x9a);
 });
 
 test('writing the GPU registers', function() {

@@ -215,11 +215,11 @@
 
   <div id='roms'>
     <h2>Roms</h2>
-    <button onclick='debug.gb.load_rom("/roms/opus5.gb", function() { debug.update(); });'>opus5</button>
-    <button onclick='debug.gb.load_rom("/roms/mario.gb", function() { debug.update(); });'>mario</button>
-    <button onclick='debug.gb.load_rom("/roms/ttt.gb", function() { debug.update(); });'>ttt</button>
-    <button onclick='debug.gb.load_rom("/roms/tetris.gb", function() { debug.update(); });'>tetris</button>
-    <button onclick='debug.gb.load_rom("/roms/pokemon-red.gb", function() { debug.update(); });'>red</button>
+    <button onclick='debug.load_remote_rom("/roms/opus5.gb");'>opus5</button>
+    <button onclick='debug.load_remote_rom("/roms/mario.gb");'>mario</button>
+    <button onclick='debug.load_remote_rom("/roms/ttt.gb");'>ttt</button>
+    <button onclick='debug.load_remote_rom("/roms/tetris.gb");'>tetris</button>
+    <button onclick='debug.load_remote_rom("/jba/roms/pokemon-red.gb");'>red</button>
   </div>
 
   <canvas id='gb' height='144' width='160'></canvas>

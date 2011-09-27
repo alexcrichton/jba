@@ -48,7 +48,7 @@ JBA.Debug.prototype = {
     this.update_timer();
     this.update_interrupts();
 
-    this.highlight(hexw(this.gb.cpu.registers.pc));
+    this.highlight(hexw(this.gb.cpu.registers.u16regs[Z80.PC]));
   },
 
   /** @param addr the address as a string ('0x----') in memory to highlight */
@@ -101,22 +101,22 @@ JBA.Debug.prototype = {
   update_registers: function() {
     var gb = this.gb;
 
-    $('#registers .a').text(hexb(gb.cpu.registers.a));
-    $('#registers .b').text(hexb(gb.cpu.registers.b));
-    $('#registers .c').text(hexb(gb.cpu.registers.c));
-    $('#registers .d').text(hexb(gb.cpu.registers.d));
-    $('#registers .e').text(hexb(gb.cpu.registers.e));
-    $('#registers .f').text(hexb(gb.cpu.registers.f));
-    $('#registers .h').text(hexb(gb.cpu.registers.h));
-    $('#registers .l').text(hexb(gb.cpu.registers.l));
+    $('#registers .a').text(hexb(gb.cpu.registers.u8regs[Z80.A]));
+    $('#registers .b').text(hexb(gb.cpu.registers.u8regs[Z80.B]));
+    $('#registers .c').text(hexb(gb.cpu.registers.u8regs[Z80.C]));
+    $('#registers .d').text(hexb(gb.cpu.registers.u8regs[Z80.D]));
+    $('#registers .e').text(hexb(gb.cpu.registers.u8regs[Z80.E]));
+    $('#registers .f').text(hexb(gb.cpu.registers.u8regs[Z80.F]));
+    $('#registers .h').text(hexb(gb.cpu.registers.u8regs[Z80.H]));
+    $('#registers .l').text(hexb(gb.cpu.registers.u8regs[Z80.L]));
 
     $('#registers .af').text(hexw(gb.cpu.registers.af()));
     $('#registers .bc').html(linkmem(hexw(gb.cpu.registers.bc())));
     $('#registers .de').html(linkmem(hexw(gb.cpu.registers.de())));
     $('#registers .hl').html(linkmem(hexw(gb.cpu.registers.hl())));
 
-    $('#registers .sp').html(linkmem(hexw(gb.cpu.registers.sp)));
-    $('#registers .pc').html(linkmem(hexw(gb.cpu.registers.pc)));
+    $('#registers .sp').html(linkmem(hexw(gb.cpu.registers.u16regs[Z80.SP])));
+    $('#registers .pc').html(linkmem(hexw(gb.cpu.registers.u16regs[Z80.PC])));
   },
 
   /**
@@ -188,7 +188,7 @@ JBA.Debug.prototype = {
     var el = $('#disas dl');
     el.html('');
     var gb = this.gb;
-    var pc = gb.cpu.registers.pc;
+    var pc = gb.cpu.registers.u16regs[Z80.PC];
 
     for (var i = 0; i < JBA.Debug.INST; i++, pc++) {
       var row = document.createElement('dt');
@@ -283,5 +283,22 @@ JBA.Debug.prototype = {
       _ie >>= 1;
       _if >>= 1;
     }
+  },
+
+  load_remote_rom: function(url) {
+    $.ajax({
+      url: url,
+      /* Force the browser to interpret this as binary data instead of unicode
+         which produces incorrect charCodeAt() return values */
+      beforeSend: function(xhr) {
+        xhr.overrideMimeType('text/plain; charset=x-user-defined');
+      },
+      context: this,
+      success: function(data) {
+        debug.gb.load_rom(data);
+        debug.update();
+      }
+    });
   }
+
 };
