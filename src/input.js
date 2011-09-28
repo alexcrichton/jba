@@ -1,5 +1,3 @@
-(function() {
-
 /**
  * @constructor
  * @implements {Serializable}
@@ -267,9 +265,9 @@ JBA.Input.prototype = {
       case 0x18: //   OBJ_TRN   Super NES OBJ Mode
       default:
         /* Catch all other exceptions so we know what we need to implement */
-        console.log('process!');
-        console.log(this.sgb_command);
-        console.log(this.sgb_data);
+        // console.log('process!');
+        // console.log(this.sgb_command);
+        // console.log(this.sgb_data);
         throw 'Unknown!';
     }
   },
@@ -500,4 +498,3 @@ JBA.Input.prototype = {
     return keep_propogating;
   }
 };
-})();
