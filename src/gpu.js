@@ -385,7 +385,7 @@ JBA.GPU.prototype = {
    * @private
    */
   render_line: function() {
-    if (!this.lcdon) return;
+    if (this.lcdon == 0) return;
 
     var scanline = [];
 
@@ -453,6 +453,9 @@ JBA.GPU.prototype = {
         bank1 = this.vrambanks[1],
         bgp   = this._pal.bg,
         cgb   = this.mem.cgb,
+        sgb   = this.mem.sgb,
+        sgb_p = this.mem.input.sgb_pals,
+        sgb_a = this.mem.input.sgbatf,
         tiles = this._tiles.data;
 
     /* vram is from 0x8000-0x9fff
@@ -521,8 +524,20 @@ JBA.GPU.prototype = {
       }
 
       for (; x < 8 && i < 160; x++, i++, coff += 4) {
-        var colori  = row[hflip ? 7 - x : x];
-        var color   = bgp[colori];
+        var colori = row[hflip ? 7 - x : x];
+        var color;
+        if (sgb && !cgb) {
+          var sgbaddr = (i >> 3) + (this.ly >> 3) * 20;
+          var mapped  = sgb_a[sgbaddr];
+          switch (bgp[colori][0]) {
+            case 0: color   = sgb_p[mapped][3]; break;
+            case 96: color  = sgb_p[mapped][2]; break;
+            case 192: color = sgb_p[mapped][1]; break;
+            case 255: color = sgb_p[mapped][0]; break;
+          }
+        } else {
+          color = bgp[colori];
+        }
         /* To indicate bg priority, list a color >= 4 */
         scanline[i] = bgpri ? 4 : colori;
 
@@ -546,6 +561,9 @@ JBA.GPU.prototype = {
         banks = this.vrambanks,
         bgp   = this._pal.bg,
         cgb   = this.mem.cgb,
+        sgb   = this.mem.sgb,
+        sgb_p = this.mem.input.sgb_pals,
+        sgb_a = this.mem.input.sgbatf,
         tiles = this._tiles.data;
 
     var mapbase = this.winmap ? 0x1c00 : 0x1800;
@@ -592,8 +610,20 @@ JBA.GPU.prototype = {
       }
 
       for (; x < 8 && i < 160; x++, i++, coff += 4) {
-        var colori  = row[hflip ? 7 - x : x];
-        var color   = bgp[colori];
+        var colori = row[hflip ? 7 - x : x];
+        var color;
+        if (sgb && !cgb) {
+          var sgbaddr = (i >> 3) + (this.ly >> 3) * 20;
+          var mapped  = sgb_a[sgbaddr];
+          switch (bgp[colori][0]) {
+            case 0: color   = sgb_p[mapped][3]; break;
+            case 96: color  = sgb_p[mapped][2]; break;
+            case 192: color = sgb_p[mapped][1]; break;
+            case 255: color = sgb_p[mapped][0]; break;
+          }
+        } else {
+          color = bgp[colori];
+        }
         /* To indicate bg priority, list a color >= 4 */
         scanline[i] = bgpri ? 4 : row[colori];
 
@@ -613,6 +643,9 @@ JBA.GPU.prototype = {
         banks = this.vrambanks,
         oam   = this.oam,
         cgb   = this.mem.cgb,
+        sgb   = this.mem.sgb,
+        sgb_p = this.mem.input.sgb_pals,
+        sgb_a = this.mem.input.sgbatf,
         tiles = this._tiles.data;
 
     // More information about sprites is located at:
@@ -694,7 +727,19 @@ JBA.GPU.prototype = {
           continue;
         }
 
-        var color = pal[colori];
+        var color;
+        if (sgb && !cgb) {
+          var sgbaddr = ((xoff + x) >> 3) + (line >> 3) * 20;
+          var mapped  = sgb_a[sgbaddr];
+          switch (pal[colori][0]) {
+            case 0: color   = sgb_p[mapped][3]; break;
+            case 96: color  = sgb_p[mapped][2]; break;
+            case 192: color = sgb_p[mapped][1]; break;
+            case 255: color = sgb_p[mapped][0]; break;
+          }
+        } else {
+          color = pal[colori];
+        }
         data[coff]     = color[0];
         data[coff + 1] = color[1];
         data[coff + 2] = color[2];
