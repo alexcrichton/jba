@@ -107,14 +107,14 @@ JBA.Input.prototype = {
     var mask = JBA.Input.Map.directions[code];
     if (mask) {
       this.directions &= mask;
-      this.memory._if |= 0x10; /* Joypad interrupt bit */
+      this.memory._if |= JBA.INT.INPUT; /* Joypad interrupt bit */
       keep_propogating = false;
     }
 
     mask = JBA.Input.Map.buttons[code];
     if (mask) {
       this.buttons &= mask;
-      this.memory._if |= 0x10;
+      this.memory._if |= JBA.INT.INPUT;
       keep_propogating = false;
     }
 

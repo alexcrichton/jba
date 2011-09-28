@@ -99,7 +99,7 @@ JBA.Timer.prototype = {
         this.tima++;
         if (this.tima >= 0xff) {
           this.tima = this.tma;
-          this.memory._if |= 0x4; /* Request a timer interrupt */
+          this.memory._if |= JBA.INT.TIMER; /* Request a timer interrupt */
         }
         clock.tima -= this._tima_speed;
       }

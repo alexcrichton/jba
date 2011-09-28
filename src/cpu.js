@@ -9,6 +9,19 @@ JBA.CPU = function() {
   this.reset();
 };
 
+/**
+ * Interrupt codes for each interrupt the gameboy can receive
+ *
+ * @enum {number}
+ */
+JBA.INT = {
+  VBLANK:  0x01,
+  LCDSTAT: 0x02,
+  TIMER:   0x04,
+  SERIAL:  0x08,
+  JOYPAD:  0x10
+};
+
 /* Table of what action to take on delivering an interrupt. This table is
    indexed based on the IF and IE flags AND'ed together. That index leads to
    a function which will deliver the necessary interrupt. */
@@ -25,16 +38,17 @@ JBA.CPU.Interrupts = [];
   }
 
   for (var i = 0; i < 32; i++) {
-    if (i & 0x01) { /* vblank => INT 40 */
-      JBA.CPU.Interrupts[i] = deliver_interrupt(0x01, Z80.ops.rst_40);
-    } else if (i & 0x02) { /* LCD STAT => INT 48 */
-      JBA.CPU.Interrupts[i] = deliver_interrupt(0x02, Z80.ops.rst_48);
-    } else if (i & 0x04) { /* timer => INT 50 */
-      JBA.CPU.Interrupts[i] = deliver_interrupt(0x04, Z80.ops.rst_50);
-    } else if (i & 0x08) { /* serial => INT 58 */
-      JBA.CPU.Interrupts[i] = deliver_interrupt(0x08, Z80.ops.rst_58);
-    } else if (i & 0x10) { /* joypad => INT 60 */
-      JBA.CPU.Interrupts[i] = deliver_interrupt(0x10, Z80.ops.rst_60);
+    if (i & JBA.INT.VBLANK) { /* vblank => INT 40 */
+      JBA.CPU.Interrupts[i] = deliver_interrupt(JBA.INT.VBLANK, Z80.ops.rst_40);
+    } else if (i & JBA.INT.LCDSTAT) { /* LCD STAT => INT 48 */
+      JBA.CPU.Interrupts[i] = deliver_interrupt(JBA.INT.LCDSTAT,
+                                                Z80.ops.rst_48);
+    } else if (i & JBA.INT.TIMER) { /* timer => INT 50 */
+      JBA.CPU.Interrupts[i] = deliver_interrupt(JBA.INT.TIMER, Z80.ops.rst_50);
+    } else if (i & JBA.INT.SERIAL) { /* serial => INT 58 */
+      JBA.CPU.Interrupts[i] = deliver_interrupt(JBA.INT.SERIAL, Z80.ops.rst_58);
+    } else if (i & JBA.INT.JOYPAD) { /* joypad => INT 60 */
+      JBA.CPU.Interrupts[i] = deliver_interrupt(JBA.INT.JOYPAD, Z80.ops.rst_60);
     } else { /* No interrupt to deliver */
       JBA.CPU.Interrupts[i] = function() {};
     }

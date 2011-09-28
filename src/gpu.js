@@ -292,7 +292,7 @@ JBA.GPU.prototype = {
     this.mode = JBA.GPU.Mode.HBLANK;
     this.render_line();
     if (this.mode0int) {
-      this.mem._if |= 0x02;
+      this.mem._if |= JBA.INT.LCDSTAT;
     }
   },
 
@@ -307,9 +307,9 @@ JBA.GPU.prototype = {
     }
 
     /* Deliver the interrupt as both a VBLANK and LCD STAT if necessary */
-    this.mem._if |= 0x01;
+    this.mem._if |= JBA.INT.VBLANK;
     if (this.mode1int) {
-      this.mem._if |= 0x02;
+      this.mem._if |= JBA.INT.LCDSTAT;
     }
   },
 
@@ -320,7 +320,7 @@ JBA.GPU.prototype = {
   switch_mode2: function() {
     this.mode = JBA.GPU.Mode.RDOAM;
     if (this.mode2int) {
-      this.mem._if |= 0x02;
+      this.mem._if |= JBA.INT.LCDSTAT;
     }
   },
 
@@ -360,7 +360,7 @@ JBA.GPU.prototype = {
       }
 
       if (this.ly == this.lyc && this.lycly) {
-        this.mem._if |= 0x02;
+        this.mem._if |= JBA.INT.LCDSTAT;
       }
     }
 
