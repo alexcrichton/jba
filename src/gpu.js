@@ -454,8 +454,8 @@ JBA.GPU.prototype = {
         bgp   = this._pal.bg,
         cgb   = this.mem.cgb,
         sgb   = this.mem.sgb,
-        sgb_p = this.mem.input.sgb_pals,
-        sgb_a = this.mem.input.sgbatf,
+        sgb_p = this.mem.input.sgb.sgb_pals,
+        sgb_a = this.mem.input.sgb.sgbatf,
         tiles = this._tiles.data;
 
     /* vram is from 0x8000-0x9fff
@@ -562,8 +562,8 @@ JBA.GPU.prototype = {
         bgp   = this._pal.bg,
         cgb   = this.mem.cgb,
         sgb   = this.mem.sgb,
-        sgb_p = this.mem.input.sgb_pals,
-        sgb_a = this.mem.input.sgbatf,
+        sgb_p = this.mem.input.sgb.sgb_pals,
+        sgb_a = this.mem.input.sgb.sgbatf,
         tiles = this._tiles.data;
 
     var mapbase = this.winmap ? 0x1c00 : 0x1800;
@@ -644,8 +644,8 @@ JBA.GPU.prototype = {
         oam   = this.oam,
         cgb   = this.mem.cgb,
         sgb   = this.mem.sgb,
-        sgb_p = this.mem.input.sgb_pals,
-        sgb_a = this.mem.input.sgbatf,
+        sgb_p = this.mem.input.sgb.sgb_pals,
+        sgb_a = this.mem.input.sgb.sgbatf,
         tiles = this._tiles.data;
 
     // More information about sprites is located at:
