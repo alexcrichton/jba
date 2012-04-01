@@ -1,8 +1,8 @@
 CACHE MANIFEST
-# 63f215cfe033c23079320f775ab20b499cedfa6b6d67792268d42cda31a637a1
+# 86598ddc020b36549e7b518665b66888f3cec2173657cd824b5caed79a159483
 /jba/jba.min.js
 /jba/jba-browser.js
-http://code.jquery.com/jquery.min.js
+http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js
 http://cdnjs.cloudflare.com/ajax/libs/modernizr/2.0.6/modernizr.min.js
 /jba/roms/adjtris.gb
 /jba/roms/hangman.gb
