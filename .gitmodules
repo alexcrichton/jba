@@ -1,0 +1,3 @@
+[submodule "glfw-rs"]
+	path = glfw-rs
+	url = git://github.com/bjz/glfw-rs
