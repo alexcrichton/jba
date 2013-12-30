@@ -19,6 +19,20 @@ struct Clock {
 }
 
 impl Timer {
+    pub fn new() -> Timer {
+        Timer {
+            div: 0,
+            tima: 0,
+            tma: 0,
+            tac: 0,
+            tima_speed: 256,
+            clock: Clock {
+                tima: 0,
+                div: 0,
+            }
+        }
+    }
+
     pub fn reset(&mut self) {
         self.div = 0;
         self.tima = 0;
