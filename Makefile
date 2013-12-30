@@ -18,6 +18,9 @@ jba-rs: $(BUILDDIR)/jba-rs
 $(BUILDDIR)/jba-rs: $(MAIN_RS) $(RSGLFW) | $(BUILDDIR)
 	$(RUSTC) $(RUSTFLAGS) --dep-info $(BUILDDIR)/main.d $<
 
+$(RSGLFW_LIB):
+	git submodule update
+
 $(RSGLFW): $(RSGLFW_LIB) | $(BUILDDIR)
 	$(RUSTC) $(RUSTFLAGS) --rlib --dep-info $(BUILDDIR)/glfw.d $<
 
