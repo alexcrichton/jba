@@ -6,7 +6,17 @@ before_install:
     - yes | sudo add-apt-repository ppa:hansjorg/rust
     - sudo apt-get update
 install:
-    - sudo apt-get install rust-nightly glfw
+    - sudo apt-get install rust-nightly
+# Voodoo to get glfw on the system
+before_script:
+    - sudo apt-get install libXxf86vm-dev
+    - git clone https://github.com/glfw/glfw.git
+    - cd glfw
+    - git checkout 3.0.3
+    - cmake -DBUILD_SHARED_LIBS=ON
+    - make
+    - sudo make install
+    - cd ..
 script:
     - make
     - make test
