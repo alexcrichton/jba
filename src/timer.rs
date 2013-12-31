@@ -6,9 +6,9 @@ pub struct Timer {
 
     // See http://nocash.emubase.de/pandocs.htm#timeranddividerregisters
     div: u8,
-    tima: uint,
-    tma: uint,
-    tac: uint,
+    tima: u8,
+    tma: u8,
+    tac: u8,
 
     priv tima_speed: uint,
 }
@@ -85,7 +85,7 @@ impl Timer {
                 self.tima += 1;
                 if self.tima >= 0xff {
                     self.tima = self.tma;
-                    mem.if_ |= cpu::IntTimer as uint;
+                    mem.if_ |= cpu::IntTimer as u8;
                 }
                 self.clock.tima -= self.tima_speed;
             }
