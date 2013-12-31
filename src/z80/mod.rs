@@ -37,30 +37,17 @@ impl Registers {
         Registers {
             ime: 0, halt: 0, stop: 0,
 
-            a: 0, b: 0, d: 0, h: 0, f: 0, c: 0, e: 0, l: 0,
-            sp: 0, pc: 0,
+            // See: http://nocash.emubase.de/pandocs.htm#powerupsequence
+            // We initialize A to 0x11 instead of 0x01 because we're emulating
+            // CGB hardware and this is how the difference is detected
+            a: 0x11, b: 0x00, d: 0x00, h: 0x01,
+            f: 0xb0, c: 0x13, e: 0xd8, l: 0x4d,
+            sp: 0xfffe, pc: 0x0100,
         }
     }
 
     pub fn reset(&mut self) {
-        self.ime = 0;
-        self.halt = 0;
-        self.stop = 0;
-
-        // See: http://nocash.emubase.de/pandocs.htm#powerupsequence
-        // We initialize A to 0x11 instead of 0x01 because we're emulating
-        // CGB hardware and this is how the difference is detected
-        self.a = 0x11;
-        self.b = 0x00;
-        self.d = 0x00;
-        self.h = 0x01;
-        self.f = 0xb0;
-        self.c = 0x13;
-        self.e = 0xd8;
-        self.l = 0x4d;
-
-        self.sp = 0xfffe;
-        self.pc = 0x0100;
+        *self = Registers::new();
     }
 
     pub fn bump(&mut self) -> u16 {
@@ -97,5 +84,27 @@ impl Registers {
         self.sp -= 2;
         m.ww(self.sp, self.pc);
         self.pc = i;
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::Registers;
+
+    #[test]
+    fn init_values() {
+        let regs = Registers::new();
+
+        assert_eq!(regs.a, 0x11);
+        assert_eq!(regs.f, 0xb0);
+        assert_eq!(regs.b, 0x00);
+        assert_eq!(regs.c, 0x13);
+        assert_eq!(regs.d, 0x00);
+        assert_eq!(regs.e, 0xd8);
+        assert_eq!(regs.h, 0x01);
+        assert_eq!(regs.l, 0x4d);
+
+        assert_eq!(regs.pc, 0x100);
+        assert_eq!(regs.sp, 0xfffe);
     }
 }
