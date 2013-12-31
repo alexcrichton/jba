@@ -3,7 +3,6 @@
 use std::num::BitCount;
 
 use mem;
-use timer;
 
 mod z80;
 
@@ -30,8 +29,7 @@ impl Cpu {
         self.regs.reset();
     }
 
-    pub fn exec(&mut self, mem: &mut mem::Memory,
-                timer: &mut timer::Timer) -> uint {
+    pub fn exec(&mut self, mem: &mut mem::Memory) -> uint {
         // When the CPU halts, it simply goes into a "low power mode" that
         // doesn't execute any more instructions until an interrupt comes in.
         // Deferring until this interrupt happens is fairly difficult, so we
@@ -69,7 +67,6 @@ impl Cpu {
         }
 
         self.ticks += ticks;
-        timer.step(ticks / 4, mem);
         return ticks;
     }
 }

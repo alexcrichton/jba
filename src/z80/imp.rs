@@ -117,7 +117,11 @@ pub fn exec(inst: u8, r: &mut z80::Registers, m: &mut mem::Memory) -> uint {
         r.h = (hl >> 8) as u8;
         2
     }) )
-    macro_rules! jr( () => ({ r.pc = add(r.pc, m.rb(r.bump())); 3 }) )
+    macro_rules! jr( () => ({
+        let val = m.rb(r.bump());
+        r.pc = add(r.pc, val);
+        3
+    }) )
     macro_rules! jr_n( ($e:expr) => (
         if $e {jr!()} else {r.bump(); 2}
     ) )
@@ -141,7 +145,7 @@ pub fn exec(inst: u8, r: &mut z80::Registers, m: &mut mem::Memory) -> uint {
         r.f |= if (i as u16 + j as u16) > 0xff {C} else {0};
         r.a = i + j;
         r.f |= if r.a != 0 {0} else {Z};
-        2
+        1
     }) )
     macro_rules! adc_a( ($r:expr) => ({
         let i = r.a;
@@ -151,7 +155,7 @@ pub fn exec(inst: u8, r: &mut z80::Registers, m: &mut mem::Memory) -> uint {
         r.f |= if (i as u16 + j as u16 + k as u16) > 0xff {C} else {0};
         r.a = i + j + k;
         r.f |= if r.a != 0 {0} else {Z};
-        2
+        1
     }) )
     macro_rules! sub_a( ($r:expr) => ({
         let a = r.a;
@@ -159,7 +163,7 @@ pub fn exec(inst: u8, r: &mut z80::Registers, m: &mut mem::Memory) -> uint {
         r.f = N | if a < b {C} else {0} | if (a & 0xf) < (b & 0xf) {H} else {0};
         r.a = a - b;
         r.f |= if r.a != 0 {0} else {Z};
-        2
+        1
     }) )
     macro_rules! sbc_a( ($r:expr) => ({
         let a = r.a;
@@ -167,22 +171,22 @@ pub fn exec(inst: u8, r: &mut z80::Registers, m: &mut mem::Memory) -> uint {
         r.f = N | if a < b {C} else {0} | if (a & 0xf) < (b & 0xf) {H} else {0};
         r.a = a - b;
         r.f |= if r.a != 0 {0} else {Z};
-        2
+        1
     }) )
     macro_rules! and_a( ($r:expr) => ({
         r.a &= $r;
         r.f = H | if r.a != 0 {0} else {Z};
-        2
+        1
     }) )
     macro_rules! xor_a( ($r:expr) => ({
         r.a &= $r;
         r.f = if r.a != 0 {0} else {Z};
-        2
+        1
     }) )
     macro_rules! or_a( ($r:expr) => ({
         r.a |= $r;
         r.f = H | if r.a != 0 {0} else {Z};
-        2
+        1
     }) )
     macro_rules! cp_a( ($b:expr) => ({
         r.f = N | if r.a == $b {Z} else {0} |
@@ -346,7 +350,7 @@ pub fn exec(inst: u8, r: &mut z80::Registers, m: &mut mem::Memory) -> uint {
         0x83 => add_a!(r.e),                                        // add_ae
         0x84 => add_a!(r.h),                                        // add_ah
         0x85 => add_a!(r.l),                                        // add_al
-        0x86 => add_a!(m.rb(r.hl())),                               // add_ahlm
+        0x86 => { add_a!(m.rb(r.hl())); 2 }                         // add_ahlm
         0x87 => add_a!(r.a),                                        // add_aa
         0x88 => adc_a!(r.b),                                        // adc_ab
         0x89 => adc_a!(r.c),                                        // adc_ac
@@ -354,7 +358,7 @@ pub fn exec(inst: u8, r: &mut z80::Registers, m: &mut mem::Memory) -> uint {
         0x8b => adc_a!(r.e),                                        // adc_ae
         0x8c => adc_a!(r.h),                                        // adc_ah
         0x8d => adc_a!(r.l),                                        // adc_al
-        0x8e => adc_a!(m.rb(r.hl())),                               // adc_ahlm
+        0x8e => { adc_a!(m.rb(r.hl())); 2 }                         // adc_ahlm
         0x8f => adc_a!(r.a),                                        // adc_aa
 
         0x90 => sub_a!(r.b),                                        // sub_ab
@@ -363,7 +367,7 @@ pub fn exec(inst: u8, r: &mut z80::Registers, m: &mut mem::Memory) -> uint {
         0x93 => sub_a!(r.e),                                        // sub_ae
         0x94 => sub_a!(r.h),                                        // sub_ah
         0x95 => sub_a!(r.l),                                        // sub_al
-        0x96 => sub_a!(m.rb(r.hl())),                               // sub_ahlm
+        0x96 => { sub_a!(m.rb(r.hl())); 2 }                         // sub_ahlm
         0x97 => sub_a!(r.a),                                        // sub_aa
         0x98 => sbc_a!(r.b),                                        // sbc_ab
         0x99 => sbc_a!(r.c),                                        // sbc_ac
@@ -371,7 +375,7 @@ pub fn exec(inst: u8, r: &mut z80::Registers, m: &mut mem::Memory) -> uint {
         0x9b => sbc_a!(r.e),                                        // sbc_ae
         0x9c => sbc_a!(r.h),                                        // sbc_ah
         0x9d => sbc_a!(r.l),                                        // sbc_al
-        0x9e => sbc_a!(m.rb(r.hl())),                               // sbc_ahlm
+        0x9e => { sbc_a!(m.rb(r.hl())); 2 }                         // sbc_ahlm
         0x9f => sbc_a!(r.a),                                        // sbc_aa
 
         0xa0 => and_a!(r.b),                                        // and_ab
@@ -380,7 +384,7 @@ pub fn exec(inst: u8, r: &mut z80::Registers, m: &mut mem::Memory) -> uint {
         0xa3 => and_a!(r.e),                                        // and_ae
         0xa4 => and_a!(r.h),                                        // and_ah
         0xa5 => and_a!(r.l),                                        // and_al
-        0xa6 => and_a!(m.rb(r.hl())),                               // and_ahlm
+        0xa6 => { and_a!(m.rb(r.hl())); 2 }                         // and_ahlm
         0xa7 => and_a!(r.a),                                        // and_aa
         0xa8 => xor_a!(r.b),                                        // xor_ab
         0xa9 => xor_a!(r.c),                                        // xor_ac
@@ -388,7 +392,7 @@ pub fn exec(inst: u8, r: &mut z80::Registers, m: &mut mem::Memory) -> uint {
         0xab => xor_a!(r.e),                                        // xor_ae
         0xac => xor_a!(r.h),                                        // xor_ah
         0xad => xor_a!(r.l),                                        // xor_al
-        0xae => xor_a!(m.rb(r.hl())),                               // xor_ahlm
+        0xae => { xor_a!(m.rb(r.hl())); 2 }                         // xor_ahlm
         0xaf => xor_a!(r.a),                                        // xor_aa
 
         0xb0 => or_a!(r.b),                                         // or_ab
@@ -397,7 +401,7 @@ pub fn exec(inst: u8, r: &mut z80::Registers, m: &mut mem::Memory) -> uint {
         0xb3 => or_a!(r.e),                                         // or_ae
         0xb4 => or_a!(r.h),                                         // or_ah
         0xb5 => or_a!(r.l),                                         // or_al
-        0xb6 => or_a!(m.rb(r.hl())),                                // or_ahlm
+        0xb6 => { or_a!(m.rb(r.hl())); 2 }                          // or_ahlm
         0xb7 => or_a!(r.a),                                         // or_aa
         0xb8 => cp_a!(r.b),                                         // cp_ab
         0xb9 => cp_a!(r.c),                                         // cp_ac
@@ -414,7 +418,7 @@ pub fn exec(inst: u8, r: &mut z80::Registers, m: &mut mem::Memory) -> uint {
         0xc3 => jp!(),                                              // jp_nn
         0xc4 => call_if!((r.f & Z) == 0),                           // call_nz_n
         0xc5 => push!(b, c),                                        // push_bc
-        0xc6 => add_a!(m.rb(r.bump())),                             // add_an
+        0xc6 => { add_a!(m.rb(r.bump())); 2 }                       // add_an
         0xc7 => rst!(0x00),                                         // rst_00
         0xc8 => ret_if!((r.f & Z) != 0),                            // ret_z
         0xc9 => { r.ret(m); 4 }                                     // ret
@@ -422,7 +426,7 @@ pub fn exec(inst: u8, r: &mut z80::Registers, m: &mut mem::Memory) -> uint {
         0xcb => { exec_cb(m.rb(r.bump()), r, m) }                   // map_cb
         0xcc => call_if!((r.f & Z) != 0),                           // call_z_n
         0xcd => call!(),                                            // call
-        0xce => adc_a!(m.rb(r.bump())),                             // adc_an
+        0xce => { adc_a!(m.rb(r.bump())); 2 }                       // adc_an
         0xcf => rst!(0x08),                                         // rst_08
 
         0xd0 => ret_if!((r.f & C) == 0),                            // ret_nc
@@ -431,7 +435,7 @@ pub fn exec(inst: u8, r: &mut z80::Registers, m: &mut mem::Memory) -> uint {
         0xd3 => xx(),                                               // xx
         0xd4 => call_if!((r.f & C) == 0),                           // call_nc_n
         0xd5 => push!(d, e),                                        // push_de
-        0xd6 => sub_a!(m.rb(r.bump())),                             // sub_an
+        0xd6 => { sub_a!(m.rb(r.bump())); 2 }                       // sub_an
         0xd7 => rst!(0x10),                                         // rst_10
         0xd8 => ret_if!((r.f & C) != 0),                            // ret_c
         0xd9 => { r.ime = 1; r.ret(m); 4 }                          // reti
@@ -439,7 +443,7 @@ pub fn exec(inst: u8, r: &mut z80::Registers, m: &mut mem::Memory) -> uint {
         0xdb => xx(),                                               // xx
         0xdc => call_if!((r.f & C) != 0),                           // call_c_n
         0xdd => xx(),                                               // xx
-        0xde => sbc_a!(m.rb(r.bump())),                             // sbc_an
+        0xde => { sbc_a!(m.rb(r.bump())); 2 }                       // sbc_an
         0xdf => rst!(0x18),                                         // rst_18
 
         0xe0 => { ld_IOan(r, m); 3 }                                // ld_IOan
@@ -448,7 +452,7 @@ pub fn exec(inst: u8, r: &mut z80::Registers, m: &mut mem::Memory) -> uint {
         0xe3 => xx(),                                               // xx
         0xe4 => xx(),                                               // xx
         0xe5 => push!(h, l),                                        // push_hl
-        0xe6 => and_a!(m.rb(r.bump())),                             // and_an
+        0xe6 => { and_a!(m.rb(r.bump())); 2 }                       // and_an
         0xe7 => rst!(0x20),                                         // rst_20
         0xe8 => { r.sp = add(r.sp, m.rb(r.bump())); 4 }             // add_spn
         0xe9 => { r.pc = r.hl(); 1 }                                // jp_hl
@@ -456,7 +460,7 @@ pub fn exec(inst: u8, r: &mut z80::Registers, m: &mut mem::Memory) -> uint {
         0xeb => xx(),                                               // xx
         0xec => xx(),                                               // xx
         0xed => xx(),                                               // xx
-        0xee => xor_a!(m.rb(r.bump())),                             // xor_an
+        0xee => { xor_a!(m.rb(r.bump())); 2 }                       // xor_an
         0xef => rst!(0x28),                                         // rst_28
 
         0xf0 => { r.a = m.rb(0xff00 | (m.rb(r.bump()) as u16)); 3 } // ld_aIOn
@@ -465,7 +469,7 @@ pub fn exec(inst: u8, r: &mut z80::Registers, m: &mut mem::Memory) -> uint {
         0xf3 => { r.ime = 0; 1 }                                    // di
         0xf4 => xx(),                                               // xx
         0xf5 => push!(a, f),                                        // push_af
-        0xf6 => or_a!(m.rb(r.bump())),                              // or_an
+        0xf6 => { or_a!(m.rb(r.bump())); 2 }                        // or_an
         0xf7 => rst!(0x30),                                         // rst_30
         0xf8 => { ld_hlspn(r, m); 3 }                               // ld_hlspn
         0xf9 => { r.sp = r.hl(); 2 }                                // ld_sphl
@@ -473,7 +477,7 @@ pub fn exec(inst: u8, r: &mut z80::Registers, m: &mut mem::Memory) -> uint {
         0xfb => { r.ime = 1; 1 }                                    // ei
         0xfc => xx(),                                               // xx
         0xfd => xx(),                                               // xx
-        0xfe => cp_a!(m.rb(r.bump())),                              // cp_an
+        0xfe => { cp_a!(m.rb(r.bump())); 2 }                        // cp_an
         0xff => rst!(0x38),                                         // rst_38
 
         _ => 0
@@ -794,3 +798,603 @@ pub fn exec_cb(inst: u8, r: &mut z80::Registers, m: &mut mem::Memory) -> uint {
     }
 }
 
+#[cfg(test)]
+mod test {
+    use cpu;
+    use mem;
+
+    fn init() -> (cpu::Cpu, mem::Memory) {
+        let mem = mem::Memory::new();
+        let mut cpu = cpu::Cpu::new();
+        cpu.regs.pc = 0xe000; // put it in wram instead of rom
+        (cpu, mem)
+    }
+
+    fn op(cpu: &mut cpu::Cpu, mem: &mut mem::Memory,
+          code: u8, diff: u16, cycles: uint) {
+
+        let before = cpu.regs.pc;
+        mem.wb(before, code);
+        let cy = cpu.exec(mem);
+        assert_eq!(cy, 4 * cycles);
+        assert_eq!(cpu.regs.pc, before + diff);
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    // 0x00
+    ////////////////////////////////////////////////////////////////////////////
+
+    #[test]
+    fn nop() {
+        let (mut c, mut m) = init();
+        op(&mut c, &mut m, 0x00, 1, 1);
+    }
+
+    #[test]
+    fn ld_bc_nn() {
+        let (mut c, mut m) = init();
+        m.ww(c.regs.pc + 1, 0xf892);
+        op(&mut c, &mut m, 0x01, 3, 3);
+        assert_eq!(c.regs.b, 0xf8);
+        assert_eq!(c.regs.c, 0x92);
+    }
+
+    #[test]
+    fn ld_bc_a() {
+        let (mut c, mut m) = init();
+        c.regs.a = 0xf3;
+        c.regs.b = 0xd2;
+        c.regs.c = 0x02;
+        op(&mut c, &mut m, 0x02, 1, 2);
+        assert_eq!(m.rb(0xd202), 0xf3);
+    }
+
+    #[test]
+    fn inc_bc() {
+        let (mut c, mut m) = init();
+        c.regs.b = 0x33;
+        c.regs.c = 0x48;
+        op(&mut c, &mut m, 0x03, 1, 2);
+        assert_eq!(c.regs.b, 0x33);
+        assert_eq!(c.regs.c, 0x49);
+    }
+
+    #[test]
+    fn inc_b() {
+        let (mut c, mut m) = init();
+        c.regs.b = 0x33;
+        c.regs.f = 0x10;
+        op(&mut c, &mut m, 0x04, 1, 1);
+        assert_eq!(c.regs.b, 0x34);
+        assert_eq!(c.regs.f, 0x00);
+    }
+
+    #[test]
+    fn dec_b() {
+        // normal decrement
+        let (mut c, mut m) = init();
+        c.regs.b = 0x33;
+        c.regs.f = 0x10;
+        op(&mut c, &mut m, 0x05, 1, 1);
+        assert_eq!(c.regs.b, 0x32);
+        assert_eq!(c.regs.f, 0x50);
+
+        // carry in lower 4
+        let (mut c, mut m) = init();
+        c.regs.b = 0x30;
+        c.regs.f = 0x10;
+        op(&mut c, &mut m, 0x05, 1, 1);
+        assert_eq!(c.regs.b, 0x2f);
+        assert_eq!(c.regs.f, 0x70);
+
+        // zero flag
+        let (mut c, mut m) = init();
+        c.regs.b = 0x01;
+        c.regs.f = 0x00;
+        op(&mut c, &mut m, 0x05, 1, 1);
+        assert_eq!(c.regs.b, 0x00);
+        assert_eq!(c.regs.f, 0xc0);
+
+        // wrap around
+        let (mut c, mut m) = init();
+        c.regs.b = 0x00;
+        c.regs.f = 0x10;
+        op(&mut c, &mut m, 0x05, 1, 1);
+        assert_eq!(c.regs.b, 0xff);
+        assert_eq!(c.regs.f, 0x70);
+    }
+
+    #[test]
+    fn ld_b_n() {
+        let (mut c, mut m) = init();
+        m.wb(c.regs.pc + 1, 0x36);
+        op(&mut c, &mut m, 0x06, 2, 2);
+        assert_eq!(c.regs.b, 0x36);
+    }
+
+    #[test]
+    fn rlca() {
+        let (mut c, mut m) = init();
+        c.regs.a = 0x01;
+        op(&mut c, &mut m, 0x07, 1, 1);
+        assert_eq!(c.regs.a, 0x02);
+        assert_eq!(c.regs.f, 0x00);
+
+        c.regs.a = 0x8f;
+        op(&mut c, &mut m, 0x07, 1, 1);
+        assert_eq!(c.regs.a, 0x1f);
+        assert_eq!(c.regs.f, 0x10);
+    }
+
+    #[test]
+    fn ld_n_sp() {
+        let (mut c, mut m) = init();
+        m.ww(c.regs.pc + 1, 0xf0f0);
+        c.regs.sp = 0x7893;
+        op(&mut c, &mut m, 0x08, 3, 4);
+        assert_eq!(m.rw(0xf0f0), 0x7893);
+    }
+
+    #[test]
+    fn add_hl_bc() {
+        let (mut c, mut m) = init();
+        c.regs.b = 0xf0;
+        c.regs.c = 0xe0;
+        c.regs.h = 0x87;
+        c.regs.l = 0x10;
+        c.regs.f = 0;
+
+        // carry, no half carry
+        op(&mut c, &mut m, 0x09, 1, 2);
+        assert_eq!(c.regs.l, 0xf0);
+        assert_eq!(c.regs.h, 0x77);
+        assert_eq!(c.regs.f, 0x10);
+    }
+
+    #[test]
+    fn ld_a_bc() {
+        let (mut c, mut m) = init();
+        c.regs.b = 0xd8;
+        c.regs.c = 0x80;
+        m.wb(0xd880, 0x93);
+        op(&mut c, &mut m, 0x0a, 1, 2);
+        assert_eq!(c.regs.a, 0x93);
+    }
+
+    #[test]
+    fn dec_bc() {
+        let (mut c, mut m) = init();
+        c.regs.b = 0x20;
+        c.regs.c = 0x33;
+        op(&mut c, &mut m, 0x0b, 1, 2);
+        assert_eq!(c.regs.c, 0x32);
+        assert_eq!(c.regs.b, 0x20);
+
+        c.regs.b = 0x01;
+        c.regs.c = 0x00;
+        op(&mut c, &mut m, 0x0b, 1, 2);
+        assert_eq!(c.regs.b, 0x00);
+        assert_eq!(c.regs.c, 0xff);
+
+        c.regs.b = 0x00;
+        c.regs.c = 0x00;
+        op(&mut c, &mut m, 0x0b, 1, 2);
+        assert_eq!(c.regs.c, 0xff);
+        assert_eq!(c.regs.b, 0xff);
+    }
+
+    #[test]
+    fn ld_c_n() {
+        let (mut c, mut m) = init();
+        m.wb(c.regs.pc + 1, 0x20);
+        op(&mut c, &mut m, 0x0e, 2, 2);
+        assert_eq!(c.regs.c, 0x20);
+    }
+
+    #[test]
+    fn rrca() {
+        let (mut c, mut m) = init();
+        c.regs.a = 0x02;
+        c.regs.f = 0x00;
+        op(&mut c, &mut m, 0x0f, 1, 1);
+        assert_eq!(c.regs.a, 1);
+        assert_eq!(c.regs.f, 0);
+
+        c.regs.a = 0x01;
+        op(&mut c, &mut m, 0x0f, 1, 1);
+        assert_eq!(c.regs.a, 0x80);
+        assert_eq!(c.regs.f, 0x10);
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    // 0x10
+    ////////////////////////////////////////////////////////////////////////////
+
+    #[test]
+    fn ld_de_nn() {
+        let (mut c, mut m) = init();
+        m.ww(c.regs.pc + 1, 0x8739);
+        op(&mut c, &mut m, 0x11, 3, 3);
+        assert_eq!(c.regs.d, 0x87);
+        assert_eq!(c.regs.e, 0x39);
+    }
+
+    #[test]
+    fn ld_de_a() {
+        let (mut c, mut m) = init();
+        c.regs.a = 0x22;
+        c.regs.d = 0xd9;
+        c.regs.e = 0x88;
+        op(&mut c, &mut m, 0x12, 1, 2);
+        assert_eq!(m.rb(0xd988), 0x22);
+    }
+
+    #[test]
+    fn rla() {
+        let (mut c, mut m) = init();
+        c.regs.a = 0x01;
+        c.regs.f = 0x10;
+        op(&mut c, &mut m, 0x17, 1, 1);
+        assert_eq!(c.regs.a, 0x03);
+        assert_eq!(c.regs.f, 0x00);
+
+        c.regs.a = 0x8f;
+        op(&mut c, &mut m, 0x17, 1, 1);
+        assert_eq!(c.regs.a, 0x1e);
+        assert_eq!(c.regs.f, 0x10);
+    }
+
+    #[test]
+    fn jr_n() {
+        let (mut c, mut m) = init();
+        m.wb(c.regs.pc + 1, 0xfe);
+        op(&mut c, &mut m, 0x18, 0, 3);
+
+        m.wb(c.regs.pc + 1, 0x02);
+        op(&mut c, &mut m, 0x18, 4, 3);
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    // 0x30
+    ////////////////////////////////////////////////////////////////////////////
+
+    #[test]
+    fn ld_a_n() {
+        let (mut c, mut m) = init();
+        c.regs.a = 0x01;
+        m.wb(c.regs.pc + 1, 0x20);
+        op(&mut c, &mut m, 0x3e, 2, 2);
+        assert_eq!(c.regs.a, 0x20);
+    }
+
+    #[test]
+    fn scf() {
+        let (mut c, mut m) = init();
+        c.regs.f = 0x10;
+        op(&mut c, &mut m, 0x37, 1, 1);
+        assert_eq!(c.regs.f, 0x10);
+        c.regs.f = 0x60;
+        op(&mut c, &mut m, 0x37, 1, 1);
+        assert_eq!(c.regs.f, 0x10);
+        c.regs.f = 0x80;
+        op(&mut c, &mut m, 0x37, 1, 1);
+        assert_eq!(c.regs.f, 0x90);
+    }
+
+    #[test]
+    fn ccf() {
+        let (mut c, mut m) = init();
+        c.regs.f = 0x10;
+        op(&mut c, &mut m, 0x3f, 1, 1);
+        assert_eq!(c.regs.f, 0x00);
+        c.regs.f = 0x60;
+        op(&mut c, &mut m, 0x3f, 1, 1);
+        assert_eq!(c.regs.f, 0x10);
+        c.regs.f = 0x80;
+        op(&mut c, &mut m, 0x3f, 1, 1);
+        assert_eq!(c.regs.f, 0x90);
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    // 0x80
+    ////////////////////////////////////////////////////////////////////////////
+
+    #[test]
+    fn add_a_b() {
+        let (mut c, mut m) = init();
+        c.regs.a = 0x02;
+        c.regs.b = 0x01;
+        c.regs.f = super::Z | super::N | super::H | super::C;
+        op(&mut c, &mut m, 0x80, 1, 1);
+        assert_eq!(c.regs.a, 0x03);
+        assert_eq!(c.regs.f, 0x00);
+
+        c.regs.a = 0x0f;
+        c.regs.b = 0x01;
+        op(&mut c, &mut m, 0x80, 1, 1);
+        assert_eq!(c.regs.a, 0x10);
+        assert_eq!(c.regs.f & super::H, super::H);
+
+        c.regs.a = 0xf0;
+        c.regs.b = 0x10;
+        op(&mut c, &mut m, 0x80, 1, 1);
+        assert_eq!(c.regs.a, 0x00);
+        assert_eq!(c.regs.f & super::C, super::C);
+        assert_eq!(c.regs.f & super::Z, super::Z);
+    }
+
+    #[test]
+    fn adc_a_b() {
+        let (mut c, mut m) = init();
+        c.regs.a = 0x02;
+        c.regs.b = 0x01;
+        c.regs.f = super::Z | super::N | super::H | super::C;
+        op(&mut c, &mut m, 0x88, 1, 1);
+        assert_eq!(c.regs.a, 0x04);
+        assert_eq!(c.regs.f, 0x00);
+
+        c.regs.a = 0x0f;
+        c.regs.b = 0x01;
+        op(&mut c, &mut m, 0x88, 1, 1);
+        assert_eq!(c.regs.a, 0x10);
+        assert_eq!(c.regs.f, super::H);
+
+        c.regs.a = 0xf0;
+        c.regs.b = 0x10;
+        op(&mut c, &mut m, 0x88, 1, 1);
+        assert_eq!(c.regs.a, 0x00);
+        assert_eq!(c.regs.f, super::C | super::Z);
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    // 0x90
+    ////////////////////////////////////////////////////////////////////////////
+
+    #[test]
+    fn sub_a_b() {
+        let (mut c, mut m) = init();
+        c.regs.a = 0x02;
+        c.regs.b = 0x01;
+        c.regs.f = super::Z | super::N | super::H | super::C;
+        op(&mut c, &mut m, 0x90, 1, 1);
+        assert_eq!(c.regs.a, 0x01);
+        assert_eq!(c.regs.f, super::N);
+
+        c.regs.a = 0xf1;
+        c.regs.b = 0x02;
+        op(&mut c, &mut m, 0x90, 1, 1);
+        assert_eq!(c.regs.a, 0xef);
+        assert_eq!(c.regs.f, super::N | super::H);
+
+        c.regs.a = 0x10;
+        c.regs.b = 0x10;
+        op(&mut c, &mut m, 0x90, 1, 1);
+        assert_eq!(c.regs.a, 0x00);
+        assert_eq!(c.regs.f, super::N | super::Z);
+
+        c.regs.a = 0x10;
+        c.regs.b = 0x20;
+        op(&mut c, &mut m, 0x90, 1, 1);
+        assert_eq!(c.regs.a, 0xf0);
+        assert_eq!(c.regs.f, super::N | super::C);
+    }
+
+    #[test]
+    fn sbc_a_b() {
+        let (mut c, mut m) = init();
+        c.regs.a = 0x02;
+        c.regs.b = 0x01;
+        c.regs.f = super::Z | super::N | super::H | super::C;
+        op(&mut c, &mut m, 0x98, 1, 1);
+        assert_eq!(c.regs.a, 0x00);
+        assert_eq!(c.regs.f, super::N | super::Z);
+
+        c.regs.a = 0xf1;
+        c.regs.b = 0x02;
+        op(&mut c, &mut m, 0x98, 1, 1);
+        assert_eq!(c.regs.a, 0xef);
+        assert_eq!(c.regs.f, super::N | super::H);
+
+        c.regs.a = 0x10;
+        c.regs.b = 0x10;
+        op(&mut c, &mut m, 0x98, 1, 1);
+        assert_eq!(c.regs.a, 0x00);
+        assert_eq!(c.regs.f, super::N | super::Z);
+
+        c.regs.a = 0x10;
+        c.regs.b = 0x20;
+        op(&mut c, &mut m, 0x98, 1, 1);
+        assert_eq!(c.regs.a, 0xf0);
+        assert_eq!(c.regs.f, super::N | super::C);
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    // 0xb0
+    ////////////////////////////////////////////////////////////////////////////
+
+    #[test]
+    fn cp_b() {
+        let (mut c, mut m) = init();
+        c.regs.a = 0x01;
+        c.regs.b = 0x01;
+        op(&mut c, &mut m, 0xb8, 1, 1);
+        assert_eq!(c.regs.f, super::Z | super::N);
+
+        c.regs.a = 0x02;
+        c.regs.b = 0x01;
+        op(&mut c, &mut m, 0xb8, 1, 1);
+        assert_eq!(c.regs.f, super::N);
+
+        c.regs.a = 0x00;
+        c.regs.b = 0x01;
+        op(&mut c, &mut m, 0xb8, 1, 1);
+        assert_eq!(c.regs.f, super::C | super::N | super::H);
+
+        c.regs.a = 0x01;
+        c.regs.b = 0x10;
+        op(&mut c, &mut m, 0xb8, 1, 1);
+        assert_eq!(c.regs.f, super::C | super::N);
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    // 0xc0
+    ////////////////////////////////////////////////////////////////////////////
+
+    #[test]
+    fn pop_bc() {
+        let (mut c, mut m) = init();
+        c.regs.b = 0x01;
+        c.regs.c = 0x01;
+        c.regs.sp = 0xd111;
+        m.ww(0xd111, 0x1234);
+        op(&mut c, &mut m, 0xc1, 1, 3);
+        assert_eq!(c.regs.b, 0x12);
+        assert_eq!(c.regs.c, 0x34);
+        assert_eq!(c.regs.sp, 0xd113);
+    }
+
+    #[test]
+    fn rlc_b() {
+        let (mut c, mut m) = init();
+        c.regs.b = 0x01;
+        m.wb(c.regs.pc + 1, 0x00);
+        op(&mut c, &mut m, 0xcb, 2, 2);
+        assert_eq!(c.regs.b, 0x02);
+        assert_eq!(c.regs.f, 0x00);
+
+        c.regs.b = 0x00;
+        m.wb(c.regs.pc + 1, 0x00);
+        op(&mut c, &mut m, 0xcb, 2, 2);
+        assert_eq!(c.regs.b, 0x00);
+        assert_eq!(c.regs.f, 0x80);
+
+        c.regs.b = 0x81;
+        m.wb(c.regs.pc + 1, 0x00);
+        op(&mut c, &mut m, 0xcb, 2, 2);
+        assert_eq!(c.regs.b, 0x03);
+        assert_eq!(c.regs.f, 0x10);
+    }
+
+    #[test]
+    fn rl_b() {
+        let (mut c, mut m) = init();
+        c.regs.b = 0x01;
+        c.regs.f = 0x00;
+        m.wb(c.regs.pc + 1, 0x10);
+        op(&mut c, &mut m, 0xcb, 2, 2);
+        assert_eq!(c.regs.b, 0x02);
+        assert_eq!(c.regs.f, 0x00);
+
+        c.regs.b = 0x00;
+        m.wb(c.regs.pc + 1, 0x10);
+        op(&mut c, &mut m, 0xcb, 2, 2);
+        assert_eq!(c.regs.b, 0x00);
+        assert_eq!(c.regs.f, 0x80);
+
+        c.regs.b = 0x81;
+        c.regs.f = 0;
+        m.wb(c.regs.pc + 1, 0x10);
+        op(&mut c, &mut m, 0xcb, 2, 2);
+        assert_eq!(c.regs.b, 0x02);
+        assert_eq!(c.regs.f, 0x10);
+    }
+
+    #[test]
+    fn sla_e() {
+        let (mut c, mut m) = init();
+        c.regs.e = 0x01;
+        m.wb(c.regs.pc + 1, 0x23);
+        op(&mut c, &mut m, 0xcb, 2, 2);
+        assert_eq!(c.regs.e, 0x02);
+        assert_eq!(c.regs.f, 0x00);
+
+        c.regs.e = 0x00;
+        m.wb(c.regs.pc + 1, 0x23);
+        op(&mut c, &mut m, 0xcb, 2, 2);
+        assert_eq!(c.regs.e, 0x00);
+        assert_eq!(c.regs.f, 0x80);
+
+        c.regs.e = 0x81;
+        c.regs.f = 0;
+        m.wb(c.regs.pc + 1, 0x23);
+        op(&mut c, &mut m, 0xcb, 2, 2);
+        assert_eq!(c.regs.e, 0x02);
+        assert_eq!(c.regs.f, 0x10);
+    }
+
+    #[test]
+    fn sra_e() {
+        let (mut c, mut m) = init();
+        c.regs.a = 0x81;
+        m.wb(c.regs.pc + 1, 0x2f);
+        op(&mut c, &mut m, 0xcb, 2, 2);
+        assert_eq!(c.regs.a, 0xc0);
+        assert_eq!(c.regs.f, 0x10);
+
+        c.regs.a = 0x00;
+        m.wb(c.regs.pc + 1, 0x2f);
+        op(&mut c, &mut m, 0xcb, 2, 2);
+        assert_eq!(c.regs.a, 0x00);
+        assert_eq!(c.regs.f, 0x80);
+    }
+
+    #[test]
+    fn srl_a() {
+        let (mut c, mut m) = init();
+        c.regs.a = 0x81;
+        m.wb(c.regs.pc + 1, 0x3f);
+        op(&mut c, &mut m, 0xcb, 2, 2);
+        assert_eq!(c.regs.a, 0x40);
+        assert_eq!(c.regs.f, 0x10);
+
+        c.regs.a = 0x00;
+        m.wb(c.regs.pc + 1, 0x3f);
+        op(&mut c, &mut m, 0xcb, 2, 2);
+        assert_eq!(c.regs.a, 0x00);
+        assert_eq!(c.regs.f, 0x80);
+    }
+
+    #[test]
+    fn bit_0b() {
+        let (mut c, mut m) = init();
+        c.regs.b = 0x01;
+        c.regs.f = 0;
+        m.wb(c.regs.pc + 1, 0x40);
+        op(&mut c, &mut m, 0xcb, 2, 2);
+        assert_eq!(c.regs.f, 0x20);
+
+        c.regs.b = 0x00;
+        c.regs.f = 0x10;
+        m.wb(c.regs.pc + 1, 0x40);
+        op(&mut c, &mut m, 0xcb, 2, 2);
+        assert_eq!(c.regs.f, 0xb0);
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    // 0xe0
+    ////////////////////////////////////////////////////////////////////////////
+
+    #[test]
+    fn ld_nn_a() {
+        let (mut c, mut m) = init();
+        c.regs.a = 0x01;
+        m.ww(c.regs.pc + 1, 0xd0d0);
+        m.wb(0xd0d0, 0x02);
+        op(&mut c, &mut m, 0xea, 3, 4);
+        assert_eq!(m.rb(0xd0d0), 0x01);
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    // 0xf0
+    ////////////////////////////////////////////////////////////////////////////
+
+    #[test]
+    fn ld_a_nn() {
+        let (mut c, mut m) = init();
+        c.regs.a = 0x01;
+        m.ww(c.regs.pc + 1, 0xd0d0);
+        m.wb(0xd0d0, 0x02);
+        op(&mut c, &mut m, 0xfa, 3, 4);
+        assert_eq!(c.regs.a, 0x02);
+    }
+}
