@@ -434,7 +434,7 @@ impl Memory {
             // TODO: sound registers
             0x1 | 0x2 | 0x3 => {}
 
-            0x4 => {
+            0x4 | 0x5 | 0x6 => {
                 // See http://nocash.emubase.de/pandocs.htm#cgbregisters
                 if self.cgb && addr == 0xff4d {
                     dfail!("can't go double speed just yet");

@@ -33,7 +33,7 @@ type Color = [u8, ..4];
 pub struct Gpu {
     oam: [u8, ..OAM_SIZE],
 
-    image_data: ~[Color, ..WIDTH * HEIGHT],
+    image_data: ~[u8, ..WIDTH * HEIGHT * 4],
 
     is_cgb: bool,
     is_sgb: bool,
@@ -159,7 +159,7 @@ impl Gpu {
             oam: [0, ..OAM_SIZE],
             is_cgb: false,
             is_sgb: false,
-            image_data: ~([[255, ..4], ..HEIGHT * WIDTH]),
+            image_data: ~([255, ..HEIGHT * WIDTH * 4]),
 
             mode: RdOam,
             wx: 0, wy: 0, obp1: 0, obp0: 0, bgp: 0,
@@ -418,7 +418,10 @@ impl Gpu {
                 // To indicate bg priority, list a color >= 4
                 scanline[i] = if bgpri {4} else {colori};
 
-                self.image_data[coff] = color;
+                self.image_data[coff] = color[0];
+                self.image_data[coff + 1] = color[1];
+                self.image_data[coff + 2] = color[2];
+                self.image_data[coff + 3] = color[3];
 
                 x += 1;
                 i += 1;
@@ -517,7 +520,7 @@ impl Gpu {
             0x47 => { self.bgp = val; update_pal(&mut self.pal.bg, val); }
             0x48 => { self.obp0 = val; update_pal(&mut self.pal.obp0, val); }
             0x49 => { self.obp1 = val; update_pal(&mut self.pal.obp1, val); }
-            0x4a => { self.wx = val; }
+            0x4a => { self.wy = val; }
             0x4b => { self.wx = val - 7; }
             0x4f => { if self.is_cgb { self.vrambank = val & 1; } }
 
@@ -636,5 +639,364 @@ fn update_cgb_pal(pal: &mut [[Color, ..4], ..8], mem: &[u8, ..CGB_BP_SIZE],
 
     for slot in color.mut_iter() {
         *slot = (((*slot as uint) * 0xff) >> 5) as u8;
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use gpu::Gpu;
+    use mem::Memory;
+
+    static BGP: u16  = 0xff47;
+    static LCDC: u16 = 0xff40;
+    static SCY: u16  = 0xff42;
+    static SCX: u16  = 0xff43;
+    static STAT: u16 = 0xff41;
+    static LY: u16   = 0xff44;
+    static LYC: u16  = 0xff45;
+
+    static LCDON: u8   = 0x80;
+    static TILESEL: u8 = 0x10;
+    static BGSEL: u8   = 0x08;
+    static OBJON: u8   = 0x02;
+    static BGON: u8    = 0x01;
+
+    #[test]
+    fn read_regs() {
+        let mut gpu = Gpu::new();
+        gpu.lcdon    = true;
+        gpu.winmap   = false;
+        gpu.winon    = true;
+        gpu.tiledata = true;
+        gpu.bgmap    = true;
+        gpu.objsize  = false;
+        gpu.objon    = false;
+        gpu.bgon     = true;
+        assert_eq!(gpu.rb(LCDC), 0xb9);
+
+        gpu.ly = 0; // So coinc flag is 0
+        gpu.lycly    = true;
+        gpu.mode2int = false;
+        gpu.mode1int = true;
+        gpu.mode0int = true;
+        gpu.mode     = super::RdOam;
+        assert_eq!(gpu.rb(STAT), 0x5a);
+
+        gpu.scy = 0x98;
+        gpu.scx = 0x32;
+        assert_eq!(gpu.rb(SCY), 0x98);
+        assert_eq!(gpu.rb(SCX), 0x32);
+
+        gpu.ly  = 0x89;
+        gpu.lyc = 0x42;
+        assert_eq!(gpu.rb(LY), 0x89);
+        assert_eq!(gpu.rb(LYC), 0x42);
+
+        gpu.bgp  = 0x42;
+        gpu.obp0 = 0xd8;
+        gpu.obp1 = 0x20;
+        assert_eq!(gpu.rb(BGP), 0x42);
+        assert_eq!(gpu.rb(0xff48), 0xd8);
+        assert_eq!(gpu.rb(0xff49), 0x20);
+
+        gpu.wy = 0x42;
+        gpu.wx = 0x93;
+        assert_eq!(gpu.rb(0xff4a), 0x42);
+        assert_eq!(gpu.rb(0xff4b), 0x9a);
+    }
+
+    #[test]
+    fn write_regs() {
+        let mut gpu = Gpu::new();
+        gpu.wb(LCDC, 0xb9);
+        assert_eq!(gpu.lcdon, true);
+        assert_eq!(gpu.winmap, false);
+        assert_eq!(gpu.winon, true);
+        assert_eq!(gpu.tiledata, true);
+        assert_eq!(gpu.bgmap, true);
+        assert_eq!(gpu.objsize, false);
+        assert_eq!(gpu.objon, false);
+        assert_eq!(gpu.bgon, true);
+
+        gpu.wb(STAT, 0x5a);
+        assert_eq!(gpu.lycly, true);
+        assert_eq!(gpu.mode2int, false);
+        assert_eq!(gpu.mode1int, true);
+        assert_eq!(gpu.mode0int, true);
+        assert_eq!(gpu.mode, super::RdOam);
+
+        gpu.wb(SCY, 0x98);
+        gpu.wb(SCX, 0x32);
+        assert_eq!(gpu.scy, 0x98);
+        assert_eq!(gpu.scx, 0x32);
+
+        gpu.wb(LY, 0x89);
+        gpu.wb(LYC, 0x42);
+        assert_eq!(gpu.ly, 0x00); // this should be read only
+        assert_eq!(gpu.lyc, 0x42);
+
+        gpu.wb(BGP, 0x42);
+        gpu.wb(0xff48, 0xd8);
+        gpu.wb(0xff49, 0x20);
+        assert_eq!(gpu.bgp, 0x42);
+        assert_eq!(gpu.obp0, 0xd8);
+        assert_eq!(gpu.obp1, 0x20);
+
+        gpu.wb(0xff4a, 0x42);
+        gpu.wb(0xff4b, 0x93);
+        assert_eq!(gpu.wy, 0x42);
+        assert_eq!(gpu.wx, 0x93 - 7); // Should automatically take the -7 into account
+    }
+
+    #[test]
+    fn dma_transfers() {
+        // This first byte should by copied in the DMA transfer
+        let mut mem = Memory::new();
+        mem.wb(0xd087, 0x32);
+        mem.wb(0xff46, 0xd0); // trigger the transfer
+
+        assert_eq!(mem.gpu.oam[0x87], 0x32); // Make sure the byte was copied
+    }
+
+    #[test]
+    fn clock() {
+        let mut gpu = Gpu::new();
+        let mut if_ = 0u8;
+
+        // Enable all interrupts and STAT interrupts
+        gpu.wb(STAT, 0xff);
+
+        // Timings (from http://nocash.emubase.de/pandocs.htm#lcdstatusregister)
+        // Mode 2  2_____2_____2_____2_____2_____2___________________2____
+        // Mode 3  _33____33____33____33____33____33__________________3___
+        // Mode 0  ___000___000___000___000___000___000________________000
+        // Mode 1  ____________________________________11111111111111_____
+        //
+        // mode0 - hblank - 204
+        // mode1 - vblank - 456
+        // mode2 - rdoam  - 80
+        // mode3 - rdvram - 172
+
+        // Initially at line 0 with 1 tick on the clock in RDOAM (mode 2)
+        gpu.ly = 0;
+        gpu.step(1, &mut if_);
+        gpu.mode = super::RdOam;
+
+        // Test going into RDVRAM and staying there
+        gpu.step(80, &mut if_);
+        assert_eq!(gpu.mode, super::RdVram);
+        gpu.step(0, &mut if_);
+        assert_eq!(gpu.mode, super::RdVram);
+
+        // Test entering HBLANK and the IF is set. Also test that we stay there
+        // and don't request another interrupt
+        gpu.step(172, &mut if_);
+        assert_eq!(if_, 0x2);
+        assert_eq!(gpu.mode, super::HBlank);
+
+        if_ = 0;
+        gpu.step(0, &mut if_);
+        assert_eq!(gpu.mode, super::HBlank);
+        assert_eq!(if_, 0x0);
+
+        // Test reentering RDOAM and the IF is set. Also test that we stay there
+        // and don't request another interrupt
+        gpu.step(204, &mut if_);
+        assert_eq!(gpu.ly, 1);
+        assert_eq!(if_, 0x2);
+        assert_eq!(gpu.mode, super::RdOam);
+
+        if_ = 0;
+        gpu.step(0, &mut if_);
+        assert_eq!(gpu.mode, super::RdOam);
+        assert_eq!(if_, 0x0);
+
+        // Now simulate that we're at the end of the screen and we're gonna
+        // enter a VBLANK period
+        gpu.clock = 456; // an entire row was scanned
+        gpu.ly    = 143;
+        gpu.step(1, &mut if_);
+
+        // Both a LCD STAT interrupt and a VBLANK interrupt should be delivered
+        assert_eq!(if_, 0x3);
+        if_ = 0x0;
+
+        // When in VBLANK, this lasts for 10 lines
+        for _ in range(0, 10) {
+            assert_eq!(gpu.mode, super::VBlank);
+            assert_eq!(if_, 0x0);
+            gpu.step(456, &mut if_);
+        }
+
+        // Coming out of a VBLANK, we should be in RDOAM with an LCD STAT
+        // interrupt requested because mode2int is set
+        assert_eq!(if_, 0x2);
+        assert_eq!(gpu.mode, super::RdOam);
+    }
+
+    #[test]
+    fn background() {
+        let mut mem = Memory::new();
+
+        // BGP is a mapping of indices to shades. Each 2 bits in the mapping
+        // specify a shade of grey (0=white, 3=black). Specify a reverse mapping
+        // here where obp[0] = 3, obp[1] = 2, ...
+        mem.wb(BGP, 0b_0001_1011);
+
+        // Now paint in that the 10th line needs 8 pixels of each color
+        mem.wb(SCX, 5);
+        mem.wb(SCY, 3);
+        // We're going to be simulating rendering line 10. This means that we're
+        // actually rendering line 13, offset 5 pixels in from the left.
+
+        // Fill in the bgmap data first
+        // - bgmap = 0 => bgmap base = 0x9800
+        // - 13 lines in where each line is 32 bytes
+        // - each tile is 8 pixels high, so we're on second row
+        mem.wb(0x9800 + 1 * 32, 0); // first 8 pixels are tile 0
+        mem.wb(0x9800 + 1 * 32 + 1, 1); // next 8 pixels are tile 1
+        mem.wb(0x9800 + 1 * 32 + 2, 2); // next 8 pixels are tile 2
+        mem.wb(0x9800 + 1 * 32 + 3, 3); // next 8 pixels are tile 3
+        mem.wb(0x9800 + 1 * 32 + 4, 0); // next 8 pixels are tile 0
+
+        // Now fill in the tile data for tiles 0,1,2,3
+        // - tiledata = 0 => tile base = 0x8800 => 0x0800 in vram
+        // - if tiledata = 0, numbers are 2's complement, and zero index is at
+        //   0x9000
+        // - Mappings are weird. Each tile is 2 bytes. Each byte has 8 bits to
+        //   define
+        // 8 pixels, but each tile is 8 pixels wide. This means that the two
+        // bytes are interpreted as such:
+        //
+        // byte[0] = a7 a6 a5 a4 a3 a2 a1 a0
+        // byte[1] = b7 b6 b5 b4 b3 b2 b1 b0
+        //
+        // and the color for the pixels is:
+        // [ {b7,a7}, {b6,a6}, ...]
+        // where {b,a} is a binary number with digits b,a
+
+        // Data for tile 0, each pixel is color 0
+        for i in range(0u16, 8) { // 8 rows of pixels
+            mem.wb(0x9000 + i * 2, 0x00);
+            mem.wb(0x9000 + i * 2 + 1, 0x00);
+        }
+
+        // Data for tile 1, each pixel is color 1
+        for i in range(0u16, 8) {
+            mem.wb(0x9010 + i * 2, 0xff);
+            mem.wb(0x9010 + i * 2 + 1, 0x00);
+        }
+
+        // Data for tile 2, each pixel is color 2
+        for i in range(0u16, 8) {
+            mem.wb(0x9020 + i * 2, 0x00);
+            mem.wb(0x9020 + i * 2 + 1, 0xff);
+        }
+
+        /* Data for tile 3, each pixel is color 3 */
+        for i in range(0u16, 8) {
+            mem.wb(0x9030 + i * 2, 0xff);
+            mem.wb(0x9030 + i * 2 + 1, 0xff);
+        }
+
+        mem.gpu.ly = 10;
+        let offset = 10u16 * 160 * 4;
+        for i in range(0u16, 160 * 4) {
+            mem.gpu.image_data[offset + i] = 10;
+        }
+
+        /* disable everything, so previous data should not be overwritten */
+        mem.gpu.wb(LCDC, 0);
+        mem.gpu.render_line();
+        for i in range(0u16, 160 * 4) {
+            assert_eq!(mem.gpu.image_data[offset + i], 10);
+        }
+
+        mem.gpu.wb(LCDC, LCDON | BGON);
+        mem.gpu.render_line();
+
+        // First 3 pixels are all black. SCX = 5 so only 3 pixels of first tile
+        // should be shown
+        for i in range(0u16, 3) {
+            assert_eq!(mem.gpu.image_data[offset + i * 4], 0);
+            assert_eq!(mem.gpu.image_data[offset + i * 4 + 1], 0);
+            assert_eq!(mem.gpu.image_data[offset + i * 4 + 2], 0);
+            assert_eq!(mem.gpu.image_data[offset + i * 4 + 3], 255);
+        }
+
+        // Next 8 pixels should all be next color (dark grey)
+        //for i in range(3u16, 11) {
+        //    assert_eq!(mem.gpu.image_data[offset + i * 4], 96);
+        //    assert_eq!(mem.gpu.image_data[offset + i * 4 + 1], 96);
+        //    assert_eq!(mem.gpu.image_data[offset + i * 4 + 2], 96);
+        //    assert_eq!(mem.gpu.image_data[offset + i * 4 + 3], 255);
+        //}
+
+        // Next 8 pixels should all be next color (light grey)
+        //for (i = 11; i < 19; i++) {
+        //    assert_eq!(gpu.image.data[offset + i * 4], 192);
+        //    assert_eq!(gpu.image.data[offset + i * 4 + 1], 192);
+        //    assert_eq!(gpu.image.data[offset + i * 4 + 2], 192);
+        //    assert_eq!(gpu.image.data[offset + i * 4 + 3], 255);
+        //}
+
+        // Next 8 pixels should all be next color (light grey)
+        //for (i = 19; i < 27; i++) {
+        //    assert_eq!(gpu.image.data[offset + i * 4], 255);
+        //    assert_eq!(gpu.image.data[offset + i * 4 + 1], 255);
+        //    assert_eq!(gpu.image.data[offset + i * 4 + 2], 255);
+        //    assert_eq!(gpu.image.data[offset + i * 4 + 3], 255);
+        //}
+
+        // Finally, the next 8 should be black
+        //for (i = 27; i < 35; i++) {
+        //    assert_eq!(gpu.image.data[offset + i * 4], 0);
+        //    assert_eq!(gpu.image.data[offset + i * 4 + 1], 0);
+        //    assert_eq!(gpu.image.data[offset + i * 4 + 2], 0);
+        //    assert_eq!(gpu.image.data[offset + i * 4 + 3], 255);
+        //}
+
+    }
+
+    #[test]
+    fn cbg_switch_vram() {
+        let mut mem = Memory::new();
+        // First, make sure non CGB doesn't switch VRAM banks
+        mem.gpu.is_cgb = false;
+        mem.wb(0x8000, 0x89);
+        mem.wb(0xff4f, 0x01); // would normally switch VRAM bank
+        assert_eq!(mem.rb(0x8000), 0x89);
+
+        mem.gpu.is_cgb = true;
+        mem.wb(0xff4f, 0x01); // now switch vram banks
+        assert_eq!(mem.rb(0x8000), 0x00);
+    }
+
+    #[test]
+    fn cgb_color_palettes() {
+        let mut mem = Memory::new();
+        mem.gpu.is_cgb = true;
+
+        // Background Palette
+        mem.wb(0xff68, 0x80); // Indicate auto-increment, index 0
+        for i in range(0, 64u8) {
+            mem.wb(0xff69, i);
+        }
+
+        for i in range(0, 64u8) {
+            mem.wb(0xff68, 0x80 | i);
+            assert_eq!(mem.rb(0xff69), i);
+        }
+
+        // Object Palette
+        mem.wb(0xff6a, 0x80); // Indicate auto-increment, index 0
+        for i in range(0, 64u8) {
+            mem.wb(0xff6b, i + 64);
+        }
+
+        for i in range(0, 64u8) {
+            mem.wb(0xff6a, 0x80 | i);
+            assert_eq!(mem.rb(0xff6b), i + 64);
+        }
     }
 }
