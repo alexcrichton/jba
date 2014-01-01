@@ -1,8 +1,8 @@
 RUSTC = rustc
 BUILDDIR = build
-RUSTFLAGS = -O
+RUSTFLAGS = -O -Lbuild
 
-RSGLFW_LIB = glfw-rs/src/glfw/lib.rs
+RSGLFW_LIB = src/glfw-rs/src/glfw/lib.rs
 RSGLFW = $(BUILDDIR)/$(shell $(RUSTC) --crate-file-name $(RSGLFW_LIB))
 
 S = src

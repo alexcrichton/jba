@@ -3,7 +3,7 @@
 
 extern mod extra;
 extern mod native;
-//extern mod glfw = "lib";
+extern mod glfw;
 
 use std::os;
 use std::io::File;
