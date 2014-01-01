@@ -189,9 +189,10 @@ pub fn exec(inst: u8, r: &mut z80::Registers, m: &mut mem::Memory) -> uint {
         1
     }) )
     macro_rules! cp_a( ($b:expr) => ({
-        r.f = N | if r.a == $b {Z} else {0} |
-                  if r.a < $b {C} else {0} |
-                  if (r.a & 0xf) < ($b & 0xf) {H} else {0};
+        let b = $b;
+        r.f = N | if r.a == b {Z} else {0} |
+                  if r.a < b {C} else {0} |
+                  if (r.a & 0xf) < (b & 0xf) {H} else {0};
         1
     }) )
     macro_rules! ret_if( ($e:expr) => ({ if $e { r.ret(m); 5 } else { 2 } }) )
@@ -206,6 +207,9 @@ pub fn exec(inst: u8, r: &mut z80::Registers, m: &mut mem::Memory) -> uint {
         r.sp -= 2; 4
     }) )
     macro_rules! rst( ($e:expr) => ({ r.rst($e, m); 4 }) )
+
+    debug!("executing {} at {}", inst, r.pc);
+    //debug!("  {}", *r);
 
     match inst {
         0x00 => 1,                                                  // nop
@@ -1396,5 +1400,14 @@ mod test {
         m.wb(0xd0d0, 0x02);
         op(&mut c, &mut m, 0xfa, 3, 4);
         assert_eq!(c.regs.a, 0x02);
+    }
+
+    #[test]
+    fn cp_an() {
+        let (mut c, mut m) = init();
+        c.regs.a = 0x01;
+        m.wb(c.regs.pc + 1, 0x01);
+        op(&mut c, &mut m, 0xfe, 2, 2);
+        assert_eq!(c.regs.f, 0xc0);
     }
 }

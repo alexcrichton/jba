@@ -1,12 +1,12 @@
 #[crate_id = "jba-rs"];
-#[allow(dead_code)];
-
 #[feature(macro_rules)];
 
+extern mod extra;
 extern mod native;
 //extern mod glfw = "lib";
 
-use stdmem = std::mem;
+use std::os;
+use std::io::File;
 
 macro_rules! dfail( ($($e:tt)*) => ({
     if cfg!(not(ndebug)) {
@@ -31,8 +31,23 @@ fn start(argc: int, argv: **u8) -> int {
 }
 
 fn main() {
-    println!("{:x}", stdmem::size_of::<gpu::Gpu>())
-    println!("{}", stdmem::size_of::<gpu::Gpu>())
-    println!("{:x}", stdmem::size_of::<mem::Memory>())
-    println!("{}", stdmem::size_of::<mem::Memory>())
+    let args = os::args();
+    if args.len() != 2 {
+        println!("usage: {} <rom>", args[0]);
+        return
+    }
+    let rom = File::open(&Path::new(args[1])).read_to_end();
+
+    let mut gb = gb::Gb::new();
+    gb.load(rom);
+
+    let mut last = extra::time::precise_time_ns();
+    loop {
+        gb.frame();
+        let cur = extra::time::precise_time_ns();
+        if cur - last >= 1000000000 {
+            println!("{}", gb.frames());
+            last = cur;
+        }
+    }
 }

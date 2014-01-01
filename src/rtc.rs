@@ -22,10 +22,6 @@ impl Rtc {
         }
     }
 
-    pub fn reset(&mut self) {
-        *self = Rtc::new();
-    }
-
     pub fn latch(&mut self, value: u8) {
         if self.readylatch {
             if value == 1 {
@@ -64,6 +60,7 @@ impl Rtc {
         }
     }
 
+    #[allow(dead_code)]
     pub fn step(&mut self) {
         if self.stop != 0 { return }
 

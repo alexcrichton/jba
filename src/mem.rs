@@ -6,12 +6,13 @@
 //! For more information about how these work, see this url:
 //!     http://nocash.emubase.de/pandocs.htm#memorybankcontrollers
 
+use std::vec;
+
 use gpu;
 use input;
 use rtc;
 use timer;
 
-static RAM_SIZE: uint = 32 << 10;  // 32 K max on MBC3, 8 KB * 4 banks
 static WRAM_SIZE: uint = 32 << 10; // CGB has 32K (8 banks * 4 KB/bank), GB has 8K
 static HIRAM_SIZE: uint = 0x7f;    // hiram is from 0xff80 - 0xfffe
 
@@ -29,7 +30,7 @@ pub struct Memory {
     priv sgb: bool,
 
     priv rom: ~[u8],
-    priv ram: ~[u8, ..RAM_SIZE],
+    priv ram: ~[u8],
     priv wram: ~[u8, ..WRAM_SIZE],
     priv hiram: ~[u8, ..HIRAM_SIZE],
     /// The number of the rom bank currently swapped in
@@ -66,7 +67,7 @@ impl Memory {
         Memory {
             if_: 0, ie_: 0, battery: false, cgb: false, sgb: false,
             rom: ~[],
-            ram: ~([0, ..RAM_SIZE]),
+            ram: ~[],
             wram: ~([0, ..WRAM_SIZE]),
             hiram: ~([0, ..HIRAM_SIZE]),
             rombank: 1, rambank: 0, wrambank: 1,
@@ -79,16 +80,12 @@ impl Memory {
         }
     }
 
-    pub fn reset(&mut self) {
-        *self = Memory::new();
-    }
-
     /// Returns the cartridge's listed amount of ram that it should have. This
     /// doesn't represent the actual size of the ram array internally, but just
     /// to what extent the cartridge will use it.
     pub fn ram_size(&self) -> uint {
         // See http://nocash.emubase.de/pandocs.htm#thecartridgeheader
-        match self.rom[0x149] {
+        match self.rom[0x0149] {
             0x00 =>  0,
             0x01 =>  2 << 10, // 2KB
             0x02 =>  8 << 10, // 8KB
@@ -183,6 +180,7 @@ impl Memory {
             _ => { fail!("unknown cartridge inserted: {:x}", self.rom[0x0147]); }
         }
 
+        self.ram = vec::from_elem(self.ram_size(), 0u8);
         self.cgb = self.rom[0x0143] & 0x80 == 0x80;
         self.sgb = self.rom[0x0146] == 0x03;
     }
@@ -541,6 +539,7 @@ mod test {
     macro_rules! load( ($($k:expr => $v:expr),+) => ({
         let mut m = Memory::new();
         let mut ram = vec::from_elem(0x1000000, 0u8);
+        ram[0x0149] = 0x03;
         $(ram[$k] = $v;)+
         m.load_cartridge(ram);
         m

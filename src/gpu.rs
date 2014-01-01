@@ -343,7 +343,7 @@ impl Gpu {
         let mut x = self.scx % 8;
 
         // Offset into the canvas to draw. line * width * 4 colors
-        let mut coff = (self.ly as uint) * 160 * 4;
+        let mut coff = (self.ly as uint) * WIDTH * 4;
 
         // this.tiledata is a flag to determine which tile data table to use
         // 0=8800-97FF, 1=8000-8FFF. For some odd reason, if tiledata = 0, then
@@ -397,7 +397,97 @@ impl Gpu {
                 bgp = self.pal.bg;
             }
 
-            while x < 8 && i < 160 {
+            while x < 8 && i < WIDTH as u8 {
+                let colori = row[if hflip {7 - x} else {x}];
+                let color;
+                if self.is_sgb && !self.is_cgb {
+                    let sgbaddr = (i >> 3) + (self.ly >> 3) * 20;
+                    let mapped = self.sgb.atf[sgbaddr];
+                    match bgp[colori][0] {
+                          0 => { color = self.sgb.pal[mapped][3]; }
+                         96 => { color = self.sgb.pal[mapped][2]; }
+                        192 => { color = self.sgb.pal[mapped][1]; }
+                        255 => { color = self.sgb.pal[mapped][0]; }
+
+                        // not actually reachable
+                        _ => { color = [0, 0, 0, 0]; }
+                    }
+                } else {
+                    color = bgp[colori];
+                }
+                // To indicate bg priority, list a color >= 4
+                scanline[i] = if bgpri {4} else {colori};
+
+                self.image_data[coff] = color[0];
+                self.image_data[coff + 1] = color[1];
+                self.image_data[coff + 2] = color[2];
+                self.image_data[coff + 3] = color[3];
+
+                x += 1;
+                i += 1;
+                coff += 4;
+            }
+
+            x = 0;
+            if i >= WIDTH as u8 { break }
+        }
+    }
+
+    fn render_window(&mut self, scanline: &mut [u8, ..WIDTH]) {
+        // TODO: this shouldn't be so duplicated with render_window
+        if self.wy >= HEIGHT as u8 || self.wx >= WIDTH as u8 { return }
+
+        let mapbase = if self.bgmap {0x1c00} else {0x1800};
+        let mapbase = mapbase + (((self.ly + self.wy) >> 3) as uint) * 32;
+
+        // X and Y location inside the tile itself to paint
+        let y = self.ly % 8;
+        let mut x = self.wx % 8;
+
+        // Offset into the canvas to draw. line * width * 4 colors
+        let mut coff = (self.ly as uint + self.wy as uint) * WIDTH * 4;
+
+        // this.tiledata is a flag to determine which tile data table to use
+        // 0=8800-97FF, 1=8000-8FFF. For some odd reason, if tiledata = 0, then
+        // (&tiles[0]) == 0x9000, where if tiledata = 1, (&tiles[0]) = 0x8000.
+        // This implies that the indices are treated as signed numbers.
+        let mut i = self.wx;
+        let tilebase = if !self.tiledata {128} else {0};
+
+        loop {
+            // Backgrounds wrap around, so calculate the offset into the bgmap
+            // each loop to check for wrapping
+            let mapoff = (i + self.scx) >> 3;
+            let tilei = self.vrambanks[0][mapbase + mapoff as uint];
+
+            // tiledata = 0 => tilei is a signed byte, so fix it here
+            let tilebase = if self.tiledata {
+                tilebase + tilei as uint
+            } else {
+                (tilebase as int + (tilei as i8 as int)) as uint
+            };
+
+            let row;
+            let bgpri;
+            let hflip;
+            let bgp;
+            if self.is_cgb {
+                let attrs = self.vrambanks[1][mapbase + mapoff as uint] as uint;
+
+                let tile = self.tiles.data[tilebase +
+                                           ((attrs >> 3) & 1) * NUM_TILES];
+                bgpri = attrs & 0x80 != 0;
+                hflip = attrs & 0x20 != 0;
+                row = tile[if attrs & 0x40 != 0 {7 - y} else {y}];
+                bgp = self.cgb.cbgp[attrs & 0x7];
+            } else {
+                row = self.tiles.data[tilebase][y];
+                bgpri = false;
+                hflip = false;
+                bgp = self.pal.bg;
+            }
+
+            while x < 8 && i < WIDTH as u8 {
                 let colori = row[if hflip {7 - x} else {x}];
                 let color;
                 if self.is_sgb && !self.is_cgb {
@@ -431,9 +521,6 @@ impl Gpu {
             x = 0;
             if i >= 160 { break }
         }
-    }
-
-    fn render_window(&mut self, _scanline: &mut [u8, ..WIDTH]) {
     }
 
     fn render_sprites(&mut self, _scanline: &mut [u8, ..WIDTH]) {

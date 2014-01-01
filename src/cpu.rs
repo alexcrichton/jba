@@ -24,11 +24,6 @@ impl Cpu {
         Cpu { regs: z80::Registers::new(), ticks: 0 }
     }
 
-    pub fn reset(&mut self) {
-        self.ticks = 0;
-        self.regs.reset();
-    }
-
     pub fn exec(&mut self, mem: &mut mem::Memory) -> uint {
         // When the CPU halts, it simply goes into a "low power mode" that
         // doesn't execute any more instructions until an interrupt comes in.

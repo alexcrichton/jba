@@ -1,3 +1,5 @@
+use std::fmt;
+
 use mem;
 
 pub use cpu::z80::daa::DAA_TABLE;
@@ -46,17 +48,12 @@ impl Registers {
         }
     }
 
-    pub fn reset(&mut self) {
-        *self = Registers::new();
-    }
-
     pub fn bump(&mut self) -> u16 {
         let ret = self.pc;
         self.pc += 1;
         return ret;
     }
 
-    fn af(&self) -> u16 { ((self.a as u16) << 8) | (self.f as u16) }
     fn bc(&self) -> u16 { ((self.b as u16) << 8) | (self.c as u16) }
     fn de(&self) -> u16 { ((self.d as u16) << 8) | (self.e as u16) }
     fn hl(&self) -> u16 { ((self.h as u16) << 8) | (self.l as u16) }
@@ -84,6 +81,14 @@ impl Registers {
         self.sp -= 2;
         m.ww(self.sp, self.pc);
         self.pc = i;
+    }
+}
+
+impl fmt::Default for Registers {
+    fn fmt(r: &Registers, f: &mut fmt::Formatter) {
+        write!(f.buf, "a:{:2x} b:{:2x} c:{:2x} d:{:2x} e:{:2x} \
+                       f:{:2x} h:{:2x} l:{:2x} pc:{:4x} sp:{:4x}",
+               r.a, r.b, r.c, r.d, r.e, r.f, r.h, r.l, r.pc, r.sp);
     }
 }
 

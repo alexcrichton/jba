@@ -32,15 +32,6 @@ impl Timer {
         }
     }
 
-    pub fn reset(&mut self) {
-        self.div = 0;
-        self.tima = 0;
-        self.tma = 0;
-        self.tac = 0;
-        self.clock.tima = 0;
-        self.clock.div = 0;
-    }
-
     pub fn update(&mut self) {
         // See step() function for timings
         match self.tac & 0x3 {
@@ -54,6 +45,7 @@ impl Timer {
 
     // Details: http://imrannazar.com/GameBoy-Emulation-in-JavaScript:-Timers
     pub fn step(&mut self, ticks: uint, if_: &mut u8) {
+        let ticks = ticks / 4; // undo the multiplication in the cpu
         self.clock.div += ticks;
 
         // CPU runs on a 4,194,304 Hz clock, although the argument to this
