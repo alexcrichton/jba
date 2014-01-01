@@ -6,6 +6,8 @@
 extern mod native;
 //extern mod glfw = "lib";
 
+use stdmem = std::mem;
+
 macro_rules! dfail( ($($e:tt)*) => ({
     if cfg!(not(ndebug)) {
         fail!($($e)*);
@@ -29,4 +31,8 @@ fn start(argc: int, argv: **u8) -> int {
 }
 
 fn main() {
+    println!("{:x}", stdmem::size_of::<gpu::Gpu>())
+    println!("{}", stdmem::size_of::<gpu::Gpu>())
+    println!("{:x}", stdmem::size_of::<mem::Memory>())
+    println!("{}", stdmem::size_of::<mem::Memory>())
 }

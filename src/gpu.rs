@@ -33,7 +33,7 @@ type Color = [u8, ..4];
 pub struct Gpu {
     oam: [u8, ..OAM_SIZE],
 
-    image_data: [Color, ..WIDTH * HEIGHT],
+    image_data: ~[Color, ..WIDTH * HEIGHT],
 
     is_cgb: bool,
     is_sgb: bool,
@@ -41,7 +41,7 @@ pub struct Gpu {
     priv mode: Mode,
 
     // CGB supports only 2 banks of vram
-    priv vrambanks: [[u8, ..VRAM_SIZE], ..2],
+    priv vrambanks: ~([[u8, ..VRAM_SIZE], ..2]),
     // Selected vram bank
     priv vrambank: u8,
 
@@ -94,18 +94,18 @@ pub struct Gpu {
     // Compiled palettes. These are updated when writing to BGP/OBP0/OBP1. Meant
     // for non CGB use only. Each palette is an array of 4 color schemes. Each
     // color scheme is one in PALETTE.
-    priv pal: Palette,
+    priv pal: ~Palette,
 
     // Compiled tiles
-    priv tiles: Tiles,
+    priv tiles: ~Tiles,
 
     // When in CGB mode, the BGP and OBP memory is stored internally and is only
     // accessible through some I/O registers. Each section of memory is 64 bytes
     // and defines 8 palettes of 4 colors each
-    priv cgb: CgbData,
+    priv cgb: ~CgbData,
 
     // Data related to SGB operation
-    priv sgb: SgbData,
+    priv sgb: ~SgbData,
 }
 
 #[deriving(Eq)]
@@ -154,12 +154,12 @@ struct SgbData {
 impl Gpu {
     pub fn new() -> Gpu {
         Gpu {
-            vrambanks: [[0, ..VRAM_SIZE], .. 2],
+            vrambanks: ~([[0, ..VRAM_SIZE], .. 2]),
             vrambank: 0,
             oam: [0, ..OAM_SIZE],
             is_cgb: false,
             is_sgb: false,
-            image_data: [[255, ..4], ..HEIGHT * WIDTH],
+            image_data: ~([[255, ..4], ..HEIGHT * WIDTH]),
 
             mode: RdOam,
             wx: 0, wy: 0, obp1: 0, obp0: 0, bgp: 0,
@@ -174,19 +174,19 @@ impl Gpu {
             hdma_dst: 0,
             hdma5: 0,
 
-            pal: Palette {
+            pal: ~Palette {
                 bg: [[0, ..4], ..4],
                 obp0: [[0, ..4], ..4],
                 obp1: [[0, ..4], ..4],
             },
 
-            tiles: Tiles {
+            tiles: ~Tiles {
                 need_update: false,
                 to_update: [false, .. NUM_TILES * 2],
                 data: [[[0, ..8], ..8], ..NUM_TILES * 2],
             },
 
-            cgb: CgbData {
+            cgb: ~CgbData {
                 bgp: [255, ..CGB_BP_SIZE],
                 obp: [0, ..CGB_BP_SIZE],
                 bgpi: 0,
@@ -195,7 +195,7 @@ impl Gpu {
                 cobp: [[[  0,   0,   0, 255], ..4], ..8],
             },
 
-            sgb: SgbData {
+            sgb: ~SgbData {
                 atf: [0, .. 20 * 18],
                 pal: [[[0, 0, 0, 255], ..4], ..4],
             }

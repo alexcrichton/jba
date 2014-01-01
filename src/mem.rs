@@ -29,9 +29,9 @@ pub struct Memory {
     priv sgb: bool,
 
     priv rom: ~[u8],
-    priv ram: [u8, ..RAM_SIZE],
-    priv wram: [u8, ..WRAM_SIZE],
-    priv hiram: [u8, ..HIRAM_SIZE],
+    priv ram: ~[u8, ..RAM_SIZE],
+    priv wram: ~[u8, ..WRAM_SIZE],
+    priv hiram: ~[u8, ..HIRAM_SIZE],
     /// The number of the rom bank currently swapped in
     priv rombank: u8,
     /// The number of the ram bank currently swapped in
@@ -46,10 +46,10 @@ pub struct Memory {
     priv mbc: Mbc,
 
     // Owned components
-    rtc: rtc::Rtc,
-    input: input::Input,
-    timer: timer::Timer,
-    gpu: gpu::Gpu,
+    rtc: ~rtc::Rtc,
+    input: ~input::Input,
+    timer: ~timer::Timer,
+    gpu: ~gpu::Gpu,
 }
 
 #[deriving(Eq)]
@@ -65,14 +65,17 @@ impl Memory {
     pub fn new() -> Memory {
         Memory {
             if_: 0, ie_: 0, battery: false, cgb: false, sgb: false,
-            rom: ~[], ram: [0, ..RAM_SIZE], wram: [0, ..WRAM_SIZE],
-            hiram: [0, ..HIRAM_SIZE], rombank: 1, rambank: 0, wrambank: 1,
+            rom: ~[],
+            ram: ~([0, ..RAM_SIZE]),
+            wram: ~([0, ..WRAM_SIZE]),
+            hiram: ~([0, ..HIRAM_SIZE]),
+            rombank: 1, rambank: 0, wrambank: 1,
             ramon: false, mode: false, mbc: Unknown,
 
-            rtc: rtc::Rtc::new(),
-            input: input::Input::new(),
-            timer: timer::Timer::new(),
-            gpu: gpu::Gpu::new(),
+            rtc: ~rtc::Rtc::new(),
+            input: ~input::Input::new(),
+            timer: ~timer::Timer::new(),
+            gpu: ~gpu::Gpu::new(),
         }
     }
 
