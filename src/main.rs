@@ -7,6 +7,7 @@ extern mod native;
 
 use std::os;
 use std::io::File;
+use opts = extra::getopts::groups;
 
 macro_rules! dfail( ($($e:tt)*) => ({
     if cfg!(not(ndebug)) {
@@ -32,22 +33,35 @@ fn start(argc: int, argv: **u8) -> int {
 
 fn main() {
     let args = os::args();
-    if args.len() != 2 {
-        println!("usage: {} <rom>", args[0]);
-        return
+    let opts = ~[
+        opts::optflag("h", "help", "show this message"),
+        opts::optflag("", "fps", "don't run a display, just print FPS"),
+    ];
+    let matches = match opts::getopts(args.tail(), opts) {
+        Ok(m) => { m }
+        Err(f) => { fail!(f.to_err_msg()) }
+    };
+    if matches.opt_present("h") || matches.opt_present("help") ||
+       matches.free.len() == 0 {
+        let h = opts::usage(format!("usage: {} [options] <rom>", args[0]), opts);
+        println!("{}", h);
+        return;
     }
-    let rom = File::open(&Path::new(args[1])).read_to_end();
 
+    let rom = File::open(&Path::new(matches.free[0].as_slice())).read_to_end();
     let mut gb = gb::Gb::new();
     gb.load(rom);
 
-    let mut last = extra::time::precise_time_ns();
-    loop {
-        gb.frame();
-        let cur = extra::time::precise_time_ns();
-        if cur - last >= 1000000000 {
-            println!("{}", gb.frames());
-            last = cur;
+    // TODO: needs native timers
+    if matches.opt_present("fps") {
+        let mut last = extra::time::precise_time_ns();
+        loop {
+            gb.frame();
+            let cur = extra::time::precise_time_ns();
+            if cur - last >= 1000000000 {
+                println!("{}", gb.frames());
+                last = cur;
+            }
         }
     }
 }

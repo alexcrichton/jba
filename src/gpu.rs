@@ -523,7 +523,117 @@ impl Gpu {
         }
     }
 
-    fn render_sprites(&mut self, _scanline: &mut [u8, ..WIDTH]) {
+    fn render_sprites(&mut self, scanline: &mut [u8, ..WIDTH]) {
+        // More information about sprites is located at:
+        // http://nocash.emubase.de/pandocs.htm#vramspriteattributetableoam
+
+        let line = self.ly as int;
+        let ysize = if self.objsize {16} else {8};
+
+        // All sprits are located in OAM
+        // There are 40 sprites in total
+        for i in range(0, 40) {
+            let offset = i * 4; // each sprite is 4 bytes wide
+            let mut yoff = (self.oam[offset] as int) - 16;
+            let xoff = (self.oam[offset + 1] as int) - 8;
+            let mut tile = self.oam[offset + 2];
+            let flags = self.oam[offset + 3];
+
+            // First make sure that this sprite even lands on the current line
+            // being rendered. The y value in the sprite is the top left corner,
+            // so if that is below the scanline or the bottom of the sprite
+            // (which is 8 pixels high) lands below the scanline, this sprite
+            // doesn't need to be rendered right now
+            if yoff > line || yoff + ysize <= line ||
+               xoff <= -8 || xoff >= WIDTH as int {
+               continue
+            }
+
+            // 8x16 tiles always use adjacent tile indices. If we're in 8x16
+            // mode and this sprite needs the second tile, add 1 to the tile
+            // index and change yoff so it looks like we're rendering that tile
+            if ysize == 16 {
+                tile &= 0xfe; // ignore the lowest bit
+                if line - yoff >= 8 {
+                    tile += 1;
+                    yoff += 8;
+                }
+            }
+
+            // 160px/line, 4 entries/px
+            let mut coff = (WIDTH as int * line + xoff) * 4;
+
+            // All sprite tile palettes are at 0x8000-0x8fff => start of vram.
+            // If we're in CGB mode, then we get our palette from the spite
+            // flags. We also need to take into account the tile being in a
+            // different bank. Otherwise, we just use the tile index as a raw
+            // index.
+            let pal;
+            let tiled;
+            if self.is_cgb {
+                tiled = self.tiles.data[((flags as uint >> 3) & 1 * NUM_TILES) +
+                                        tile as uint];
+                pal = self.cgb.cobp[flags & 0x3];
+            } else {
+                // bit4 is the palette number. 0 = obp0, 1 = obp1
+                pal = if flags & 0x10 != 0 {self.pal.obp1} else {self.pal.obp0};
+                tiled = self.tiles.data[tile];
+            }
+
+            // bit6 is the vertical flip bit
+            let row = if flags & 0x40 != 0 {
+                tiled[7 - (line - yoff)]
+            } else {
+                tiled[line - yoff]
+            };
+
+            for x in range(0, 8) {
+                // If these pixels are off screen, don't bother drawing
+                // anything. Also, if the background tile at this pixel has
+                // priority, don't render this sprite at all.
+                if xoff + x < 0 || xoff + x >= WIDTH as int ||
+                   scanline[x + xoff] > 3 {
+                    coff += 4;
+                    continue
+                }
+                // bit5 is the horizontal flip flag
+                let colori = row[if flags & 0x20 != 0 {7-x} else {x}];
+
+                // A color index of 0 for sprites means transparent
+                if colori == 0 { coff += 4; continue }
+
+                // bit7 0=OBJ Above BG, 1=OBJ Behind BG color 1-3. So if this
+                // sprite has this flag set and the data at this location
+                // already contains data (nonzero), then don't render this
+                // sprite
+                if flags & 0x80 != 0 && scanline[xoff + x] != 0 {
+                    coff += 4;
+                    continue
+                }
+
+                let color;
+                if self.is_sgb && !self.is_cgb {
+                    let sgbaddr = ((xoff + x) >> 3) + (line >> 3) * 20;
+                    let mapped = self.sgb.atf[sgbaddr];
+                    match pal[colori][0] {
+                          0 => { color = self.sgb.pal[mapped][3]; }
+                         96 => { color = self.sgb.pal[mapped][2]; }
+                        192 => { color = self.sgb.pal[mapped][1]; }
+                        255 => { color = self.sgb.pal[mapped][0]; }
+
+                        // not actually reachable
+                        _ => { color = [0, 0, 0, 0]; }
+                    }
+                } else {
+                    color = pal[colori];
+                }
+
+                self.image_data[coff] = color[0];
+                self.image_data[coff + 1] = color[1];
+                self.image_data[coff + 2] = color[2];
+                self.image_data[coff + 3] = color[3];
+            }
+        }
     }
 
     pub fn rb(&self, addr: u16) -> u8 {
