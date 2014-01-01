@@ -1,5 +1,4 @@
 use cpu;
-use mem;
 
 pub struct Input {
     buttons: u8,
@@ -74,8 +73,8 @@ impl Input {
     // Bit 1 - P11 Input Left or Button B (0=Pressed) 1101 = 0xd
     // Bit 0 - P10 Input Right or Button A (0=Pressed) 1110 = 0xe
 
-    pub fn keydown(&mut self, key: Button, mem: &mut mem::Memory) {
-        mem.if_ |= cpu::IntJoypad as u8;
+    pub fn keydown(&mut self, key: Button, if_: &mut u8) {
+        *if_ |= cpu::IntJoypad as u8;
         match key {
             A      => { self.buttons &= 0xe; }
             B      => { self.buttons &= 0xd; }

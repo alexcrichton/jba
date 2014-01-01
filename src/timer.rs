@@ -1,5 +1,4 @@
 use cpu;
-use mem;
 
 pub struct Timer {
     priv clock: Clock,
@@ -54,7 +53,7 @@ impl Timer {
     }
 
     // Details: http://imrannazar.com/GameBoy-Emulation-in-JavaScript:-Timers
-    pub fn step(&mut self, ticks: uint, mem: &mut mem::Memory) {
+    pub fn step(&mut self, ticks: uint, if_: &mut u8) {
         self.clock.div += ticks;
 
         // CPU runs on a 4,194,304 Hz clock, although the argument to this
@@ -85,7 +84,7 @@ impl Timer {
                 self.tima += 1;
                 if self.tima >= 0xff {
                     self.tima = self.tma;
-                    mem.if_ |= cpu::IntTimer as u8;
+                    *if_ |= cpu::IntTimer as u8;
                 }
                 self.clock.tima -= self.tima_speed;
             }

@@ -210,7 +210,7 @@ impl Memory {
                          ((addr as u32) & 0x3fff)]
             }
 
-            0x8 | 0x9 => self.gpu.vram[addr & 0x1fff],
+            0x8 | 0x9 => self.gpu.vram()[addr & 0x1fff],
 
             0xa | 0xb => {
                 // Swappable banks of RAM
@@ -365,7 +365,7 @@ impl Memory {
             }
 
             0x8 | 0x9 => {
-                self.gpu.vram[addr & 0x1fff] = val;
+                self.gpu.vram_mut()[addr & 0x1fff] = val;
                 if addr < 0x9800 {
                     self.gpu.update_tile(addr);
                 }
@@ -436,7 +436,13 @@ impl Memory {
                 if self.cgb && addr == 0xff4d {
                     dfail!("can't go double speed just yet");
                 }
-                self.gpu.wb(addr, val);
+                if addr == 0xff46 {
+                    gpu::Gpu::oam_dma_transfer(self, val);
+                } else if addr == 0xff55 {
+                    gpu::Gpu::hdma_dma_transfer(self, val);
+                } else {
+                    self.gpu.wb(addr, val);
+                }
             }
 
             // WRAM banks only for CGB mode, see
