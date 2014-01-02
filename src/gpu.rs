@@ -315,6 +315,7 @@ impl Gpu {
                 let mut lsb = self.vram()[addr];
                 let mut msb = self.vram()[addr + 1];
 
+                // LSB is the right-most pixel.
                 for k in range(0, 8).invert() {
                     self.tiles.data[i][j][k] = ((msb & 1) << 1) | (lsb & 1);
                     lsb >>= 1;
@@ -350,7 +351,7 @@ impl Gpu {
         // (&tiles[0]) == 0x9000, where if tiledata = 1, (&tiles[0]) = 0x8000.
         // This implies that the indices are treated as signed numbers.
         let mut i = 0;
-        let tilebase = if !self.tiledata {128} else {0};
+        let tilebase = if !self.tiledata {256} else {0};
 
         loop {
             // Backgrounds wrap around, so calculate the offset into the bgmap
@@ -452,7 +453,7 @@ impl Gpu {
         // (&tiles[0]) == 0x9000, where if tiledata = 1, (&tiles[0]) = 0x8000.
         // This implies that the indices are treated as signed numbers.
         let mut i = self.wx;
-        let tilebase = if !self.tiledata {128} else {0};
+        let tilebase = if !self.tiledata {256} else {0};
 
         loop {
             // Backgrounds wrap around, so calculate the offset into the bgmap
@@ -1120,37 +1121,36 @@ mod test {
         }
 
         // Next 8 pixels should all be next color (dark grey)
-        //for i in range(3u16, 11) {
-        //    assert_eq!(mem.gpu.image_data[offset + i * 4], 96);
-        //    assert_eq!(mem.gpu.image_data[offset + i * 4 + 1], 96);
-        //    assert_eq!(mem.gpu.image_data[offset + i * 4 + 2], 96);
-        //    assert_eq!(mem.gpu.image_data[offset + i * 4 + 3], 255);
-        //}
+        for i in range(3u16, 11) {
+            assert_eq!(mem.gpu.image_data[offset + i * 4], 96);
+            assert_eq!(mem.gpu.image_data[offset + i * 4 + 1], 96);
+            assert_eq!(mem.gpu.image_data[offset + i * 4 + 2], 96);
+            assert_eq!(mem.gpu.image_data[offset + i * 4 + 3], 255);
+        }
 
         // Next 8 pixels should all be next color (light grey)
-        //for (i = 11; i < 19; i++) {
-        //    assert_eq!(gpu.image.data[offset + i * 4], 192);
-        //    assert_eq!(gpu.image.data[offset + i * 4 + 1], 192);
-        //    assert_eq!(gpu.image.data[offset + i * 4 + 2], 192);
-        //    assert_eq!(gpu.image.data[offset + i * 4 + 3], 255);
-        //}
+        for i in range(11u16, 19) {
+            assert_eq!(mem.gpu.image_data[offset + i * 4], 192);
+            assert_eq!(mem.gpu.image_data[offset + i * 4 + 1], 192);
+            assert_eq!(mem.gpu.image_data[offset + i * 4 + 2], 192);
+            assert_eq!(mem.gpu.image_data[offset + i * 4 + 3], 255);
+        }
 
         // Next 8 pixels should all be next color (light grey)
-        //for (i = 19; i < 27; i++) {
-        //    assert_eq!(gpu.image.data[offset + i * 4], 255);
-        //    assert_eq!(gpu.image.data[offset + i * 4 + 1], 255);
-        //    assert_eq!(gpu.image.data[offset + i * 4 + 2], 255);
-        //    assert_eq!(gpu.image.data[offset + i * 4 + 3], 255);
-        //}
+        for i in range(19u16, 27) {
+            assert_eq!(mem.gpu.image_data[offset + i * 4], 255);
+            assert_eq!(mem.gpu.image_data[offset + i * 4 + 1], 255);
+            assert_eq!(mem.gpu.image_data[offset + i * 4 + 2], 255);
+            assert_eq!(mem.gpu.image_data[offset + i * 4 + 3], 255);
+        }
 
         // Finally, the next 8 should be black
-        //for (i = 27; i < 35; i++) {
-        //    assert_eq!(gpu.image.data[offset + i * 4], 0);
-        //    assert_eq!(gpu.image.data[offset + i * 4 + 1], 0);
-        //    assert_eq!(gpu.image.data[offset + i * 4 + 2], 0);
-        //    assert_eq!(gpu.image.data[offset + i * 4 + 3], 255);
-        //}
-
+        for i in range(27u16, 35) {
+            assert_eq!(mem.gpu.image_data[offset + i * 4], 0);
+            assert_eq!(mem.gpu.image_data[offset + i * 4 + 1], 0);
+            assert_eq!(mem.gpu.image_data[offset + i * 4 + 2], 0);
+            assert_eq!(mem.gpu.image_data[offset + i * 4 + 3], 255);
+        }
     }
 
     #[test]
