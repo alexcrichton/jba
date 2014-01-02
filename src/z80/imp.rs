@@ -11,7 +11,7 @@ fn add(a: u16, b: u8) -> u16 {
 }
 
 fn daa(r: &mut z80::Registers) {
-    let d = z80::DAA_TABLE[(r.a as u16) | ((r.f as u16) << 4)];
+    let d = z80::DAA_TABLE[(r.a as u16) | (((r.f & (N | H | C)) as u16) << 4)];
     r.a = (d >> 8) as u8;
     r.f = d as u8;
 }
@@ -179,13 +179,13 @@ pub fn exec(inst: u8, r: &mut z80::Registers, m: &mut mem::Memory) -> uint {
         1
     }) )
     macro_rules! xor_a( ($r:expr) => ({
-        r.a &= $r;
+        r.a ^= $r;
         r.f = if r.a != 0 {0} else {Z};
         1
     }) )
     macro_rules! or_a( ($r:expr) => ({
         r.a |= $r;
-        r.f = H | if r.a != 0 {0} else {Z};
+        r.f = if r.a != 0 {0} else {Z};
         1
     }) )
     macro_rules! cp_a( ($b:expr) => ({
@@ -1213,8 +1213,32 @@ mod test {
     }
 
     ////////////////////////////////////////////////////////////////////////////
+    // 0xa0
+    ////////////////////////////////////////////////////////////////////////////
+
+    #[test]
+    fn xor_b() {
+        let (mut c, mut m) = init();
+        c.regs.a = 0x01;
+        c.regs.b = 0x01;
+        op(&mut c, &mut m, 0xa8, 1, 1);
+        assert_eq!(c.regs.a, 0);
+        assert_eq!(c.regs.f, 0x80);
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
     // 0xb0
     ////////////////////////////////////////////////////////////////////////////
+
+    #[test]
+    fn or_b() {
+        let (mut c, mut m) = init();
+        c.regs.a = 0x01;
+        c.regs.b = 0x02;
+        op(&mut c, &mut m, 0xb0, 1, 1);
+        assert_eq!(c.regs.a, 0x03);
+        assert_eq!(c.regs.f, 0);
+    }
 
     #[test]
     fn cp_b() {
