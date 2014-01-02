@@ -1,6 +1,7 @@
 use glfw;
 use gl;
 use std::libc;
+use std::mem;
 
 use input;
 use gpu;
@@ -16,6 +17,10 @@ pub fn run(gb: Gb) {
         let mut gb = gb;
         let (keys, keyc) = Chan::new();
         let (focus, focusc) = Chan::new();
+
+        glfw::window_hint::context_version(3, 2);
+        glfw::window_hint::opengl_profile(glfw::OpenGlCoreProfile);
+        glfw::window_hint::opengl_forward_compat(true);
 
         gl::load_with(glfw::get_proc_address);
         let window = glfw::Window::create(gpu::WIDTH as u32,
@@ -95,20 +100,37 @@ impl glfw::WindowFocusCallback for Focus {
 
 fn upload_frame(gb: &Gb) {
     unsafe {
-        gl::BindTexture(gl::TEXTURE_2D, 13);
+        let mut tex: gl::types::GLuint = 0;
+        gl::GenTextures(1, &mut tex);
+        gl::BindTexture(gl::TEXTURE_2D, tex);
         gl::TexImage2D(gl::TEXTURE_2D, 0, gl::RGB as i32,
                        gpu::WIDTH as i32, gpu::HEIGHT as i32, 0,
                        gl::RGBA8, gl::UNSIGNED_BYTE,
                        gb.image().as_ptr() as *libc::c_void);
-        gl::Begin(gl::TRIANGLES);
-        gl::TexCoord2f(0.0, 0.0);
-        gl::Vertex3f(0.0, 0.0, 0.0);
-        gl::TexCoord2f(1.0, 0.0);
-        gl::Vertex3f(1.0, 0.0, 0.0);
-        gl::TexCoord2f(1.0, 1.0);
-        gl::Vertex3f(1.0, 1.0, 0.0);
-        gl::TexCoord2f(0.0, 1.0);
-        gl::Vertex3f(0.0, 1.0, 0.0);
-        gl::End();
+
+        let mut foo: gl::types::GLuint = 0;
+        let vertices = [
+            0.0f32, 0.0, 0.0,
+            1.0, 0.0, 0.0,
+            1.0, 1.0, 0.0,
+            0.0, 1.0, 0.0,
+        ];
+        gl::GenBuffers(1, &mut foo);
+        gl::BindBuffer(gl::ARRAY_BUFFER, foo);
+        gl::BufferData(gl::ARRAY_BUFFER,
+                       (vertices.len() * mem::size_of::<f32>()) as i64,
+                       vertices.as_ptr() as *libc::c_void,
+                       gl::STATIC_DRAW);
+
+        //gl::Begin(gl::TRIANGLES);
+        //gl::TexCoord2f(0.0, 0.0);
+        //gl::Vertex3f(0.0, 0.0, 0.0);
+        //gl::TexCoord2f(1.0, 0.0);
+        //gl::Vertex3f(1.0, 0.0, 0.0);
+        //gl::TexCoord2f(1.0, 1.0);
+        //gl::Vertex3f(1.0, 1.0, 0.0);
+        //gl::TexCoord2f(0.0, 1.0);
+        //gl::Vertex3f(0.0, 1.0, 0.0);
+        //gl::End();
     }
 }
