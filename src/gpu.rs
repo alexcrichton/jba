@@ -588,28 +588,26 @@ impl Gpu {
             };
 
             for x in range(0, 8) {
+                coff += 4;
+
                 // If these pixels are off screen, don't bother drawing
                 // anything. Also, if the background tile at this pixel has
                 // priority, don't render this sprite at all.
                 if xoff + x < 0 || xoff + x >= WIDTH as int ||
                    scanline[x + xoff] > 3 {
-                    coff += 4;
                     continue
                 }
                 // bit5 is the horizontal flip flag
                 let colori = row[if flags & 0x20 != 0 {7-x} else {x}];
 
                 // A color index of 0 for sprites means transparent
-                if colori == 0 { coff += 4; continue }
+                if colori == 0 { continue }
 
                 // bit7 0=OBJ Above BG, 1=OBJ Behind BG color 1-3. So if this
                 // sprite has this flag set and the data at this location
                 // already contains data (nonzero), then don't render this
                 // sprite
-                if flags & 0x80 != 0 && scanline[xoff + x] != 0 {
-                    coff += 4;
-                    continue
-                }
+                if flags & 0x80 != 0 && scanline[xoff + x] != 0 { continue }
 
                 let color;
                 if self.is_sgb && !self.is_cgb {
@@ -628,10 +626,10 @@ impl Gpu {
                     color = pal[colori];
                 }
 
-                self.image_data[coff] = color[0];
-                self.image_data[coff + 1] = color[1];
-                self.image_data[coff + 2] = color[2];
-                self.image_data[coff + 3] = color[3];
+                self.image_data[coff - 4] = color[0];
+                self.image_data[coff - 3] = color[1];
+                self.image_data[coff - 2] = color[2];
+                self.image_data[coff - 1] = color[3];
             }
         }
     }
