@@ -208,8 +208,7 @@ pub fn exec(inst: u8, r: &mut z80::Registers, m: &mut mem::Memory) -> uint {
     }) )
     macro_rules! rst( ($e:expr) => ({ r.rst($e, m); 4 }) )
 
-    debug!("executing {} at {}", inst, r.pc);
-    //debug!("  {}", *r);
+    debug!("executing {} at {:i}", inst, *r);
 
     match inst {
         0x00 => 1,                                                  // nop

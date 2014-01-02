@@ -182,7 +182,9 @@ impl Memory {
 
         self.ram = vec::from_elem(self.ram_size(), 0u8);
         self.cgb = self.rom[0x0143] & 0x80 == 0x80;
+        self.gpu.is_cgb = self.cgb;
         self.sgb = self.rom[0x0146] == 0x03;
+        self.gpu.is_sgb = self.sgb;
     }
 
     /// Reads a word at the given address (2 bytes)
@@ -410,6 +412,7 @@ impl Memory {
     }
 
     fn ioreg_wb(&mut self, addr: u16, val: u8) {
+        debug!("ioreg_wb {:x} {:x}", addr, val);
         match (addr >> 4) & 0xf {
             // TODO: serial data transfer
             // http://nocash.emubase.de/pandocs.htm#serialdatatransferlinkcable
@@ -434,15 +437,11 @@ impl Memory {
 
             0x4 | 0x5 | 0x6 => {
                 // See http://nocash.emubase.de/pandocs.htm#cgbregisters
-                if self.cgb && addr == 0xff4d {
-                    dfail!("can't go double speed just yet");
-                }
-                if addr == 0xff46 {
-                    gpu::Gpu::oam_dma_transfer(self, val);
-                } else if addr == 0xff55 {
-                    gpu::Gpu::hdma_dma_transfer(self, val);
-                } else {
-                    self.gpu.wb(addr, val);
+                match addr {
+                    0xff46 => gpu::Gpu::oam_dma_transfer(self, val),
+                    0xff4d if self.cgb => dfail!("can't go double speed"),
+                    0xff55 => gpu::Gpu::hdma_dma_transfer(self, val),
+                    _ => self.gpu.wb(addr, val),
                 }
             }
 

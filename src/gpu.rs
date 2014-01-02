@@ -337,7 +337,7 @@ impl Gpu {
         // because each tile is 8 pixels high. We then multiply by 32
         // because each row is 32 bytes long. We can't just multiply by 4
         // because we need the truncation to happen beforehand
-        let mapbase = mapbase + (((self.ly + self.scy) >> 3) as uint) * 32;
+        let mapbase = mapbase + ((self.ly as uint + self.scy as uint) >> 3) * 32;
 
         // X and Y location inside the tile itself to paint
         let y = (self.ly + self.scy) % 8;
@@ -352,6 +352,8 @@ impl Gpu {
         // This implies that the indices are treated as signed numbers.
         let mut i = 0;
         let tilebase = if !self.tiledata {256} else {0};
+
+        debug!("render background from {:x}", mapbase);
 
         loop {
             // Backgrounds wrap around, so calculate the offset into the bgmap
@@ -435,31 +437,44 @@ impl Gpu {
     }
 
     fn render_window(&mut self, scanline: &mut [u8, ..WIDTH]) {
-        // TODO: this shouldn't be so duplicated with render_window
-        if self.wy >= HEIGHT as u8 || self.wx >= WIDTH as u8 { return }
+        // If our current line is less than the windows initial offset, then
+        // there's no window to draw
+        if self.ly < self.wy { return }
 
-        let mapbase = if self.bgmap {0x1c00} else {0x1800};
-        let mapbase = mapbase + (((self.ly + self.wy) >> 3) as uint) * 32;
+        // The window's x position is actually at (wx - 7), so if the wx
+        // register is greater than WIDTH + 7, then there's nothing to do
+        if self.wx >= WIDTH as u8 + 7 { return }
+
+        let mapbase = if self.winmap {0x1c00} else {0x1800};
+        let mapbase = mapbase + ((self.ly as uint - self.wy as uint) >> 3) * 32;
 
         // X and Y location inside the tile itself to paint
-        let y = self.ly % 8;
-        let mut x = self.wx % 8;
+        //
+        // The Y location is offset by the window's offset (as with the above
+        // mapbase calculation), and the X location takes into account that the
+        // actual offset is wx - 7 (and is careful to avoid overflow).
+        let y = (self.ly - self.wy) % 8;
+        let (mut x, mut i) = if self.wx < 7 {
+            (8 - self.wx, 0)
+        } else {
+            ((self.wx - 7) % 8, self.wx - 7)
+        };
 
-        // Offset into the canvas to draw. line * width * 4 colors
-        let mut coff = (self.ly as uint + self.wy as uint) * WIDTH * 4;
+        // Offset into the canvas to draw. (line * width + xoff) * 4 colors
+        let mut coff = (self.ly as uint * WIDTH + i as uint) * 4;
 
         // this.tiledata is a flag to determine which tile data table to use
         // 0=8800-97FF, 1=8000-8FFF. For some odd reason, if tiledata = 0, then
         // (&tiles[0]) == 0x9000, where if tiledata = 1, (&tiles[0]) = 0x8000.
         // This implies that the indices are treated as signed numbers.
-        let mut i = self.wx;
         let tilebase = if !self.tiledata {256} else {0};
 
+        debug!("render window from {:x}", mapbase);
+
+        let mut mapoff = 0;
         loop {
-            // Backgrounds wrap around, so calculate the offset into the bgmap
-            // each loop to check for wrapping
-            let mapoff = (i + self.scx) >> 3;
             let tilei = self.vrambanks[0][mapbase + mapoff as uint];
+            mapoff += 1;
 
             // tiledata = 0 => tilei is a signed byte, so fix it here
             let tilebase = if self.tiledata {
@@ -549,6 +564,8 @@ impl Gpu {
                xoff <= -8 || xoff >= WIDTH as int {
                continue
             }
+
+            debug!("render sprite {}", i);
 
             // 8x16 tiles always use adjacent tile indices. If we're in 8x16
             // mode and this sprite needs the second tile, add 1 to the tile
@@ -666,7 +683,7 @@ impl Gpu {
             0x48 => self.obp0,
             0x49 => self.obp1,
             0x4a => self.wy,
-            0x4b => self.wx + 7,
+            0x4b => self.wx,
             0x4f => self.vrambank,
 
             // http://nocash.emubase.de/pandocs.htm#lcdvramdmatransferscgbonly
@@ -717,7 +734,7 @@ impl Gpu {
             0x48 => { self.obp0 = val; update_pal(&mut self.pal.obp0, val); }
             0x49 => { self.obp1 = val; update_pal(&mut self.pal.obp1, val); }
             0x4a => { self.wy = val; }
-            0x4b => { self.wx = val - 7; }
+            0x4b => { self.wx = val; }
             0x4f => { if self.is_cgb { self.vrambank = val & 1; } }
 
             // http://nocash.emubase.de/pandocs.htm#lcdvramdmatransferscgbonly
@@ -781,6 +798,7 @@ impl Gpu {
         let orval = (val as u16) << 8;
         if orval > 0xf100 { return }
 
+        debug!("oam dma transfer from {:x}", orval);
         for i in range(0, OAM_SIZE as u16) {
             mem.gpu.oam[i] = mem.rb(orval | i);
         }
@@ -815,6 +833,7 @@ fn update_pal(pal: &mut [Color, ..4], val: u8) {
 // Update the cached CGB palette that was just written to
 fn update_cgb_pal(pal: &mut [[Color, ..4], ..8], mem: &[u8, ..CGB_BP_SIZE],
                   addr: u8) {
+    debug!("updating cgb pal");
     // See http://nocash.emubase.de/pandocs.htm#lcdcolorpalettescgbonly
     let pali = (addr & 0x3f) >> 3; // divide by 8 (size of one palette)
     let colori = (addr & 0x07) >> 1; // 2 bytes per color, divide by 2

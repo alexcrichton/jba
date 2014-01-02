@@ -92,6 +92,14 @@ impl fmt::Default for Registers {
     }
 }
 
+impl fmt::Signed for Registers {
+    fn fmt(r: &Registers, f: &mut fmt::Formatter) {
+        write!(f.buf, "a:{} b:{} c:{} d:{} e:{} \
+                       f:{} h:{} l:{} pc:{} sp:{}",
+               r.a, r.b, r.c, r.d, r.e, r.f, r.h, r.l, r.pc, r.sp);
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::Registers;

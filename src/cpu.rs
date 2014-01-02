@@ -49,6 +49,7 @@ impl Cpu {
                 self.regs.halt = 0;
                 let i = ints.trailing_zeros();
                 mem.if_ &= !(1 << i);
+                debug!("{:x} => {}", ints, i);
                 match i {
                     0 => { self.regs.rst(0x40, mem); }
                     1 => { self.regs.rst(0x48, mem); }
