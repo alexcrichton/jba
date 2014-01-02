@@ -289,6 +289,7 @@ impl Glcx {
                            gpu::WIDTH as i32, gpu::HEIGHT as i32,
                            0, gl::RGBA, gl::UNSIGNED_BYTE,
                            data.as_ptr() as *libc::c_void);
+            assert_eq!(gl::GetError(), 0);
 
             // Draw a rectangle from the 2 triangles using 6
             // indices
