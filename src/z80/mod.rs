@@ -123,12 +123,13 @@ impl fmt::Signed for Registers {
 #[cfg(test)]
 mod test {
     use super::Registers;
+    use GB = gb::GameBoy;
 
     #[test]
     fn init_values() {
-        let regs = Registers::new();
+        let regs = Registers::new(GB);
 
-        assert_eq!(regs.a, 0x11);
+        assert_eq!(regs.a, 0x01);
         assert_eq!(regs.f, 0xb0);
         assert_eq!(regs.b, 0x00);
         assert_eq!(regs.c, 0x13);

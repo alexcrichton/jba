@@ -871,6 +871,7 @@ fn update_cgb_pal(pal: &mut [[Color, ..4], ..8], mem: &[u8, ..CGB_BP_SIZE],
 
 #[cfg(test)]
 mod test {
+    use GB = gb::GameBoy;
     use gpu::Gpu;
     use mem::Memory;
 
@@ -890,7 +891,7 @@ mod test {
 
     #[test]
     fn read_regs() {
-        let mut gpu = Gpu::new();
+        let mut gpu = Gpu::new(GB);
         gpu.lcdon    = true;
         gpu.winmap   = false;
         gpu.winon    = true;
@@ -929,12 +930,12 @@ mod test {
         gpu.wy = 0x42;
         gpu.wx = 0x93;
         assert_eq!(gpu.rb(0xff4a), 0x42);
-        assert_eq!(gpu.rb(0xff4b), 0x9a);
+        assert_eq!(gpu.rb(0xff4b), 0x93);
     }
 
     #[test]
     fn write_regs() {
-        let mut gpu = Gpu::new();
+        let mut gpu = Gpu::new(GB);
         gpu.wb(LCDC, 0xb9);
         assert_eq!(gpu.lcdon, true);
         assert_eq!(gpu.winmap, false);
@@ -972,13 +973,13 @@ mod test {
         gpu.wb(0xff4a, 0x42);
         gpu.wb(0xff4b, 0x93);
         assert_eq!(gpu.wy, 0x42);
-        assert_eq!(gpu.wx, 0x93 - 7); // Should automatically take the -7 into account
+        assert_eq!(gpu.wx, 0x93);
     }
 
     #[test]
     fn dma_transfers() {
         // This first byte should by copied in the DMA transfer
-        let mut mem = Memory::new();
+        let mut mem = Memory::new(GB);
         mem.wb(0xd087, 0x32);
         mem.wb(0xff46, 0xd0); // trigger the transfer
 
@@ -987,7 +988,7 @@ mod test {
 
     #[test]
     fn clock() {
-        let mut gpu = Gpu::new();
+        let mut gpu = Gpu::new(GB);
         let mut if_ = 0u8;
 
         // Enable all interrupts and STAT interrupts
@@ -1063,7 +1064,7 @@ mod test {
 
     #[test]
     fn background() {
-        let mut mem = Memory::new();
+        let mut mem = Memory::new(GB);
 
         // BGP is a mapping of indices to shades. Each 2 bits in the mapping
         // specify a shade of grey (0=white, 3=black). Specify a reverse mapping
@@ -1186,7 +1187,7 @@ mod test {
 
     #[test]
     fn cbg_switch_vram() {
-        let mut mem = Memory::new();
+        let mut mem = Memory::new(GB);
         // First, make sure non CGB doesn't switch VRAM banks
         mem.gpu.is_cgb = false;
         mem.wb(0x8000, 0x89);
@@ -1200,7 +1201,7 @@ mod test {
 
     #[test]
     fn cgb_color_palettes() {
-        let mut mem = Memory::new();
+        let mut mem = Memory::new(GB);
         mem.gpu.is_cgb = true;
 
         // Background Palette

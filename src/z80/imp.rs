@@ -807,8 +807,8 @@ mod test {
     use mem;
 
     fn init() -> (cpu::Cpu, mem::Memory) {
-        let mem = mem::Memory::new();
-        let mut cpu = cpu::Cpu::new();
+        let mem = mem::Memory::new(::gb::GameBoy);
+        let mut cpu = cpu::Cpu::new(::gb::GameBoy);
         cpu.regs.pc = 0xe000; // put it in wram instead of rom
         (cpu, mem)
     }

@@ -499,10 +499,11 @@ impl Memory {
 mod test {
     use std::vec;
     use super::Memory;
+    use GB = gb::GameBoy;
 
     #[test]
     fn mirroring() {
-        let mut mem = Memory::new();
+        let mut mem = Memory::new(GB);
         mem.wb(0xcae0, 0x31);
         assert_eq!(mem.rb(0xcae0), 0x31);
         assert_eq!(mem.rb(0xeae0), 0x31);
@@ -518,7 +519,7 @@ mod test {
 
     #[test]
     fn hiram() {
-        let mut mem = Memory::new();
+        let mut mem = Memory::new(GB);
         mem.wb(0xff89, 0x78);
         assert_eq!(mem.rb(0xff89), 0x78);
 
@@ -528,7 +529,7 @@ mod test {
 
     #[test]
     fn vram() {
-        let mut mem = Memory::new();
+        let mut mem = Memory::new(GB);
         mem.wb(0xc089, 0x78);
         assert_eq!(mem.rb(0xc089), 0x78);
 
@@ -538,7 +539,7 @@ mod test {
 
     #[test]
     fn oam() {
-        let mut mem = Memory::new();
+        let mut mem = Memory::new(GB);
         mem.wb(0xfe03, 0x32);
         assert_eq!(mem.rb(0xfe03), 0x32);
 
@@ -550,7 +551,7 @@ mod test {
     // 0xd000-0xdfff is wram bank 1 (switchable 1-7 if CGB)
     #[test]
     fn wram_banks() {
-        let mut mem = Memory::new();
+        let mut mem = Memory::new(GB);
         /* If not CGB, don't swap out banks */
         mem.is_cgb = false;
         mem.wb(0xff70, 0x01);
@@ -572,7 +573,7 @@ mod test {
     }
 
     macro_rules! load( ($($k:expr => $v:expr),+) => ({
-        let mut m = Memory::new();
+        let mut m = Memory::new(GB);
         let mut ram = vec::from_elem(0x1000000, 0u8);
         ram[0x0149] = 0x03;
         $(ram[$k] = $v;)+
