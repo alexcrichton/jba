@@ -1,5 +1,6 @@
 use std::fmt;
 
+use gb;
 use mem;
 
 pub use cpu::z80::daa::DAA_TABLE;
@@ -35,17 +36,36 @@ pub struct Registers {
 }
 
 impl Registers {
-    pub fn new() -> Registers {
-        Registers {
+    pub fn new(target: gb::Target) -> Registers {
+        let mut r = Registers {
             ime: 0, halt: 0, stop: 0,
 
             // See: http://nocash.emubase.de/pandocs.htm#powerupsequence
-            // We initialize A to 0x11 instead of 0x01 because we're emulating
-            // CGB hardware and this is how the difference is detected
-            a: 0x11, b: 0x00, d: 0x00, h: 0x01,
+            a: 0x01, b: 0x00, d: 0x00, h: 0x01,
             f: 0xb0, c: 0x13, e: 0xd8, l: 0x4d,
             sp: 0xfffe, pc: 0x0100,
+        };
+
+        match target {
+            gb::GameBoy => {}
+
+            // These two cases were lifted from visualboyadvance
+            gb::GameBoyColor => {
+                r.a = 0x11; r.f = 0xb0;
+                r.b = 0x00; r.c = 0x00;
+                r.d = 0xff; r.e = 0x56;
+                r.h = 0x00; r.l = 0x0d;
+            }
+
+            gb::SuperGameBoy => {
+                r.a = 0x01; r.f = 0xb0;
+                r.b = 0x00; r.c = 0x13;
+                r.d = 0x00; r.e = 0xd8;
+                r.h = 0x01; r.l = 0x4d;
+            }
         }
+
+        return r;
     }
 
     pub fn bump(&mut self) -> u16 {

@@ -2,6 +2,7 @@
 
 use std::num::BitCount;
 
+use gb;
 use mem;
 
 mod z80;
@@ -20,8 +21,8 @@ pub enum Interrupts {
 }
 
 impl Cpu {
-    pub fn new() -> Cpu {
-        Cpu { regs: z80::Registers::new(), ticks: 0 }
+    pub fn new(target: gb::Target) -> Cpu {
+        Cpu { regs: z80::Registers::new(target), ticks: 0 }
     }
 
     pub fn exec(&mut self, mem: &mut mem::Memory) -> uint {

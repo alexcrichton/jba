@@ -8,6 +8,7 @@
 
 use std::vec;
 
+use gb;
 use gpu;
 use input;
 use rtc;
@@ -21,6 +22,9 @@ pub struct Memory {
     /// The master enable flag is on the cpu
     if_: u8,
     ie_: u8,
+
+    /// Target that this memory was instantiated for
+    priv target: gb::Target,
 
     /// Flag if this cartridge uses a battery or not
     priv battery: bool,
@@ -63,8 +67,9 @@ enum Mbc {
 }
 
 impl Memory {
-    pub fn new() -> Memory {
+    pub fn new(target: gb::Target) -> Memory {
         Memory {
+            target: target,
             if_: 0, ie_: 0, battery: false, cgb: false, sgb: false,
             rom: ~[],
             ram: ~[],
@@ -76,7 +81,7 @@ impl Memory {
             rtc: ~rtc::Rtc::new(),
             input: ~input::Input::new(),
             timer: ~timer::Timer::new(),
-            gpu: ~gpu::Gpu::new(),
+            gpu: ~gpu::Gpu::new(target),
         }
     }
 
@@ -127,6 +132,15 @@ impl Memory {
         self.wb(0xff4a, 0x00); // WY
         self.wb(0xff4b, 0x00); // WX
         self.wb(0xffff, 0x00); // IE
+
+        // lifted from visualboyadvance
+        match self.target {
+            gb::GameBoyColor => {
+                self.wb(0xff68, 0xc0);
+                self.wb(0xff6a, 0xc0);
+            }
+            gb::GameBoy | gb::SuperGameBoy => {}
+        }
     }
 
     /// Loads a string of data as a cartridge into this memory. The data
@@ -181,10 +195,17 @@ impl Memory {
         }
 
         self.ram = vec::from_elem(self.ram_size(), 0u8);
-        self.cgb = self.rom[0x0143] & 0x80 == 0x80;
-        self.gpu.is_cgb = self.cgb;
-        self.sgb = self.rom[0x0146] == 0x03;
-        self.gpu.is_sgb = self.sgb;
+        match self.target {
+            gb::GameBoyColor => {
+                self.cgb = self.rom[0x0143] & 0x80 != 0;
+                self.gpu.is_cgb = self.cgb;
+            }
+            gb::SuperGameBoy => {
+                self.sgb = self.rom[0x0146] == 0x03;
+                self.gpu.is_sgb = self.sgb;
+            }
+            _ => {}
+        }
     }
 
     /// Reads a word at the given address (2 bytes)

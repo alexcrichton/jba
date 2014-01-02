@@ -4,6 +4,7 @@
 
 use std::iter;
 
+use gb;
 use cpu;
 use mem;
 
@@ -152,7 +153,7 @@ struct SgbData {
 }
 
 impl Gpu {
-    pub fn new() -> Gpu {
+    pub fn new(_targ: gb::Target) -> Gpu {
         Gpu {
             vrambanks: ~([[0, ..VRAM_SIZE], .. 2]),
             vrambank: 0,

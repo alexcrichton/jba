@@ -4,6 +4,13 @@ use cpu::Cpu;
 use input;
 use mem::Memory;
 
+#[deriving(Eq)]
+pub enum Target {
+    GameBoy,
+    GameBoyColor,
+    SuperGameBoy,
+}
+
 pub struct Gb {
     priv cpu: Cpu,
     priv mem: Memory,
@@ -12,10 +19,10 @@ pub struct Gb {
 }
 
 impl Gb {
-    pub fn new() -> Gb {
+    pub fn new(target: Target) -> Gb {
         let mut gb = Gb {
-            mem: Memory::new(),
-            cpu: Cpu::new(),
+            mem: Memory::new(target),
+            cpu: Cpu::new(target),
             fps: 0,
             cycles: 0,
         };

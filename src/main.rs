@@ -32,11 +32,17 @@ fn start(argc: int, argv: **u8) -> int {
     }
 }
 
+fn usage(prog: &str, opts: &[opts::OptGroup]) {
+    let h = opts::usage(format!("usage: {} [options] <rom>", prog), opts);
+    println!("{}", h);
+}
+
 fn main() {
     let args = os::args();
     let opts = ~[
         opts::optflag("h", "help", "show this message"),
         opts::optflag("", "fps", "don't run a display, just print FPS"),
+        opts::optopt("g", "gb", "type of gameboy to run", "[gb|cgb|sgb]"),
     ];
     let matches = match opts::getopts(args.tail(), opts) {
         Ok(m) => { m }
@@ -44,13 +50,21 @@ fn main() {
     };
     if matches.opt_present("h") || matches.opt_present("help") ||
        matches.free.len() == 0 {
-        let h = opts::usage(format!("usage: {} [options] <rom>", args[0]), opts);
-        println!("{}", h);
-        return;
+        return usage(args[0], opts);
     }
 
     let rom = File::open(&Path::new(matches.free[0].as_slice())).read_to_end();
-    let mut gb = gb::Gb::new();
+    let mut gb = gb::Gb::new(match matches.opt_str("gb") {
+        Some(~"gb") => gb::GameBoy,
+        Some(~"cgb") => gb::GameBoyColor,
+        Some(~"sgb") => gb::SuperGameBoy,
+        Some(s) => {
+            println!("Invalid gameboy type: {}", s);
+            println!("Supported types: gb, cgb, sgb");
+            return usage(args[0], opts);
+        }
+        None => gb::GameBoyColor,
+    });
     gb.load(rom);
 
     // TODO: needs native timers
