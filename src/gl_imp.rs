@@ -1,4 +1,5 @@
 use glfw;
+use gl;
 use std::libc;
 
 use input;
@@ -15,9 +16,11 @@ pub fn run(gb: Gb) {
         let mut gb = gb;
         let (keys, keyc) = Chan::new();
         let (focus, focusc) = Chan::new();
+
+        gl::load_with(glfw::get_proc_address);
         let window = glfw::Window::create(gpu::WIDTH as u32,
                                           gpu::HEIGHT as u32,
-                                          "Hello this is window",
+                                          "JBA",
                                           glfw::Windowed);
         let window = window.expect("Failed to create GLFW window.");
         window.make_context_current();
@@ -28,6 +31,7 @@ pub fn run(gb: Gb) {
         while !window.should_close() {
             if focused {
                 gb.frame();
+                upload_frame(&gb);
                 window.swap_buffers();
                 glfw::poll_events();
             } else {
@@ -86,5 +90,25 @@ impl glfw::WindowFocusCallback for Focus {
     fn call(&self, _window: &glfw::Window, focused: bool) {
         let Focus(ref chan) = *self;
         chan.send(focused);
+    }
+}
+
+fn upload_frame(gb: &Gb) {
+    unsafe {
+        gl::BindTexture(gl::TEXTURE_2D, 13);
+        gl::TexImage2D(gl::TEXTURE_2D, 0, gl::RGB as i32,
+                       gpu::WIDTH as i32, gpu::HEIGHT as i32, 0,
+                       gl::RGBA8, gl::UNSIGNED_BYTE,
+                       gb.image().as_ptr() as *libc::c_void);
+        gl::Begin(gl::TRIANGLES);
+        gl::TexCoord2f(0.0, 0.0);
+        gl::Vertex3f(0.0, 0.0, 0.0);
+        gl::TexCoord2f(1.0, 0.0);
+        gl::Vertex3f(1.0, 0.0, 0.0);
+        gl::TexCoord2f(1.0, 1.0);
+        gl::Vertex3f(1.0, 1.0, 0.0);
+        gl::TexCoord2f(0.0, 1.0);
+        gl::Vertex3f(0.0, 1.0, 0.0);
+        gl::End();
     }
 }

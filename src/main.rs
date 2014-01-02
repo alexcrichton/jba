@@ -5,6 +5,7 @@ extern mod extra;
 extern mod native;
 
 #[cfg(glfw)] extern mod glfw;
+#[cfg(glfw)] extern mod gl;
 
 use std::os;
 use std::io::File;
