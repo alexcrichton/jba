@@ -8,9 +8,11 @@ use input;
 use gpu;
 use gb::Gb;
 
-enum Direction {
+enum Event {
     Down(input::Button),
     Up(input::Button),
+    ResizeUp,
+    ResizeDown,
 }
 
 struct Glcx {
@@ -32,6 +34,7 @@ pub fn run(gb: Gb) {
         glfw::window_hint::context_version(3, 2);
         glfw::window_hint::opengl_profile(glfw::OpenGlCoreProfile);
         glfw::window_hint::opengl_forward_compat(true);
+        glfw::window_hint::resizable(false);
 
         let window = glfw::Window::create(gpu::WIDTH as u32,
                                           gpu::HEIGHT as u32,
@@ -47,6 +50,7 @@ pub fn run(gb: Gb) {
         let cx = Glcx::new();
 
         let mut focused = true;
+        let mut ratio = 1;
         while !window.should_close() {
             if focused {
                 gb.frame();
@@ -61,6 +65,17 @@ pub fn run(gb: Gb) {
                 match keys.try_recv() {
                     Some(Down(key)) => gb.keydown(key),
                     Some(Up(key)) => gb.keyup(key),
+                    Some(ResizeUp) => {
+                        ratio += 1;
+                        window.set_size((gpu::WIDTH as i32) * ratio,
+                                        (gpu::HEIGHT as i32) * ratio);
+                    }
+                    Some(ResizeDown) => {
+                        ratio -= 1;
+                        if ratio <= 0 { ratio = 1; }
+                        window.set_size((gpu::WIDTH as i32) * ratio,
+                                        (gpu::HEIGHT as i32) * ratio);
+                    }
                     None => break
                 }
             }
@@ -74,11 +89,19 @@ pub fn run(gb: Gb) {
     }
 }
 
-struct Keypress(Chan<Direction>);
+struct Keypress(Chan<Event>);
 impl glfw::KeyCallback for Keypress {
     fn call(&self, _window: &glfw::Window, key: glfw::Key,
             _scancode: libc::c_int,
             action: glfw::Action, _modifiers: glfw::Modifiers) {
+        let Keypress(ref chan) = *self;
+
+        match key {
+            glfw::KeyEqual => { return chan.send(ResizeUp); }
+            glfw::KeyMinus => { return chan.send(ResizeDown); }
+            _ => {}
+        }
+
         let f = match action {
             glfw::Release => Up,
             glfw::Press => Down,
@@ -99,7 +122,6 @@ impl glfw::KeyCallback for Keypress {
             _ => return
         };
 
-        let Keypress(ref chan) = *self;
         chan.send(f(button));
     }
 }
@@ -113,29 +135,27 @@ impl glfw::WindowFocusCallback for Focus {
 }
 
 // Shader sources
-static VERTEX: &'static str = r"
-    #version 150 core
-    in vec2 position;
-    in vec3 color;
-    in vec2 texcoord;
-    out vec3 Color;
-    out vec2 Texcoord;
-    void main() {
-       Color = color;
-       Texcoord = texcoord;
-       gl_Position = vec4(position, 0.0, 1.0);
-    };
+static VERTEX: &'static str = r"#version 150 core
+in vec2 position;
+in vec3 color;
+in vec2 texcoord;
+out vec3 Color;
+out vec2 Texcoord;
+void main() {
+   Color = color;
+   Texcoord = texcoord;
+   gl_Position = vec4(position, 0.0, 1.0);
+}
 ";
 
-static FRAGMENT: &'static str = r"
-    #version 150 core
-    in vec3 Color;
-    in vec2 Texcoord;
-    out vec4 outColor;
-    uniform sampler2D tex;
-    void main() {
-       outColor = texture(tex, Texcoord);
-    };
+static FRAGMENT: &'static str = r"#version 150 core
+in vec3 Color;
+in vec2 Texcoord;
+out vec4 outColor;
+uniform sampler2D tex;
+void main() {
+   outColor = texture(tex, Texcoord);
+}
 ";
 
 impl Glcx {
@@ -152,10 +172,10 @@ impl Glcx {
 
             static VERTICES: &'static [f32] = &[
             //  Position   Color             Texcoords
-                -0.5,  0.5, 1.0, 0.0, 0.0, 0.0, 0.0, // Top-left
-                 0.5,  0.5, 0.0, 1.0, 0.0, 1.0, 0.0, // Top-right
-                 0.5, -0.5, 0.0, 0.0, 1.0, 1.0, 1.0, // Bottom-right
-                -0.5, -0.5, 1.0, 1.0, 1.0, 0.0, 1.0  // Bottom-left
+                -1.0,  1.0, 1.0, 0.0, 0.0, 0.0, 0.0, // Top-left
+                 1.0,  1.0, 0.0, 1.0, 0.0, 1.0, 0.0, // Top-right
+                 1.0, -1.0, 0.0, 0.0, 1.0, 1.0, 1.0, // Bottom-right
+                -1.0, -1.0, 1.0, 1.0, 1.0, 0.0, 1.0  // Bottom-left
             ];
             gl::BindBuffer(gl::ARRAY_BUFFER, vbo);
             gl::BufferData(gl::ARRAY_BUFFER,
@@ -201,6 +221,7 @@ impl Glcx {
                 gl::BindFragDataLocation(program, 0, buf)
             });
             gl::LinkProgram(program);
+            assert_eq!(gl::GetError(), 0);
             gl::UseProgram(program);
 
             // Specify the layout of the vertex data
@@ -234,10 +255,6 @@ impl Glcx {
 
             gl::ActiveTexture(gl::TEXTURE0);
             gl::BindTexture(gl::TEXTURE_2D, tex);
-            //gl::TexImage2D(gl::TEXTURE_2D, 0, gl::RGB as i32,
-            //               gpu::WIDTH as i32, gpu::HEIGHT as i32,
-            //               0, gl::RGBA8, gl::UNSIGNED_BYTE,
-            //               data.as_ptr() as *libc::c_void);
             "tex".with_c_str(|buf| {
                 gl::Uniform1i(gl::GetUniformLocation(program, buf), 0);
             });
@@ -270,7 +287,7 @@ impl Glcx {
 
             gl::TexImage2D(gl::TEXTURE_2D, 0, gl::RGB as i32,
                            gpu::WIDTH as i32, gpu::HEIGHT as i32,
-                           0, gl::RGBA8, gl::UNSIGNED_BYTE,
+                           0, gl::RGBA, gl::UNSIGNED_BYTE,
                            data.as_ptr() as *libc::c_void);
 
             // Draw a rectangle from the 2 triangles using 6
