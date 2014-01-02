@@ -12,6 +12,7 @@ use gb;
 use gpu;
 use input;
 use rtc;
+use sgb;
 use timer;
 
 static WRAM_SIZE: uint = 32 << 10; // CGB has 32K (8 banks * 4 KB/bank), GB has 8K
@@ -29,9 +30,9 @@ pub struct Memory {
     /// Flag if this cartridge uses a battery or not
     priv battery: bool,
     /// Flag if this is a CGB cartridge or not
-    priv cgb: bool,
+    priv is_cgb: bool,
     /// Flag if this is a SGB cartridge or not
-    priv sgb: bool,
+    priv is_sgb: bool,
 
     priv rom: ~[u8],
     priv ram: ~[u8],
@@ -55,6 +56,7 @@ pub struct Memory {
     input: ~input::Input,
     timer: ~timer::Timer,
     gpu: ~gpu::Gpu,
+    sgb: Option<~sgb::Sgb>,
 }
 
 #[deriving(Eq)]
@@ -70,7 +72,7 @@ impl Memory {
     pub fn new(target: gb::Target) -> Memory {
         Memory {
             target: target,
-            if_: 0, ie_: 0, battery: false, cgb: false, sgb: false,
+            if_: 0, ie_: 0, battery: false, is_cgb: false, is_sgb: false,
             rom: ~[],
             ram: ~[],
             wram: ~([0, ..WRAM_SIZE]),
@@ -82,6 +84,7 @@ impl Memory {
             input: ~input::Input::new(),
             timer: ~timer::Timer::new(),
             gpu: ~gpu::Gpu::new(target),
+            sgb: None,
         }
     }
 
@@ -197,12 +200,15 @@ impl Memory {
         self.ram = vec::from_elem(self.ram_size(), 0u8);
         match self.target {
             gb::GameBoyColor => {
-                self.cgb = self.rom[0x0143] & 0x80 != 0;
-                self.gpu.is_cgb = self.cgb;
+                self.is_cgb = self.rom[0x0143] & 0x80 != 0;
+                self.gpu.is_cgb = self.is_cgb;
             }
             gb::SuperGameBoy => {
-                self.sgb = self.rom[0x0146] == 0x03;
-                self.gpu.is_sgb = self.sgb;
+                self.is_sgb = self.rom[0x0146] == 0x03;
+                if self.is_sgb {
+                    self.sgb = Some(~sgb::Sgb::new());
+                    self.gpu.is_sgb = self.is_sgb;
+                }
             }
             _ => {}
         }
@@ -299,7 +305,7 @@ impl Memory {
             0x1 | 0x2 | 0x3 => 0xff,
 
             0x4 => {
-                if self.cgb && addr == 0xff4d {
+                if self.is_cgb && addr == 0xff4d {
                     dfail!("can't double speed yet");
                 }
                 self.gpu.rb(addr)
@@ -307,7 +313,7 @@ impl Memory {
             0x5 | 0x6 => self.gpu.rb(addr),
 
             0x7 => {
-                if self.cgb && addr == 0xff70 {
+                if self.is_cgb && addr == 0xff70 {
                     self.wrambank as u8
                 } else {
                     dfail!(); 0xff
@@ -439,7 +445,16 @@ impl Memory {
             // http://nocash.emubase.de/pandocs.htm#serialdatatransferlinkcable
             0x0 => {
                 match addr & 0xf {
-                    0x0 => self.input.wb(addr, val),
+                    0x0 => {
+                        self.input.wb(addr, val);
+                        match self.sgb {
+                            Some(ref mut sgb) => {
+                                sgb.receive((val >> 4) & 0x3, self.gpu,
+                                            self.input);
+                            }
+                            None => {}
+                        }
+                    }
                     0x4 => { self.timer.div = 0; }
                     0x5 => { self.timer.tima = val; }
                     0x6 => { self.timer.tma = val; }
@@ -460,7 +475,7 @@ impl Memory {
                 // See http://nocash.emubase.de/pandocs.htm#cgbregisters
                 match addr {
                     0xff46 => gpu::Gpu::oam_dma_transfer(self, val),
-                    0xff4d if self.cgb => dfail!("can't go double speed"),
+                    0xff4d if self.is_cgb => dfail!("can't go double speed"),
                     0xff55 => gpu::Gpu::hdma_dma_transfer(self, val),
                     _ => self.gpu.wb(addr, val),
                 }
@@ -469,7 +484,7 @@ impl Memory {
             // WRAM banks only for CGB mode, see
             //      http://nocash.emubase.de/pandocs.htm#cgbregisters
             0x7 => {
-                if self.cgb && addr == 0xff70 {
+                if self.is_cgb && addr == 0xff70 {
                     let val = val & 0x7; /* only bits 0-2 are used */
                     self.wrambank = if val != 0 {val} else {1};
                 }
@@ -537,13 +552,13 @@ mod test {
     fn wram_banks() {
         let mut mem = Memory::new();
         /* If not CGB, don't swap out banks */
-        mem.cgb = false;
+        mem.is_cgb = false;
         mem.wb(0xff70, 0x01);
         mem.wb(0xd000, 0x54);
         mem.wb(0xff70, 0x02); /* if CGB, would switch banks */
         assert_eq!(mem.rb(0xd000), 0x54);
 
-        mem.cgb = true;
+        mem.is_cgb = true;
         mem.wb(0xff70, 0x02); /* now switch WRAM banks */
         assert_eq!(mem.rb(0xd000), 0x00);
 

@@ -40,14 +40,6 @@ impl Input {
         }
     }
 
-    pub fn reset(&mut self) {
-        self.col = Direction;
-        self.buttons = 0xf;
-        self.directions = 0xf;
-        self.joypad_sel = 0;
-        // self.sgb.reset()
-    }
-
     pub fn rb(&self, _addr: u16) -> u8 {
         match self.col {
             Button => self.buttons,
@@ -63,7 +55,6 @@ impl Input {
             Some(col) => { self.col = col; }
             None => {}
         }
-        // self.sgb.receive((value >> 4) & 0x3);
     }
 
     // This is a mapping of key codes to the mask which will be AND'ed into the

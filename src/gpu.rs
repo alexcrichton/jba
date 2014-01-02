@@ -51,10 +51,10 @@ pub struct Gpu {
     // Registers used by the GPU
 
     // 0xff40 - LCD control (LCDC) - in order from most to least significant bit
-    priv lcdon: bool,    // LCD monitor turned on or off?
+         lcdon: bool,    // LCD monitor turned on or off?
     priv winmap: bool,   // Window Tile Map Display (0=9800-9BFF, 1=9C00-9FFF)
     priv winon: bool,    // Window Display Enable   (0=Off, 1=On)
-    priv tiledata: bool, // BG & Window Tile Data   (0=8800-97FF, 1=8000-8FFF)
+         tiledata: bool, // BG & Window Tile Data   (0=8800-97FF, 1=8000-8FFF)
     priv bgmap: bool,    // BG Tile Map Display     (0=9800-9BFF, 1=9C00-9FFF)
     priv objsize: bool,  // OBJ (Sprite) Size       (0=8x8, 1=8x16)
     priv objon: bool,    // OBJ (Sprite) Display    (0=Off, 1=On)
@@ -106,7 +106,7 @@ pub struct Gpu {
     priv cgb: ~CgbData,
 
     // Data related to SGB operation
-    priv sgb: ~SgbData,
+    sgb: ~SgbData,
 }
 
 #[deriving(Eq)]
@@ -141,7 +141,7 @@ struct CgbData {
     cobp: [[Color, ..4], ..8],
 }
 
-struct SgbData {
+pub struct SgbData {
     // This is a 20x18 array which maps palettes to locations on the screen.
     // Each element defines an 8x8 block on the GB screen which should be mapped
     // through these palettes instead of using the normal grayscale.
@@ -200,6 +200,12 @@ impl Gpu {
                 atf: [0, .. 20 * 18],
                 pal: [[[0, 0, 0, 255], ..4], ..4],
             }
+        }
+    }
+
+    pub fn white(&mut self) {
+        for slot in self.image_data.mut_iter() {
+            *slot = 0xff;
         }
     }
 
@@ -326,13 +332,26 @@ impl Gpu {
         }
     }
 
-    fn render_background(&mut self, scanline: &mut [u8, ..WIDTH]) {
+    pub fn add_tilei(&self, base: uint, tilei: u8) -> uint {
+        // tiledata = 0 => tilei is a signed byte, so fix it here
+        if self.tiledata {
+            base + tilei as uint
+        } else {
+            (base as int + (tilei as i8 as int)) as uint
+        }
+    }
+
+    pub fn bgbase(&self) -> uint {
         // vram is from 0x8000-0x9fff
         // self.bgmap: 0=9800-9bff, 1=9c00-9fff
         //
         // Each map is a 32x32 (1024) array of bytes. Each byte is an index into
         // the tile map. Each tile is an 8x8 block of pixels.
-        let mapbase = if self.bgmap {0x1c00} else {0x1800};
+        if self.bgmap {0x1c00} else {0x1800}
+    }
+
+    fn render_background(&mut self, scanline: &mut [u8, ..WIDTH]) {
+        let mapbase = self.bgbase();
 
         // Now offset from the base to the right location. We divide by 8
         // because each tile is 8 pixels high. We then multiply by 32
@@ -363,11 +382,7 @@ impl Gpu {
             let tilei = self.vrambanks[0][mapbase + mapoff as uint];
 
             // tiledata = 0 => tilei is a signed byte, so fix it here
-            let tilebase = if self.tiledata {
-                tilebase + tilei as uint
-            } else {
-                (tilebase as int + (tilei as i8 as int)) as uint
-            };
+            let tilebase = self.add_tilei(tilebase, tilei);
 
             let row;
             let bgpri;
@@ -478,11 +493,7 @@ impl Gpu {
             mapoff += 1;
 
             // tiledata = 0 => tilei is a signed byte, so fix it here
-            let tilebase = if self.tiledata {
-                tilebase + tilei as uint
-            } else {
-                (tilebase as int + (tilei as i8 as int)) as uint
-            };
+            let tilebase = self.add_tilei(tilebase, tilei);
 
             let row;
             let bgpri;

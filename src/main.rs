@@ -14,13 +14,14 @@ macro_rules! dfail( ($($e:tt)*) => ({
     }
 }) )
 
-mod gb;
 mod cpu;
+mod gb;
 mod gpu;
-mod timer;
 mod input;
-mod rtc;
 mod mem;
+mod rtc;
+mod sgb;
+mod timer;
 
 #[cfg(glfw)] #[path = "gl.rs"] mod app;
 
