@@ -4,9 +4,6 @@
 extern mod extra;
 extern mod native;
 
-#[cfg(glfw)] extern mod glfw;
-#[cfg(glfw)] extern mod gl;
-
 use std::os;
 use std::io::File;
 use opts = extra::getopts::groups;
@@ -25,7 +22,7 @@ mod input;
 mod rtc;
 mod mem;
 
-#[cfg(glfw)] mod gl_imp;
+#[cfg(glfw)] #[path = "gl.rs"] mod app;
 
 #[start]
 #[cfg(not(test))]
@@ -69,7 +66,5 @@ fn main() {
         }
     }
 
-    run(gb);
+    app::run(gb);
 }
-
-#[cfg(glfw)] fn run(gb: gb::Gb) { gl_imp::run(gb); }

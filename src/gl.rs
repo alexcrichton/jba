@@ -1,8 +1,9 @@
-use glfw;
-use gl;
+extern mod glfw;
+extern mod gl;
+
 use std::libc;
 use std::mem;
-use glt = gl::types;
+use glt = self::gl::types;
 
 use input;
 use gpu;
@@ -34,7 +35,7 @@ pub fn run(gb: Gb) {
         glfw::window_hint::context_version(3, 2);
         glfw::window_hint::opengl_profile(glfw::OpenGlCoreProfile);
         glfw::window_hint::opengl_forward_compat(true);
-        glfw::window_hint::resizable(false);
+        //glfw::window_hint::resizable(false);
 
         let window = glfw::Window::create(gpu::WIDTH as u32,
                                           gpu::HEIGHT as u32,
@@ -44,6 +45,7 @@ pub fn run(gb: Gb) {
         window.make_context_current();
         window.set_key_callback(~Keypress(keyc));
         window.set_focus_callback(~Focus(focusc));
+        window.set_size_callback(~Resize);
 
         gl::load_with(glfw::get_proc_address);
 
@@ -67,14 +69,14 @@ pub fn run(gb: Gb) {
                     Some(Up(key)) => gb.keyup(key),
                     Some(ResizeUp) => {
                         ratio += 1;
-                        window.set_size((gpu::WIDTH as i32) * ratio,
-                                        (gpu::HEIGHT as i32) * ratio);
+                        window.set_size((gpu::WIDTH as i32) + 10 * ratio,
+                                        (gpu::HEIGHT as i32) + 9 * ratio);
                     }
                     Some(ResizeDown) => {
                         ratio -= 1;
-                        if ratio <= 0 { ratio = 1; }
-                        window.set_size((gpu::WIDTH as i32) * ratio,
-                                        (gpu::HEIGHT as i32) * ratio);
+                        if ratio <= 0 { ratio = 0; }
+                        window.set_size((gpu::WIDTH as i32) + 10 * ratio,
+                                        (gpu::HEIGHT as i32) + 9 * ratio);
                     }
                     None => break
                 }
@@ -131,6 +133,18 @@ impl glfw::WindowFocusCallback for Focus {
     fn call(&self, _window: &glfw::Window, focused: bool) {
         let Focus(ref chan) = *self;
         chan.send(focused);
+    }
+}
+
+struct Resize;
+impl glfw::WindowSizeCallback for Resize {
+    fn call(&self, window: &glfw::Window, width: i32, height: i32) {
+        let (width, height) = if width < height {
+            (width, width * (gpu::HEIGHT as i32) / (gpu::WIDTH as i32))
+        } else {
+            (height * (gpu::WIDTH as i32) / (gpu::HEIGHT as i32), height)
+        };
+        window.set_size(width, height);
     }
 }
 
