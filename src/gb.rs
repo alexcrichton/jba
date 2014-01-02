@@ -1,6 +1,7 @@
 use std::util;
 
 use cpu::Cpu;
+use input;
 use mem::Memory;
 
 pub struct Gb {
@@ -41,7 +42,19 @@ impl Gb {
         self.fps += 1;
     }
 
+    pub fn image<'a>(&'a self) -> &'a [u8] {
+        self.mem.gpu.image_data.as_slice()
+    }
+
     pub fn frames(&mut self) -> uint {
         util::replace(&mut self.fps, 0)
+    }
+
+    pub fn keydown(&mut self, key: input::Button) {
+        self.mem.input.keydown(key, &mut self.mem.if_);
+    }
+
+    pub fn keyup(&mut self, key: input::Button) {
+        self.mem.input.keyup(key);
     }
 }

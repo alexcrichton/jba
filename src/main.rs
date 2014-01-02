@@ -3,7 +3,8 @@
 
 extern mod extra;
 extern mod native;
-extern mod glfw;
+
+#[cfg(glfw)] extern mod glfw;
 
 use std::os;
 use std::io::File;
@@ -22,6 +23,8 @@ mod timer;
 mod input;
 mod rtc;
 mod mem;
+
+#[cfg(glfw)] mod gl_imp;
 
 #[start]
 #[cfg(not(test))]
@@ -64,4 +67,8 @@ fn main() {
             }
         }
     }
+
+    run(gb);
 }
+
+#[cfg(glfw)] fn run(gb: gb::Gb) { gl_imp::run(gb); }

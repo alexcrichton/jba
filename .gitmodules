@@ -1,3 +1,6 @@
 [submodule "src/glfw-rs"]
 	path = src/glfw-rs
 	url = git://github.com/bjz/glfw-rs
+[submodule "src/gl-rs"]
+	path = src/gl-rs
+	url = git://github.com/bjz/gl-rs
