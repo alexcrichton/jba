@@ -137,7 +137,7 @@ impl Memory {
         self.wb(0xff24, 0x77); // NR50
         self.wb(0xff25, 0xf3); // NR51
         self.wb(0xff26, 0xf1); // NR52
-        self.wb(0xff40, 0x91); // LCDC
+        self.wb(0xff40, 0xb1); // LCDC, tweaked to turn the window on
         self.wb(0xff42, 0x00); // SCY
         self.wb(0xff43, 0x00); // SCX
         self.wb(0xff45, 0x00); // LYC
@@ -145,7 +145,7 @@ impl Memory {
         self.wb(0xff48, 0xff); // OBP0
         self.wb(0xff49, 0xff); // OBP1
         self.wb(0xff4a, 0x00); // WY
-        self.wb(0xff4b, 0x00); // WX
+        self.wb(0xff4b, 0x07); // WX, tweaked to position the window at (0, 0)
         self.wb(0xffff, 0x00); // IE
 
         // lifted from visualboyadvance

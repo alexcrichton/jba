@@ -11,6 +11,32 @@ fn add(a: u16, b: u8) -> u16 {
 }
 
 fn daa(r: &mut z80::Registers) {
+    // Just in case the table needs to be recomputed
+    //
+    //if r.f & N == 0 {
+    //    if r.f & C != 0 || r.a > 0x99 {
+    //        r.a += 0x60;
+    //        r.f |= C;
+    //    }
+    //    if r.f & H != 0 || (r.a & 0xf) > 0x9 {
+    //        r.a += 0x06;
+    //        r.f &= !H;
+    //    }
+    //} else if r.f & C != 0 && r.f & H != 0 {
+    //    r.a += 0x9a;
+    //    r.f &= !H;
+    //} else if r.f & C != 0 {
+    //    r.a += 0xa0;
+    //} else if r.f & H != 0 {
+    //    r.a += 0xfa;
+    //    r.f &= !H;
+    //}
+    //if r.a == 0 {
+    //    r.f |= Z;
+    //} else {
+    //    r.f &= !Z;
+    //}
+
     let d = z80::DAA_TABLE[(r.a as u16) | (((r.f & (N | H | C)) as u16) << 4)];
     r.a = (d >> 8) as u8;
     r.f = d as u8;
@@ -20,21 +46,27 @@ fn inc_hlm(r: &mut z80::Registers, m: &mut mem::Memory) {
     let hl = r.hl();
     let k = m.rb(hl) + 1;
     m.wb(hl, k);
-    r.f = if k != 0 {0} else {Z};
+    r.f = (r.f & C) | if k != 0 {0} else {Z} | if k & 0xf == 0 {H} else {0};
 }
 
 fn dec_hlm(r: &mut z80::Registers, m: &mut mem::Memory) {
     let hl = r.hl();
     let k = m.rb(hl) - 1;
     m.wb(hl, k);
-    r.f = if k != 0 {0} else {Z} | N;
+    r.f = N | (r.f & C) |
+          if k != 0 {0} else {Z} |
+          if k & 0xf == 0xf {H} else {0};
 }
 
 fn ld_hlspn(r: &mut z80::Registers, m: &mut mem::Memory) {
-    let i = m.rb(r.bump());
-    let i = add(r.sp, i);
-    r.h = (i >> 8) as u8;
-    r.l = i as u8;
+    // I literally have no clue what's going on here
+    let b = m.rb(r.bump()) as i8 as i16 as u16;
+    let res = b + r.sp;
+    r.h = (res >> 8) as u8;
+    r.l = res as u8;
+    let tmp = b ^ r.sp ^ r.hl();
+    r.f = if tmp & 0x100 != 0 {C} else {0} |
+          if tmp & 0x010 != 0 {H} else {0};
 }
 
 fn ld_IOan(r: &mut z80::Registers, m: &mut mem::Memory) {
@@ -42,37 +74,31 @@ fn ld_IOan(r: &mut z80::Registers, m: &mut mem::Memory) {
     m.wb(0xff00 | (n as u16), r.a);
 }
 
+fn add_spn(r: &mut z80::Registers, m: &mut mem::Memory) {
+    // I literally have no clue what's going on here
+    let b = m.rb(r.bump()) as i8 as i16 as u16;
+    let res = r.sp + b;
+    let tmp = b ^ res ^ r.sp;
+    r.f = if tmp & 0x100 != 0 {C} else {0} |
+          if tmp & 0x010 != 0 {H} else {0};
+    r.sp = res;
+}
+
+fn add_hlsp(r: &mut z80::Registers) {
+    let s = r.hl() as uint + r.sp as uint;
+    r.f = if r.hl() as uint & 0xfff > s & 0xfff {H} else {0} |
+          if s > 0xffff {C} else {0} | (r.f & Z);
+    r.h = (s >> 8) as u8;
+    r.l = s as u8;
+}
+
+fn pop_af(r: &mut z80::Registers, m: &mut mem::Memory) {
+    r.f = m.rb(r.sp) & 0xf0;
+    r.a = m.rb(r.sp + 1);
+    r.sp += 2;
+}
+
 fn xx() -> uint { dfail!(); 0 }
-
-macro_rules! rl( ($reg:expr, $cy:expr) => ({
-    let ci = if (r.f & C) != 0 {1} else {0};
-    let co = $reg & 0x80;
-    $reg = ($reg << 1) | ci;
-    r.f = if $reg != 0 {0} else {Z} | if co != 0 {C} else {0};
-    $cy
-}) )
-
-macro_rules! rlc( ($reg:expr, $cy:expr) => ({
-    let ci = if ($reg & 0x80) != 0 {1} else {0};
-    $reg = ($reg << 1) | ci;
-    r.f = if $reg != 0 {0} else {Z} | if ci != 0 {C} else {0};
-    $cy
-}) )
-
-macro_rules! rr( ($reg:expr, $cy:expr) => ({
-    let ci = if (r.f & C) != 0 {0x80} else {0};
-    let co = if ($reg & 0x01) != 0 {C} else {0};
-    $reg = ($reg >> 1) | ci;
-    r.f = if $reg != 0 {0} else {Z} | co;
-    $cy
-}) )
-
-macro_rules! rrc( ($reg:expr, $cy:expr) => ({
-    let ci = $reg & 0x01;
-    $reg = ($reg >> 1) | (ci << 7);
-    r.f = if $reg != 0 {0} else {Z} | if ci != 0 {C} else {0};
-    $cy
-}) )
 
 pub fn exec(inst: u8, r: &mut z80::Registers, m: &mut mem::Memory) -> uint {
     macro_rules! ld( ($reg1:ident, $reg2:ident) => ({ r.$reg1 = r.$reg2; 1 }) )
@@ -96,7 +122,9 @@ pub fn exec(inst: u8, r: &mut z80::Registers, m: &mut mem::Memory) -> uint {
     }) )
     macro_rules! inc( ($reg:ident) => ({
         r.$reg += 1;
-        r.f = if r.$reg == 0 {Z} else {0};
+        r.f = (r.f & C) |
+              if r.$reg == 0 {Z} else {0} |
+              if r.$reg & 0xf == 0 {H} else {0};
         1
     }) )
     macro_rules! dec( ($reg:ident) => ({
@@ -107,12 +135,12 @@ pub fn exec(inst: u8, r: &mut z80::Registers, m: &mut mem::Memory) -> uint {
         1
     }) )
     macro_rules! add_hl( ($reg:expr) => ({
-        let a = r.hl();
-        let b = $reg;
-        let hl = a as u32 + b as u32;
-        r.f &= !N;
-        if hl > 0xffff { r.f |= C; } else { r.f &= !C };
-        if (a & 0xfff) + (b & 0xfff) > 0xfff { r.f |= H; }
+        let a = r.hl() as u32;
+        let b = $reg as u32;
+        let hl = a + b;
+        r.f = (r.f & Z) |
+              if hl > 0xffff {C} else {0} |
+              if (a as u32 & 0xfff) > (hl & 0xfff) {H} else {0};
         r.l = hl as u8;
         r.h = (hl >> 8) as u8;
         2
@@ -166,10 +194,13 @@ pub fn exec(inst: u8, r: &mut z80::Registers, m: &mut mem::Memory) -> uint {
         1
     }) )
     macro_rules! sbc_a( ($r:expr) => ({
-        let a = r.a;
-        let b = $r + if r.f & C != 0 {1} else {0};
-        r.f = N | if a < b {C} else {0} | if (a & 0xf) < (b & 0xf) {H} else {0};
-        r.a = a - b;
+        let a = r.a as u16;
+        let b = $r as u16;
+        let c = if r.f & C != 0 {1} else {0};
+        r.f = N |
+              if a < b + c {C} else {0} |
+              if (a & 0xf) < (b & 0xf) + c {H} else {0};
+        r.a = (a - b - c) as u8;
         r.f |= if r.a != 0 {0} else {Z};
         1
     }) )
@@ -207,6 +238,36 @@ pub fn exec(inst: u8, r: &mut z80::Registers, m: &mut mem::Memory) -> uint {
         r.sp -= 2; 4
     }) )
     macro_rules! rst( ($e:expr) => ({ r.rst($e, m); 4 }) )
+
+    macro_rules! rl( ($reg:expr, $cy:expr) => ({
+        let ci = if (r.f & C) != 0 {1} else {0};
+        let co = $reg & 0x80;
+        $reg = ($reg << 1) | ci;
+        r.f = if co != 0 {C} else {0};
+        $cy
+    }) )
+
+    macro_rules! rlc( ($reg:expr, $cy:expr) => ({
+        let ci = if ($reg & 0x80) != 0 {1} else {0};
+        $reg = ($reg << 1) | ci;
+        r.f = if ci != 0 {C} else {0};
+        $cy
+    }) )
+
+    macro_rules! rr( ($reg:expr, $cy:expr) => ({
+        let ci = if (r.f & C) != 0 {0x80} else {0};
+        let co = if ($reg & 0x01) != 0 {C} else {0};
+        $reg = ($reg >> 1) | ci;
+        r.f = co;
+        $cy
+    }) )
+
+    macro_rules! rrc( ($reg:expr, $cy:expr) => ({
+        let ci = $reg & 0x01;
+        $reg = ($reg >> 1) | (ci << 7);
+        r.f = if ci != 0 {C} else {0};
+        $cy
+    }) )
 
     debug!("executing {} at {:i}", inst, *r);
 
@@ -271,7 +332,7 @@ pub fn exec(inst: u8, r: &mut z80::Registers, m: &mut mem::Memory) -> uint {
         0x36 => { let pc = m.rb(r.bump()); m.wb(r.hl(), pc); 3 }    // ld_hlmn
         0x37 => { r.f = (r.f & Z) | C; 1 }                          // scf
         0x38 => jr_n!((r.f & C) != 0),                              // jr_c_n
-        0x39 => add_hl!(r.sp),                                      // add_hlsp
+        0x39 => { add_hlsp(r); 2 }                                  // add_hlsp
         0x3a => { r.a = m.rb(r.hl()); r.hlmm(); 2 }                 // ldd_ahlm
         0x3b => { r.sp -= 1; 2 }                                    // dec_sp
         0x3c => inc!(a),                                            // inc_a
@@ -457,7 +518,7 @@ pub fn exec(inst: u8, r: &mut z80::Registers, m: &mut mem::Memory) -> uint {
         0xe5 => push!(h, l),                                        // push_hl
         0xe6 => { and_a!(m.rb(r.bump())); 2 }                       // and_an
         0xe7 => rst!(0x20),                                         // rst_20
-        0xe8 => { r.sp = add(r.sp, m.rb(r.bump())); 4 }             // add_spn
+        0xe8 => { add_spn(r, m); 4 }                                // add_spn
         0xe9 => { r.pc = r.hl(); 1 }                                // jp_hl
         0xea => { let n = m.rw(r.pc); m.wb(n, r.a); r.pc += 2; 4 }  // ld_nna
         0xeb => xx(),                                               // xx
@@ -467,7 +528,7 @@ pub fn exec(inst: u8, r: &mut z80::Registers, m: &mut mem::Memory) -> uint {
         0xef => rst!(0x28),                                         // rst_28
 
         0xf0 => { r.a = m.rb(0xff00 | (m.rb(r.bump()) as u16)); 3 } // ld_aIOn
-        0xf1 => pop!(a, f),                                         // pop_af
+        0xf1 => { pop_af(r, m); 3 }                                 // pop_af
         0xf2 => { r.a = m.rb(0xff00 | (r.c as u16)); 2 }            // ld_aIOc
         0xf3 => { r.ime = 0; 1 }                                    // di
         0xf4 => xx(),                                               // xx
@@ -488,6 +549,35 @@ pub fn exec(inst: u8, r: &mut z80::Registers, m: &mut mem::Memory) -> uint {
 }
 
 pub fn exec_cb(inst: u8, r: &mut z80::Registers, m: &mut mem::Memory) -> uint {
+    macro_rules! rl( ($reg:expr, $cy:expr) => ({
+        let ci = if (r.f & C) != 0 {1} else {0};
+        let co = $reg & 0x80;
+        $reg = ($reg << 1) | ci;
+        r.f = if $reg != 0 {0} else {Z} | if co != 0 {C} else {0};
+        $cy
+    }) )
+
+    macro_rules! rlc( ($reg:expr, $cy:expr) => ({
+        let ci = if ($reg & 0x80) != 0 {1} else {0};
+        $reg = ($reg << 1) | ci;
+        r.f = if $reg != 0 {0} else {Z} | if ci != 0 {C} else {0};
+        $cy
+    }) )
+
+    macro_rules! rr( ($reg:expr, $cy:expr) => ({
+        let ci = if (r.f & C) != 0 {0x80} else {0};
+        let co = if ($reg & 0x01) != 0 {C} else {0};
+        $reg = ($reg >> 1) | ci;
+        r.f = if $reg != 0 {0} else {Z} | co;
+        $cy
+    }) )
+
+    macro_rules! rrc( ($reg:expr, $cy:expr) => ({
+        let ci = $reg & 0x01;
+        $reg = ($reg >> 1) | (ci << 7);
+        r.f = if $reg != 0 {0} else {Z} | if ci != 0 {C} else {0};
+        $cy
+    }) )
     macro_rules! hlm( ($i:ident, $s:stmt) => ({
         let mut $i = m.rb(r.hl());
         $s;
@@ -532,7 +622,7 @@ pub fn exec_cb(inst: u8, r: &mut z80::Registers, m: &mut mem::Memory) -> uint {
         0x04 => rlc!(r.h, 2),                                       // rlc_h
         0x05 => rlc!(r.l, 2),                                       // rlc_l
         0x06 => { hlm!(hl, rlc!(hl, 1)); 4 }                        // rlc_hlm
-        0x07 => rrc!(r.a, 2),                                       // rlc_a
+        0x07 => rlc!(r.a, 2),                                       // rlc_a
         0x08 => rrc!(r.b, 2),                                       // rrc_b
         0x09 => rrc!(r.c, 2),                                       // rrc_c
         0x0a => rrc!(r.d, 2),                                       // rrc_d
@@ -606,7 +696,7 @@ pub fn exec_cb(inst: u8, r: &mut z80::Registers, m: &mut mem::Memory) -> uint {
         0x4a => bit!(r.d, 1),                                       // bit_1d
         0x4b => bit!(r.e, 1),                                       // bit_1e
         0x4c => bit!(r.h, 1),                                       // bit_1h
-        0x4d => bit!(r.l, 2),                                       // bit_1l
+        0x4d => bit!(r.l, 1),                                       // bit_1l
         0x4e => { bit!(m.rb(r.hl()), 1); 3 }                        // bit_1hlm
         0x4f => bit!(r.a, 1),                                       // bit_1a
 
@@ -623,7 +713,7 @@ pub fn exec_cb(inst: u8, r: &mut z80::Registers, m: &mut mem::Memory) -> uint {
         0x5a => bit!(r.d, 3),                                       // bit_3d
         0x5b => bit!(r.e, 3),                                       // bit_3e
         0x5c => bit!(r.h, 3),                                       // bit_3h
-        0x5d => bit!(r.l, 2),                                       // bit_3l
+        0x5d => bit!(r.l, 3),                                       // bit_3l
         0x5e => { bit!(m.rb(r.hl()), 3); 3 }                        // bit_3hlm
         0x5f => bit!(r.a, 3),                                       // bit_3a
 
@@ -640,7 +730,7 @@ pub fn exec_cb(inst: u8, r: &mut z80::Registers, m: &mut mem::Memory) -> uint {
         0x6a => bit!(r.d, 5),                                       // bit_5d
         0x6b => bit!(r.e, 5),                                       // bit_5e
         0x6c => bit!(r.h, 5),                                       // bit_5h
-        0x6d => bit!(r.l, 2),                                       // bit_5l
+        0x6d => bit!(r.l, 5),                                       // bit_5l
         0x6e => { bit!(m.rb(r.hl()), 5); 3 }                        // bit_5hlm
         0x6f => bit!(r.a, 5),                                       // bit_5a
 
@@ -657,7 +747,7 @@ pub fn exec_cb(inst: u8, r: &mut z80::Registers, m: &mut mem::Memory) -> uint {
         0x7a => bit!(r.d, 7),                                       // bit_7d
         0x7b => bit!(r.e, 7),                                       // bit_7e
         0x7c => bit!(r.h, 7),                                       // bit_7h
-        0x7d => bit!(r.l, 2),                                       // bit_7l
+        0x7d => bit!(r.l, 7),                                       // bit_7l
         0x7e => { bit!(m.rb(r.hl()), 7); 3 }                        // bit_7hlm
         0x7f => bit!(r.a, 7),                                       // bit_7a
 
@@ -869,7 +959,7 @@ mod test {
         c.regs.f = 0x10;
         op(&mut c, &mut m, 0x04, 1, 1);
         assert_eq!(c.regs.b, 0x34);
-        assert_eq!(c.regs.f, 0x00);
+        assert_eq!(c.regs.f, 0x10);
     }
 
     #[test]
