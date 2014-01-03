@@ -794,7 +794,7 @@ impl Gpu {
 
     // Register that a tile needs to be updated
     pub fn update_tile(&mut self, addr: u16) {
-        let tilei = (addr & 0x1fff) >> 4; // each tile is 16 bytes, divide by 16
+        let tilei = (addr & 0x1fff) / 16; // each tile is 16 bytes, divide by 16
         let tilei = tilei + (self.vrambank as u16) * (NUM_TILES as u16);
         self.tiles.need_update = true;
         self.tiles.to_update[tilei] = true;

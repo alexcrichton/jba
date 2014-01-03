@@ -44,7 +44,7 @@ pub struct Memory {
     priv wram: ~[u8, ..WRAM_SIZE],
     priv hiram: ~[u8, ..HIRAM_SIZE],
     /// The number of the rom bank currently swapped in
-    priv rombank: u8,
+    priv rombank: u16,
     /// The number of the ram bank currently swapped in
     priv rambank: u8,
     /// The number of the wram bank currently swapped in
@@ -76,6 +76,7 @@ enum Mbc {
     Mbc1,
     Mbc2,
     Mbc3,
+    Mbc5,
 }
 
 impl Memory {
@@ -214,7 +215,19 @@ impl Memory {
                 self.mbc = Mbc3;
             }
 
-            _ => { fail!("unknown cartridge inserted: {:x}", self.rom[0x0147]); }
+            0x19 |      // <>
+            0x1a |      // ram
+            0x1c |      // rumble
+            0x1d => {   // rumble + ram
+                self.battery = false;
+                self.mbc = Mbc5;
+            }
+            0x1b |      // ram + battery
+            0x1e => {   // rumble + ram + batter
+                self.mbc = Mbc5;
+            }
+
+            n => { fail!("unknown cartridge inserted: {:x}", n); }
         }
 
         self.ram = vec::from_elem(self.ram_size(), 0u8);
@@ -360,7 +373,7 @@ impl Memory {
         match addr >> 12 {
             0x0 | 0x1 => {
                 match self.mbc {
-                    Mbc1 | Mbc3 => {
+                    Mbc1 | Mbc3 | Mbc5 => {
                         self.ramon = val & 0xf == 0xa;
                     }
                     Mbc2 => {
@@ -368,11 +381,12 @@ impl Memory {
                             self.ramon = !self.ramon;
                         }
                     }
-                    _ => {}
+                    Unknown | Omitted => {}
                 }
             }
 
             0x2 | 0x3 => {
+                let val = val as u16;
                 match self.mbc {
                     Mbc1 => {
                         self.rombank = (self.rombank & 0x60) | (val & 0x1f);
@@ -389,7 +403,15 @@ impl Memory {
                         let val = val & 0x7f;
                         self.rombank = val + if val != 0 {0} else {1};
                     }
-                    _ => {}
+                    Mbc5 => {
+                        if addr >> 12 == 0x2 {
+                            self.rombank = (self.rombank & 0xff00) | val;
+                        } else {
+                            let val = (val & 1) << 8;
+                            self.rombank = (self.rombank & 0x00ff) | val;
+                        }
+                    }
+                    Unknown | Omitted => {}
                 }
             }
 
@@ -398,7 +420,7 @@ impl Memory {
                     Mbc1 => {
                         if !self.mode { // ROM banking mode
                             self.rombank = (self.rombank & 0x1f) |
-                                           ((val & 0x3) << 5);
+                                           (((val as u16) & 0x3) << 5);
                         } else { // RAM banking mode
                             self.rambank = val & 0x3;
                         }
@@ -407,7 +429,10 @@ impl Memory {
                         self.rtc.current = val & 0xf;
                         self.rambank = val & 0x3
                     }
-                    _ => {}
+                    Mbc5 => {
+                        self.rambank = val & 0xf;
+                    }
+                    Unknown | Omitted | Mbc2 => {}
                 }
             }
 
