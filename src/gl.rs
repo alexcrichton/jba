@@ -52,7 +52,9 @@ pub fn run(gb: Gb) {
         let cx = Glcx::new();
 
         let mut focused = true;
-        let mut ratio = 1;
+        let mut ratio = 1 + (gpu::WIDTH as i32 / 10);
+        window.set_size((gpu::WIDTH as i32) + 10 * ratio,
+                        (gpu::HEIGHT as i32) + 9 * ratio);
         while !window.should_close() {
             if focused {
                 gb.frame();
