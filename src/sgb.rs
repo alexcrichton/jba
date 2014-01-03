@@ -201,10 +201,10 @@ impl Sgb {
         for i in range(0, self.data[1]) {
             // extract all data from what was received
             let off = 2 + (i as uint) * 6;
-            let x1 = self.data[off + 2];
-            let y1 = self.data[off + 3];
-            let x2 = self.data[off + 4];
-            let y2 = self.data[off + 5];
+            let x1 = self.data[off + 2] as int;
+            let y1 = self.data[off + 3] as int;
+            let x2 = self.data[off + 4] as int;
+            let y2 = self.data[off + 5] as int;
             let insideon = self.data[off] & 1 != 0;
             let borderon = self.data[off] & 2 != 0;
             let outsideon = self.data[off] & 4 != 0;
@@ -214,8 +214,8 @@ impl Sgb {
             let outsidepal = (self.data[off + 1] >> 4) & 3;
 
             // Apply to the attribute file for each block of data
-            for y in range(0u8, 18) {
-                for x in range(0u8, 20) {
+            for y in range(0, 18) {
+                for x in range(0, 20) {
                     if x > x1 && x < x2 && y > y1 && y < y2 {
                         if insideon {
                             gpu.sgb.atf[y * 20 + x] = insidepal;
@@ -238,15 +238,15 @@ impl Sgb {
     fn pal_set(&mut self, gpu: &mut gpu::Gpu) {
         // Each tile in SGB RAM is 8 bytes (4 colors)
         let pali = [
-            pack(self.data[2], self.data[1]) * 8,
-            pack(self.data[4], self.data[3]) * 8,
-            pack(self.data[6], self.data[5]) * 8,
-            pack(self.data[8], self.data[7]) * 8,
+            pack(self.data[2], self.data[1]) as int * 8,
+            pack(self.data[4], self.data[3]) as int * 8,
+            pack(self.data[6], self.data[5]) as int * 8,
+            pack(self.data[8], self.data[7]) as int * 8,
         ];
 
         // i = palette number, j = color number (4 palettes, 4 colors)
-        for i in range(0u16, 4) {
-            for j in range(0u16, 4) {
+        for i in range(0, 4) {
+            for j in range(0, 4) {
                 self.pal[i * 4 + j] = pack(self.ram[pali[i] + 2 * j + 1],
                                            self.ram[pali[i] + 2 * j]);
             }

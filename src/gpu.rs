@@ -304,7 +304,7 @@ impl Gpu {
     }
 
     fn update_tileset(&mut self) {
-        for i in range(0, NUM_TILES).filter(|&i| self.tiles.to_update[i]) {
+        for i in range(0, NUM_TILES * 2).filter(|&i| self.tiles.to_update[i]) {
             self.tiles.to_update[i] = false;
 
             // Each tile is 16 bytes long. Each pair of bytes represents a line
@@ -316,11 +316,14 @@ impl Gpu {
             //      byte 1 : 01101010
             //
             // The colors are [0, 2, 2, 1, 3, 0, 3, 1]
-            for (j, addr) in range(0, 8).zip(iter::count(i * 16, 2)) {
+            for (j, addr) in range(0, 8).zip(iter::count((i % NUM_TILES) * 16, 2)) {
                 // All tiles are located 0x8000-0x97ff => 0x0000-0x17ff in VRAM
                 // meaning that the index is simply an index into raw VRAM
-                let mut lsb = self.vram()[addr];
-                let mut msb = self.vram()[addr + 1];
+                let (mut lsb, mut msb) = if i < NUM_TILES {
+                    (self.vrambanks[0][addr], self.vrambanks[0][addr + 1])
+                } else {
+                    (self.vrambanks[1][addr], self.vrambanks[1][addr + 1])
+                };
 
                 // LSB is the right-most pixel.
                 for k in range(0, 8).invert() {
@@ -471,7 +474,7 @@ impl Gpu {
         // actual offset is wx - 7 (and is careful to avoid overflow).
         let y = (self.ly - self.wy) % 8;
         let (mut x, mut i) = if self.wx < 7 {
-            (8 - self.wx, 0)
+            (7 - self.wx, 0)
         } else {
             ((self.wx - 7) % 8, self.wx - 7)
         };
@@ -500,7 +503,7 @@ impl Gpu {
             let hflip;
             let bgp;
             if self.is_cgb {
-                let attrs = self.vrambanks[1][mapbase + mapoff as uint] as uint;
+                let attrs = self.vrambanks[1][mapbase + mapoff as uint - 1] as uint;
 
                 let tile = self.tiles.data[tilebase +
                                            ((attrs >> 3) & 1) * NUM_TILES];
