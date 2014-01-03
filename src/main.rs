@@ -55,6 +55,7 @@ fn main() {
     }
 
     let rom = File::open(&Path::new(matches.free[0].as_slice())).read_to_end();
+
     let mut gb = gb::Gb::new(match matches.opt_str("gb") {
         Some(~"gb") => gb::GameBoy,
         Some(~"cgb") => gb::GameBoyColor,
@@ -64,7 +65,12 @@ fn main() {
             println!("Supported types: gb, cgb, sgb");
             return usage(args[0], opts);
         }
-        None => gb::GameBoyColor,
+        None => {
+            match mem::Memory::guess_target(rom) {
+                Some(target) => target,
+                None => gb::GameBoyColor,
+            }
+        }
     });
     gb.load(rom);
 

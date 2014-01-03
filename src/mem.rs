@@ -146,6 +146,15 @@ impl Memory {
         }
     }
 
+    pub fn guess_target(rom: &[u8]) -> Option<gb::Target> {
+        if rom.len() < 0x0146 { return None }
+
+        if rom[0x0143] & 0x80 != 0x00 { return Some(gb::GameBoyColor); }
+        if rom[0x0146] & 0x03 == 0x03 { return Some(gb::SuperGameBoy); }
+
+        return None;
+    }
+
     /// Loads a string of data as a cartridge into this memory. The data
     /// provided will be used as ROM.
     pub fn load_cartridge(&mut self, rom: ~[u8]) {
@@ -198,19 +207,17 @@ impl Memory {
         }
 
         self.ram = vec::from_elem(self.ram_size(), 0u8);
-        match self.target {
-            gb::GameBoyColor => {
-                self.is_cgb = self.rom[0x0143] & 0x80 != 0;
-                self.gpu.is_cgb = self.is_cgb;
+        if self.target == gb::GameBoyColor {
+            self.is_cgb = self.rom[0x0143] & 0x80 != 0;
+            self.gpu.is_cgb = self.is_cgb;
+        }
+
+        if self.target == gb::SuperGameBoy || self.target == gb::GameBoyColor {
+            self.is_sgb = self.rom[0x0146] == 0x03;
+            if self.is_sgb {
+                self.sgb = Some(~sgb::Sgb::new());
+                self.gpu.is_sgb = self.is_sgb;
             }
-            gb::SuperGameBoy => {
-                self.is_sgb = self.rom[0x0146] == 0x03;
-                if self.is_sgb {
-                    self.sgb = Some(~sgb::Sgb::new());
-                    self.gpu.is_sgb = self.is_sgb;
-                }
-            }
-            _ => {}
         }
     }
 
