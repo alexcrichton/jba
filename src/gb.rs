@@ -41,7 +41,7 @@ impl Gb {
 
         while self.cycles <= 70224 {
             let time = self.cpu.exec(&mut self.mem);
-            self.mem.timer.step(time, &mut self.mem.if_);
+            self.mem.timer.step(time, &mut self.mem.if_, self.mem.speed);
             self.mem.gpu.step(time, &mut self.mem.if_);
             self.cycles -= time;
         }

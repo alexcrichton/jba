@@ -24,6 +24,11 @@ pub struct Memory {
     if_: u8,
     ie_: u8,
 
+    /// The speed that the gameboy is operating at and whether a switch has been
+    /// requested
+    speed: Speed,
+    speedswitch: bool,
+
     /// Target that this memory was instantiated for
     priv target: gb::Target,
 
@@ -59,6 +64,11 @@ pub struct Memory {
     sgb: Option<~sgb::Sgb>,
 }
 
+pub enum Speed {
+    Normal,
+    Double,
+}
+
 #[deriving(Eq)]
 enum Mbc {
     Unknown,
@@ -72,6 +82,7 @@ impl Memory {
     pub fn new(target: gb::Target) -> Memory {
         Memory {
             target: target,
+            speed: Normal, speedswitch: false,
             if_: 0, ie_: 0, battery: false, is_cgb: false, is_sgb: false,
             rom: ~[],
             ram: ~[],
@@ -221,6 +232,15 @@ impl Memory {
         }
     }
 
+    /// Switches speeds as requested by the CPU
+    pub fn switch_speeds(&mut self) {
+        self.speedswitch = false;
+        self.speed = match self.speed {
+            Normal => Double,
+            Double => Normal,
+        };
+    }
+
     /// Reads a word at the given address (2 bytes)
     pub fn rw(&self, addr: u16) -> u16 {
         (self.rb(addr) as u16) | ((self.rb(addr + 1) as u16) << 8)
@@ -252,7 +272,7 @@ impl Memory {
             0xa | 0xb => {
                 // Swappable banks of RAM
                 if self.ramon {
-                    if self.rtc.current & 0x08 != 0{
+                    if self.rtc.current & 0x08 != 0 {
                         self.rtc.regs[self.rtc.current & 0x7]
                     } else {
                         self.ram[((self.rambank as u16) << 12) | (addr & 0x1fff)]
@@ -313,9 +333,11 @@ impl Memory {
 
             0x4 => {
                 if self.is_cgb && addr == 0xff4d {
-                    dfail!("can't double speed yet");
+                    let b = match self.speed { Normal => 0x00, Double => 0x80 };
+                    b | (self.speedswitch as u8)
+                } else {
+                    self.gpu.rb(addr)
                 }
-                self.gpu.rb(addr)
             }
             0x5 | 0x6 => self.gpu.rb(addr),
 
@@ -482,8 +504,14 @@ impl Memory {
                 // See http://nocash.emubase.de/pandocs.htm#cgbregisters
                 match addr {
                     0xff46 => gpu::Gpu::oam_dma_transfer(self, val),
-                    0xff4d if self.is_cgb => dfail!("can't go double speed"),
                     0xff55 => gpu::Gpu::hdma_dma_transfer(self, val),
+                    0xff4d if self.is_cgb => {
+                        if val & 0x01 != 0 {
+                            self.speedswitch = true;
+                        } else {
+                            self.speedswitch = false;
+                        }
+                    }
                     _ => self.gpu.wb(addr, val),
                 }
             }

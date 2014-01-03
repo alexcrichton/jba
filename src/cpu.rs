@@ -32,14 +32,21 @@ impl Cpu {
         // just don't execute any instructions. We simulate that the 'nop'
         // instruction continuously happens until an interrupt comes in which
         // will disable the halt flag
-        let mut ticks = if self.regs.halt == 0 {
+        let mut ticks = if self.regs.halt == 0 && self.regs.stop == 0 {
             let instruction = mem.rb(self.regs.bump());
             z80::exec(instruction, &mut self.regs, mem)
         } else {
+            if self.regs.stop != 0 && mem.speedswitch {
+                mem.switch_speeds();
+                self.regs.stop = 0;
+            }
             1
         };
 
-        ticks *= 4;
+        match mem.speed {
+            mem::Normal => { ticks *= 4; }
+            mem::Double => { ticks *= 2; }
+        }
 
         // See http://nocash.emubase.de/pandocs.htm#interrupts
         if self.regs.ime != 0 {
@@ -48,6 +55,7 @@ impl Cpu {
             if ints != 0 {
                 self.regs.ime = 0;
                 self.regs.halt = 0;
+                self.regs.stop = 0;
                 let i = ints.trailing_zeros();
                 mem.if_ &= !(1 << i);
                 debug!("{:x} => {}", ints, i);
