@@ -200,7 +200,7 @@ impl Sgb {
     fn attr_blk(&mut self, gpu: &mut gpu::Gpu) {
         for i in range(0, self.data[1]) {
             // extract all data from what was received
-            let off = 2 + i * 6;
+            let off = 2 + (i as uint) * 6;
             let x1 = self.data[off + 2];
             let y1 = self.data[off + 3];
             let x2 = self.data[off + 4];
@@ -280,7 +280,7 @@ impl Sgb {
         // This is completely different from what's documented on the website,
         // but it's what's implemented in macboyadvance and it seems to work.
         let mapbase = gpu.bgbase();
-        let patbase = if gpu.tiledata {0x0000} else {0x0800};
+        let patbase = if gpu.tiledata {0x0000} else {0x1000};
         let mut offset = 0;
         let mut sgboffset = 0;
 
@@ -306,12 +306,11 @@ impl Sgb {
     fn update_palettes(&self, gpu: &mut gpu::Gpu) {
         for i in range(0, 4) {
             for j in range(0, 4) {
-                // Stored data is 16 bits
-                let color = self.data[i * 4 + j];
+                let color = self.pal[i * 4 + j];
                 gpu.sgb.pal[i][j] = [
-                    (color & 0x1f) << 3,
-                    ((color >> 5) & 0x1f) << 3,
-                    ((color >> 10) & 0x1f) << 3,
+                    (((color >>  0) & 0x1f) as u8) << 3,
+                    (((color >>  5) & 0x1f) as u8) << 3,
+                    (((color >> 10) & 0x1f) as u8) << 3,
                     255,
                 ];
             }
