@@ -420,7 +420,7 @@ impl Gpu {
                 let colori = row[if hflip {7 - x} else {x}];
                 let color;
                 if self.is_sgb && !self.is_cgb {
-                    let sgbaddr = (i >> 3) + (self.ly >> 3) * 20;
+                    let sgbaddr = (i >> 3) as uint + (self.ly as uint >> 3) * 20;
                     let mapped = self.sgb.atf[sgbaddr];
                     match bgp[colori][0] {
                           0 => { color = self.sgb.pal[mapped][3]; }
@@ -429,7 +429,7 @@ impl Gpu {
                         255 => { color = self.sgb.pal[mapped][0]; }
 
                         // not actually reachable
-                        _ => { color = [0, 0, 0, 0]; }
+                        _ => { dfail!(); color = [0, 0, 0, 0]; }
                     }
                 } else {
                     color = bgp[colori];
@@ -641,7 +641,8 @@ impl Gpu {
 
                 let color;
                 if self.is_sgb && !self.is_cgb {
-                    let sgbaddr = ((xoff + x) >> 3) + (line >> 3) * 20;
+                    let sgbaddr = ((xoff as uint + x as uint) >> 3) +
+                                  (line as uint >> 3) * 20;
                     let mapped = self.sgb.atf[sgbaddr];
                     match pal[colori][0] {
                           0 => { color = self.sgb.pal[mapped][3]; }
@@ -650,7 +651,7 @@ impl Gpu {
                         255 => { color = self.sgb.pal[mapped][0]; }
 
                         // not actually reachable
-                        _ => { color = [0, 0, 0, 0]; }
+                        _ => { dfail!(); color = [0, 0, 0, 0]; }
                     }
                 } else {
                     color = pal[colori];
