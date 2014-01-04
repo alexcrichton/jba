@@ -19,5 +19,4 @@ before_script:
     - cd ..
 script:
     - make
-    - make test
-
+    - make check
