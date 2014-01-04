@@ -76,7 +76,7 @@ ANSWER_cpu-11-op-a-hl := 10885336760602814920
 ANSWER_instr_timing := 3437662308716406134
 
 check: test $(OKFILES)
-test: $(BUILDDIR)/test/jba-rs
+test: $(BUILDDIR)/tests/jba-rs
 	$<
 
 $(BUILDDIR)/%.gb: %.gb.gz

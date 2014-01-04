@@ -1024,7 +1024,7 @@ mod test {
         let (mut c, mut m) = init();
         m.ww(c.regs.pc + 1, 0xf0f0);
         c.regs.sp = 0x7893;
-        op(&mut c, &mut m, 0x08, 3, 4);
+        op(&mut c, &mut m, 0x08, 3, 5);
         assert_eq!(m.rw(0xf0f0), 0x7893);
     }
 
