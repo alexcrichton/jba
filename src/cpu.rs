@@ -45,11 +45,6 @@ impl Cpu {
             1
         };
 
-        match mem.speed {
-            mem::Normal => { ticks *= 4; }
-            mem::Double => { ticks *= 2; }
-        }
-
         // See http://nocash.emubase.de/pandocs.htm#interrupts
         if self.regs.ime != 0 || self.regs.halt != 0 {
             let ints = mem.if_ & mem.ie_;
@@ -70,10 +65,15 @@ impl Cpu {
                     4 => { self.regs.rst(0x60, mem); }
                     _ => { dfail!(); }
                 }
-                ticks += 4;
+                ticks += 1;
             }
         }
 
+
+        match mem.speed {
+            mem::Normal => { ticks *= 4; }
+            mem::Double => { ticks *= 2; }
+        }
         self.ticks += ticks;
         return ticks;
     }

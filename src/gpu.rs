@@ -355,12 +355,13 @@ impl Gpu {
 
     fn render_background(&mut self, scanline: &mut [u8, ..WIDTH]) {
         let mapbase = self.bgbase();
+        let line = self.ly as uint + self.scy as uint;
 
         // Now offset from the base to the right location. We divide by 8
         // because each tile is 8 pixels high. We then multiply by 32
         // because each row is 32 bytes long. We can't just multiply by 4
         // because we need the truncation to happen beforehand
-        let mapbase = mapbase + ((self.ly as uint + self.scy as uint) >> 3) * 32;
+        let mapbase = mapbase + ((line % 256) >> 3) * 32;
 
         // X and Y location inside the tile itself to paint
         let y = (self.ly + self.scy) % 8;
@@ -376,13 +377,13 @@ impl Gpu {
         let mut i = 0;
         let tilebase = if !self.tiledata {256} else {0};
 
-        debug!("render background from {:x}", mapbase);
+        debug!("render background from {:x} {} {}", mapbase, self.scx, self.scy);
 
         loop {
             // Backgrounds wrap around, so calculate the offset into the bgmap
             // each loop to check for wrapping
-            let mapoff = (i + self.scx) >> 3;
-            let tilei = self.vrambanks[0][mapbase + mapoff as uint];
+            let mapoff = ((i as uint + self.scx as uint) % 256) >> 3;
+            let tilei = self.vrambanks[0][mapbase + mapoff];
 
             // tiledata = 0 => tilei is a signed byte, so fix it here
             let tilebase = self.add_tilei(tilebase, tilei);
@@ -562,13 +563,12 @@ impl Gpu {
         let ysize = if self.objsize {16} else {8};
 
         // All sprits are located in OAM
-        // There are 40 sprites in total
-        for i in range(0, 40) {
-            let offset = i * 4; // each sprite is 4 bytes wide
-            let mut yoff = (self.oam[offset] as int) - 16;
-            let xoff = (self.oam[offset + 1] as int) - 8;
-            let mut tile = self.oam[offset + 2];
-            let flags = self.oam[offset + 3];
+        // There are 40 sprites in total, each is 4 bytes wide
+        for sprite in self.oam.chunks(4) {
+            let mut yoff = (sprite[0] as int) - 16;
+            let xoff = (sprite[1] as int) - 8;
+            let mut tile = sprite[2] as uint;
+            let flags = sprite[3];
 
             // First make sure that this sprite even lands on the current line
             // being rendered. The y value in the sprite is the top left corner,
@@ -580,15 +580,13 @@ impl Gpu {
                continue
             }
 
-            debug!("render sprite {}", i);
-
             // 8x16 tiles always use adjacent tile indices. If we're in 8x16
             // mode and this sprite needs the second tile, add 1 to the tile
             // index and change yoff so it looks like we're rendering that tile
             if ysize == 16 {
                 tile &= 0xfe; // ignore the lowest bit
                 if line - yoff >= 8 {
-                    tile += 1;
+                    tile |= 1;
                     yoff += 8;
                 }
             }
@@ -722,6 +720,7 @@ impl Gpu {
     pub fn wb(&mut self, addr: u16, val: u8) {
         match addr & 0xff {
             0x40 => {
+                let before = self.lcdon;
                 self.lcdon    = (val >> 7) & 1 != 0;
                 self.winmap   = (val >> 6) & 1 != 0;
                 self.winon    = (val >> 5) & 1 != 0;
@@ -730,6 +729,10 @@ impl Gpu {
                 self.objsize  = (val >> 2) & 1 != 0;
                 self.objon    = (val >> 1) & 1 != 0;
                 self.bgon     = (val >> 0) & 1 != 0;
+                if !before && self.lcdon {
+                    self.clock = 4; // ??? why 4?!
+                    self.ly = 0;
+                }
             }
 
             0x41 => {
@@ -851,8 +854,9 @@ fn update_cgb_pal(pal: &mut [[Color, ..4], ..8], mem: &[u8, ..CGB_BP_SIZE],
                   addr: u8) {
     debug!("updating cgb pal");
     // See http://nocash.emubase.de/pandocs.htm#lcdcolorpalettescgbonly
-    let pali = (addr & 0x3f) >> 3; // divide by 8 (size of one palette)
-    let colori = (addr & 0x07) >> 1; // 2 bytes per color, divide by 2
+    let addr = addr & 0x3f; // mask off the auto-increment bit
+    let pali = addr / 8; // divide by 8 (size of one palette)
+    let colori = (addr % 8) / 2; // 2 bytes per color, divide by 2
 
     let byte1 = mem[addr & 0x3e];
     let byte2 = mem[(addr & 0x3e) + 1];
@@ -863,14 +867,10 @@ fn update_cgb_pal(pal: &mut [[Color, ..4], ..8], mem: &[u8, ..CGB_BP_SIZE],
     //  Bit 0-4   Red Intensity   (00-1F)
     //  Bit 5-9   Green Intensity (00-1F)
     //  Bit 10-14 Blue Intensity  (00-1F)
-    color[0] = byte1 & 0x1f;
-    color[1] = (byte1 >> 5) | ((byte2 & 0x3) << 3);
-    color[2] = (byte2 >> 2) & 0x1f;
+    color[0] = (byte1 & 0x1f) << 3;
+    color[1] = ((byte1 >> 5) | ((byte2 & 0x3) << 3)) << 3;
+    color[2] = ((byte2 >> 2) & 0x1f) << 3;
     color[3] = 255;
-
-    for slot in color.mut_iter() {
-        *slot = (((*slot as uint) * 0xff) >> 5) as u8;
-    }
 }
 
 #[cfg(test)]
@@ -1139,12 +1139,14 @@ mod test {
 
         /* disable everything, so previous data should not be overwritten */
         mem.gpu.wb(LCDC, 0);
+        mem.gpu.ly = 10;
         mem.gpu.render_line();
         for i in range(0u16, 160 * 4) {
             assert_eq!(mem.gpu.image_data[offset + i], 10);
         }
 
         mem.gpu.wb(LCDC, LCDON | BGON);
+        mem.gpu.ly = 10;
         mem.gpu.render_line();
 
         // First 3 pixels are all black. SCX = 5 so only 3 pixels of first tile
