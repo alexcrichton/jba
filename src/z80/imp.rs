@@ -280,7 +280,7 @@ pub fn exec(inst: u8, r: &mut z80::Registers, m: &mut mem::Memory) -> uint {
         0x05 => dec!(b),                                            // dec_b
         0x06 => ld_n!(b),                                           // ld_bn
         0x07 => rlc!(r.a, 1),                                       // rlca
-        0x08 => { let a = m.rw(r.pc); m.ww(a, r.sp); r.pc += 2; 4 } // ld_nnsp
+        0x08 => { let a = m.rw(r.pc); m.ww(a, r.sp); r.pc += 2; 5 } // ld_nnsp
         0x09 => add_hl!(r.bc()),                                    // add_hlbc
         0x0a => { r.a = m.rb(r.bc()); 2 }                           // ld_abc
         0x0b => dec_16!(b, c),                                      // dec_bc
@@ -304,7 +304,7 @@ pub fn exec(inst: u8, r: &mut z80::Registers, m: &mut mem::Memory) -> uint {
         0x1c => inc!(e),                                            // inc_e
         0x1d => dec!(e),                                            // dec_e
         0x1e => ld_n!(e),                                           // ld_en
-        0x1f => rr!(r.a, 2),                                        // rr_a
+        0x1f => rr!(r.a, 1),                                        // rr_a
 
         0x20 => jr_n!((r.f & Z) == 0),                              // jr_nz_n
         0x21 => ld_nn!(h, l),                                       // ld_hlnn
