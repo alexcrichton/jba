@@ -33,6 +33,8 @@ pub struct Registers {
 
     priv sp: u16,
     priv pc: u16,
+
+    priv delay: uint,
 }
 
 impl Registers {
@@ -44,6 +46,8 @@ impl Registers {
             a: 0x01, b: 0x00, d: 0x00, h: 0x01,
             f: 0xb0, c: 0x13, e: 0xd8, l: 0x4d,
             sp: 0xfffe, pc: 0x0100,
+
+            delay: 0,
         };
 
         match target {
@@ -102,13 +106,38 @@ impl Registers {
         m.ww(self.sp, self.pc);
         self.pc = i;
     }
+
+    pub fn int_step(&mut self) {
+        match self.delay {
+            0 => {}
+            1 => { self.delay = 0; self.ime = 1; }
+            2 => { self.delay = 1; }
+            _ => {}
+        }
+    }
+
+    // Schedule an enabling of interrupts
+    pub fn ei(&mut self, m: &mut mem::Memory) {
+        if self.delay == 2 || m.rb(self.pc) == 0x76 {
+            self.delay = 1;
+        } else {
+            self.delay = 2;
+        }
+    }
+
+    pub fn di(&mut self) {
+        self.ime = 0;
+        self.delay = 0;
+    }
 }
 
 impl fmt::Default for Registers {
     fn fmt(r: &Registers, f: &mut fmt::Formatter) {
         write!(f.buf, "a:{:2x} b:{:2x} c:{:2x} d:{:2x} e:{:2x} \
-                       f:{:2x} h:{:2x} l:{:2x} pc:{:4x} sp:{:4x}",
-               r.a, r.b, r.c, r.d, r.e, r.f, r.h, r.l, r.pc, r.sp);
+                       f:{:2x} h:{:2x} l:{:2x} pc:{:4x} sp:{:4x} \
+                       ime:{} halt:{} stop:{}",
+               r.a, r.b, r.c, r.d, r.e, r.f, r.h, r.l, r.pc, r.sp,
+               r.ime, r.halt, r.stop);
     }
 }
 

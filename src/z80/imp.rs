@@ -269,7 +269,7 @@ pub fn exec(inst: u8, r: &mut z80::Registers, m: &mut mem::Memory) -> uint {
         $cy
     }) )
 
-    debug!("executing {} at {:i}", inst, *r);
+    debug!("executing {} at {}", inst, *r);
 
     match inst {
         0x00 => 1,                                                  // nop
@@ -502,7 +502,7 @@ pub fn exec(inst: u8, r: &mut z80::Registers, m: &mut mem::Memory) -> uint {
         0xd6 => { sub_a!(m.rb(r.bump())); 2 }                       // sub_an
         0xd7 => rst!(0x10),                                         // rst_10
         0xd8 => ret_if!((r.f & C) != 0),                            // ret_c
-        0xd9 => { r.ime = 1; r.ret(m); 4 }                          // reti
+        0xd9 => { r.ei(m); r.ret(m); 4 }                            // reti
         0xda => jp_n!((r.f & C) != 0),                              // jp_c_nn
         0xdb => xx(),                                               // xx
         0xdc => call_if!((r.f & C) != 0),                           // call_c_n
@@ -530,7 +530,7 @@ pub fn exec(inst: u8, r: &mut z80::Registers, m: &mut mem::Memory) -> uint {
         0xf0 => { r.a = m.rb(0xff00 | (m.rb(r.bump()) as u16)); 3 } // ld_aIOn
         0xf1 => { pop_af(r, m); 3 }                                 // pop_af
         0xf2 => { r.a = m.rb(0xff00 | (r.c as u16)); 2 }            // ld_aIOc
-        0xf3 => { r.ime = 0; 1 }                                    // di
+        0xf3 => { r.di(); 1 }                                       // di
         0xf4 => xx(),                                               // xx
         0xf5 => push!(a, f),                                        // push_af
         0xf6 => { or_a!(m.rb(r.bump())); 2 }                        // or_an
@@ -538,7 +538,7 @@ pub fn exec(inst: u8, r: &mut z80::Registers, m: &mut mem::Memory) -> uint {
         0xf8 => { ld_hlspn(r, m); 3 }                               // ld_hlspn
         0xf9 => { r.sp = r.hl(); 2 }                                // ld_sphl
         0xfa => { r.a = m.rb(m.rw(r.pc)); r.pc += 2; 4 }            // ld_ann
-        0xfb => { r.ime = 1; 1 }                                    // ei
+        0xfb => { r.ei(m); 1 }                                      // ei
         0xfc => xx(),                                               // xx
         0xfd => xx(),                                               // xx
         0xfe => { cp_a!(m.rb(r.bump())); 2 }                        // cp_an

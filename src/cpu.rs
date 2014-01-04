@@ -26,6 +26,8 @@ impl Cpu {
     }
 
     pub fn exec(&mut self, mem: &mut mem::Memory) -> uint {
+        self.regs.int_step();
+
         // When the CPU halts, it simply goes into a "low power mode" that
         // doesn't execute any more instructions until an interrupt comes in.
         // Deferring until this interrupt happens is fairly difficult, so we
@@ -49,16 +51,17 @@ impl Cpu {
         }
 
         // See http://nocash.emubase.de/pandocs.htm#interrupts
-        if self.regs.ime != 0 {
+        if self.regs.ime != 0 || self.regs.halt != 0 {
             let ints = mem.if_ & mem.ie_;
 
             if ints != 0 {
+                let i = ints.trailing_zeros();
+                if self.regs.ime != 0 {
+                    mem.if_ &= !(1 << i);
+                }
                 self.regs.ime = 0;
                 self.regs.halt = 0;
                 self.regs.stop = 0;
-                let i = ints.trailing_zeros();
-                mem.if_ &= !(1 << i);
-                debug!("{:x} => {}", ints, i);
                 match i {
                     0 => { self.regs.rst(0x40, mem); }
                     1 => { self.regs.rst(0x48, mem); }
