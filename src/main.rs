@@ -22,6 +22,7 @@ mod mem;
 mod rtc;
 mod sgb;
 mod timer;
+mod test;
 
 #[cfg(glfw)] #[path = "gl.rs"] mod app;
 
@@ -44,6 +45,7 @@ fn main() {
         opts::optflag("h", "help", "show this message"),
         opts::optflag("", "fps", "don't run a display, just print FPS"),
         opts::optopt("g", "gb", "type of gameboy to run", "[gb|cgb|sgb]"),
+        opts::optopt("", "test", "run a test rom", "TESTFILE"),
     ];
     let matches = match opts::getopts(args.tail(), opts) {
         Ok(m) => { m }
@@ -85,6 +87,11 @@ fn main() {
                 last = cur;
             }
         }
+    }
+
+    match matches.opt_str("test") {
+        Some(file) => return test::run(&mut gb, file),
+        None => {}
     }
 
     app::run(gb);

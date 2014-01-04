@@ -129,6 +129,11 @@ impl Registers {
         self.ime = 0;
         self.delay = 0;
     }
+
+    pub fn is_loopback(&self, m: &mem::Memory) -> bool {
+        m.rb(self.pc) == 0x18 && // jr
+        m.rb(self.pc + 1) == 0xfe // jump back to self
+    }
 }
 
 impl fmt::Default for Registers {

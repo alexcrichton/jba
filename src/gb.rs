@@ -64,4 +64,8 @@ impl Gb {
     pub fn keyup(&mut self, key: input::Button) {
         self.mem.input.keyup(key);
     }
+
+    pub fn test_done(&self) -> bool {
+        !self.mem.sound_on && self.cpu.is_loopback(&self.mem)
+    }
 }

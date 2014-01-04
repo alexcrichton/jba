@@ -24,18 +24,14 @@ all: jba-rs
 jba-rs: $(BUILDDIR)/jba-rs
 	ln -nsf $< $@
 
-check: test
-test: $(BUILDDIR)/test/jba-rs
-	$<
-
 $(BUILDDIR)/jba-rs: $(MAIN_RS) $(JBA_DEPS) | $(BUILDDIR)
 	$(RUSTC) $(RUSTFLAGS) --dep-info $(BUILDDIR)/main.d $< \
 		--out-dir $(BUILDDIR)
 
-$(BUILDDIR)/test/jba-rs: $(MAIN_RS) $(JBA_DEPS) | $(BUILDDIR)
+$(BUILDDIR)/tests/jba-rs: $(MAIN_RS) $(JBA_DEPS) | $(BUILDDIR)
 	@mkdir -p $(@D)
 	$(RUSTC) $(RUSTFLAGS) --dep-info $(BUILDDIR)/test.d $< --test \
-		--out-dir $(BUILDDIR)/test -A dead-code
+		--out-dir $(@D) -A dead-code
 
 $(BUILDDIR):
 	mkdir -p $@
@@ -59,3 +55,34 @@ $(GLFWRS): $(GLFWRS_LIB) | $(BUILDDIR)
 $(GLRS): $(GLRS_LIB) | $(BUILDDIR)
 	$(RUSTC) $(RUSTFLAGS) --rlib --dep-info $(BUILDDIR)/gl.d $< \
 	    --out-dir $(BUILDDIR)
+
+# Testing
+
+GBTESTS := $(wildcard tests/*.gb.gz)
+TROMS := $(GBTESTS:%.gz=$(BUILDDIR)/%)
+OKFILES := $(TROMS:%=%.ok)
+
+ANSWER_cpu-01-special := 3042476034633502306
+ANSWER_cpu-02-interrupts := 462176620006846018
+ANSWER_cpu-03-op-sp-hl := 10657845603953411393
+ANSWER_cpu-04-op-r-imm := 11318613169574122426
+ANSWER_cpu-05-op-rp := 10170984252987847598
+ANSWER_cpu-06-ld-r-r := 6875792126886980649
+ANSWER_cpu-07-jumping := 3365161897440759532
+ANSWER_cpu-08-misc := 8370387601342429963
+ANSWER_cpu-09-op-r-r := 14541846169334570272
+ANSWER_cpu-10-bit-ops := 12081860069910899791
+ANSWER_cpu-11-op-a-hl := 10885336760602814920
+ANSWER_instr_timing := 3437662308716406134
+
+check: test $(OKFILES)
+test: $(BUILDDIR)/test/jba-rs
+	$<
+
+$(BUILDDIR)/%.gb: %.gb.gz
+	@mkdir -p $(@D)
+	gunzip -c $< > $@
+
+$(OKFILES): %.ok: % $(BUILDDIR)/jba-rs
+	$(BUILDDIR)/jba-rs --test $(ANSWER_$(@F:.gb.ok=)) $<
+	@touch $@

@@ -29,6 +29,9 @@ pub struct Memory {
     speed: Speed,
     speedswitch: bool,
 
+    /// currently only used in testing.
+    sound_on: bool,
+
     /// Target that this memory was instantiated for
     priv target: gb::Target,
 
@@ -84,6 +87,7 @@ impl Memory {
         Memory {
             target: target,
             speed: Normal, speedswitch: false,
+            sound_on: false,
             if_: 0, ie_: 0, battery: false, is_cgb: false, is_sgb: false,
             rom: ~[],
             ram: ~[],
@@ -523,7 +527,11 @@ impl Memory {
 
             // Sound info: http://nocash.emubase.de/pandocs.htm#soundcontroller
             // TODO: sound registers
-            0x1 | 0x2 | 0x3 => {}
+            0x1 | 0x2 | 0x3 => {
+                if addr == 0xff26 {
+                    self.sound_on = val != 0;
+                }
+            }
 
             0x4 | 0x5 | 0x6 => {
                 // See http://nocash.emubase.de/pandocs.htm#cgbregisters
