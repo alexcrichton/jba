@@ -79,7 +79,7 @@ impl Timer {
             self.clock.tima += ticks;
             while self.clock.tima >= self.tima_speed {
                 self.tima += 1;
-                if self.tima >= 0xff {
+                if self.tima == 0 {
                     self.tima = self.tma;
                     *if_ |= cpu::IntTimer as u8;
                 }
