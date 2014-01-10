@@ -26,9 +26,6 @@ struct Glcx {
     vao: glt::GLuint,
 }
 
-#[link(name = "glfw")]
-extern {}
-
 pub fn run(gb: Gb) {
     do glfw::start {
         let mut gb = gb;

@@ -1,6 +1,6 @@
 RUSTC = rustc
 BUILDDIR = build
-RUSTFLAGS = -O --cfg glfw
+RUSTFLAGS = -O --cfg glfw --link-args -lglfw
 
 S = src
 MAIN_RS = $(S)/main.rs
