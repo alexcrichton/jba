@@ -26,6 +26,9 @@ struct Glcx {
     vao: glt::GLuint,
 }
 
+#[link(name = "glfw")]
+extern {}
+
 pub fn run(gb: Gb) {
     do glfw::start {
         let mut gb = gb;
@@ -207,13 +210,11 @@ impl Glcx {
                 2, 3, 0
             ];
 
-
             gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, ebo);
             gl::BufferData(gl::ELEMENT_ARRAY_BUFFER,
                         (ELEMENTS.len() * mem::size_of::<glt::GLuint>()) as i64,
                         ELEMENTS.as_ptr() as *libc::c_void,
                         gl::STATIC_DRAW);
-
 
             // Create and compile the vertex shader
             let vert = gl::CreateShader(gl::VERTEX_SHADER);
