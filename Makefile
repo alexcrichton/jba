@@ -8,7 +8,7 @@ MAIN_RS = $(S)/main.rs
 ifeq ($(EXTERNAL_GL),)
     JBA_DEPS += $(GLRS) $(GLFWRS)
     RUSTFLAGS += -L build
-    GLFWRS_LIB = src/glfw-rs/src/glfw/lib.rs
+    GLFWRS_LIB = src/glfw-rs/src/lib.rs
     GLFWRS = $(BUILDDIR)/$(shell $(RUSTC) --crate-file-name $(GLFWRS_LIB))
     GLRS_LIB = src/gl-rs/src/gl/lib.rs
     GLRS = $(BUILDDIR)/$(shell $(RUSTC) --crate-file-name $(GLRS_LIB))
