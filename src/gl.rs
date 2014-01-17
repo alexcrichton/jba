@@ -1,6 +1,7 @@
 extern mod glfw;
 extern mod gl;
 
+use std::comm;
 use std::libc;
 use std::mem;
 use glt = self::gl::types;
@@ -67,26 +68,26 @@ pub fn run(gb: Gb) {
 
             loop {
                 match keys.try_recv() {
-                    Some(Down(key)) => gb.keydown(key),
-                    Some(Up(key)) => gb.keyup(key),
-                    Some(ResizeUp) => {
+                    comm::Data(Down(key)) => gb.keydown(key),
+                    comm::Data(Up(key)) => gb.keyup(key),
+                    comm::Data(ResizeUp) => {
                         ratio += 1;
                         window.set_size((gpu::WIDTH as i32) + 10 * ratio,
                                         (gpu::HEIGHT as i32) + 9 * ratio);
                     }
-                    Some(ResizeDown) => {
+                    comm::Data(ResizeDown) => {
                         ratio -= 1;
                         if ratio <= 0 { ratio = 0; }
                         window.set_size((gpu::WIDTH as i32) + 10 * ratio,
                                         (gpu::HEIGHT as i32) + 9 * ratio);
                     }
-                    None => break
+                    _ => break
                 }
             }
             loop {
                 match focus.try_recv() {
-                    Some(b) => { focused = b; }
-                    None => break
+                    comm::Data(b) => { focused = b; }
+                    _ => break
                 }
             }
         }

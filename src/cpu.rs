@@ -1,6 +1,6 @@
 //! Contains logic for the CPU of the GB.
 
-use std::num::BitCount;
+use std::num::Bitwise;
 
 use gb;
 use mem;
@@ -68,7 +68,6 @@ impl Cpu {
                 ticks += 1;
             }
         }
-
 
         match mem.speed {
             mem::Normal => { ticks *= 4; }
