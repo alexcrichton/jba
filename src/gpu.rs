@@ -326,7 +326,7 @@ impl Gpu {
                 };
 
                 // LSB is the right-most pixel.
-                for k in range(0, 8).invert() {
+                for k in range(0, 8).rev() {
                     self.tiles.data[i][j][k] = ((msb & 1) << 1) | (lsb & 1);
                     lsb >>= 1;
                     msb >>= 1;
