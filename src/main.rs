@@ -28,11 +28,7 @@ mod test;
 
 #[start]
 #[cfg(not(test))]
-fn start(argc: int, argv: **u8) -> int {
-    do native::start(argc, argv) {
-        main();
-    }
-}
+fn start(argc: int, argv: **u8) -> int { native::start(argc, argv, main) }
 
 fn usage(prog: &str, opts: &[opts::OptGroup]) {
     let h = opts::usage(format!("usage: {} [options] <rom>", prog), opts);
