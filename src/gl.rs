@@ -28,7 +28,7 @@ struct Glcx {
 }
 
 pub fn run(gb: Gb) {
-    do glfw::start {
+    glfw::start(proc() {
         let mut gb = gb;
         let (keys, keyc) = Chan::new();
         let (focus, focusc) = Chan::new();
@@ -91,7 +91,7 @@ pub fn run(gb: Gb) {
                 }
             }
         }
-    }
+    })
 }
 
 struct Keypress(Chan<Event>);
