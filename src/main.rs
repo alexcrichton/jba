@@ -53,6 +53,13 @@ fn main() {
     }
 
     let rom = File::open(&Path::new(matches.free[0].as_slice())).read_to_end();
+    let rom = match rom {
+        Ok(rom) => rom,
+        Err(e) => {
+            println!("failed to read {}: {}", matches.free[0].as_slice(), e);
+            return
+        }
+    };
 
     let mut gb = gb::Gb::new(match matches.opt_str("gb") {
         Some(~"gb") => gb::GameBoy,
