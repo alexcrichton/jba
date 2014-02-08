@@ -50,10 +50,10 @@ $(BUILDDIR)/glfw-trigger: src/glfw-trigger | $(BUILDDIR)
 	touch $@
 
 $(GLFWRS): $(GLFWRS_LIB) | $(BUILDDIR)
-	$(RUSTC) $(RUSTFLAGS) --rlib --dep-info $(BUILDDIR)/glfw.d $< \
+	$(RUSTC) $(RUSTFLAGS) --crate-type=rlib --dep-info $(BUILDDIR)/glfw.d $< \
 	    --out-dir $(BUILDDIR)
 $(GLRS): $(GLRS_LIB) | $(BUILDDIR)
-	$(RUSTC) $(RUSTFLAGS) --rlib --dep-info $(BUILDDIR)/gl.d $< \
+	$(RUSTC) $(RUSTFLAGS) --crate-type=rlib --dep-info $(BUILDDIR)/gl.d $< \
 	    --out-dir $(BUILDDIR)
 
 # Testing
