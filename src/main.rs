@@ -2,11 +2,12 @@
 #[feature(macro_rules)];
 
 extern mod extra;
+extern mod getopts;
 extern mod native;
 
 use std::os;
 use std::io::File;
-use opts = extra::getopts::groups;
+use opts = getopts;
 
 macro_rules! dfail( ($($e:tt)*) => ({
     if cfg!(not(ndebug)) {
