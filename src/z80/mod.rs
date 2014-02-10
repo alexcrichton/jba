@@ -137,20 +137,21 @@ impl Registers {
 }
 
 impl fmt::Show for Registers {
-    fn fmt(r: &Registers, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f.buf, "a:{:2x} b:{:2x} c:{:2x} d:{:2x} e:{:2x} \
                        f:{:2x} h:{:2x} l:{:2x} pc:{:4x} sp:{:4x} \
                        ime:{} halt:{} stop:{}",
-               r.a, r.b, r.c, r.d, r.e, r.f, r.h, r.l, r.pc, r.sp,
-               r.ime, r.halt, r.stop)
+               self.a, self.b, self.c, self.d, self.e, self.f, self.h, self.l,
+               self.pc, self.sp, self.ime, self.halt, self.stop)
     }
 }
 
 impl fmt::Signed for Registers {
-    fn fmt(r: &Registers, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f.buf, "a:{} b:{} c:{} d:{} e:{} \
                        f:{} h:{} l:{} pc:{} sp:{}",
-               r.a, r.b, r.c, r.d, r.e, r.f, r.h, r.l, r.pc, r.sp)
+               self.a, self.b, self.c, self.d, self.e, self.f, self.h, self.l,
+               self.pc, self.sp)
     }
 }
 
