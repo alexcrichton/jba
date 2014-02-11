@@ -1,6 +1,6 @@
 RUSTC = rustc
 BUILDDIR = build
-RUSTFLAGS = -O --cfg glfw --link-args -lglfw
+RUSTFLAGS = -O --cfg glfw -C link-args=-lglfw
 
 S = src
 MAIN_RS = $(S)/main.rs
@@ -8,8 +8,9 @@ MAIN_RS = $(S)/main.rs
 ifeq ($(EXTERNAL_GL),)
     JBA_DEPS += $(GLRS) $(GLFWRS)
     RUSTFLAGS += -L build
-    GLFWRS_LIB = src/glfw-rs/src/lib.rs
-    GLFWRS = $(BUILDDIR)/$(shell $(RUSTC) --crate-file-name $(GLFWRS_LIB))
+    GLFWRS_LIB = src/glfw-rs/src/lib/lib.rs
+    GLFWRS = $(BUILDDIR)/$(filter-out %.dylib,\
+	                   $(shell $(RUSTC) --crate-file-name $(GLFWRS_LIB)))
     GLRS_LIB = src/gl-rs/src/gl/lib.rs
     GLRS = $(BUILDDIR)/$(shell $(RUSTC) --crate-file-name $(GLRS_LIB))
 endif

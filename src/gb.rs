@@ -1,4 +1,4 @@
-use std::util;
+use std::mem;
 
 use cpu::Cpu;
 use input;
@@ -54,7 +54,7 @@ impl Gb {
     }
 
     pub fn frames(&mut self) -> uint {
-        util::replace(&mut self.fps, 0)
+        mem::replace(&mut self.fps, 0)
     }
 
     pub fn keydown(&mut self, key: input::Button) {

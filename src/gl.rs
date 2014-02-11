@@ -1,7 +1,6 @@
-extern mod glfw;
+extern mod glfw = "glfw-rs";
 extern mod gl;
 
-use std::comm;
 use std::libc;
 use std::mem;
 use glt = self::gl::types;
@@ -9,13 +8,6 @@ use glt = self::gl::types;
 use input;
 use gpu;
 use gb::Gb;
-
-enum Event {
-    Down(input::Button),
-    Up(input::Button),
-    ResizeUp,
-    ResizeDown,
-}
 
 struct Glcx {
     tex: glt::GLuint,
@@ -30,8 +22,6 @@ struct Glcx {
 pub fn run(gb: Gb) {
     glfw::start(proc() {
         let mut gb = gb;
-        let (keys, keyc) = Chan::new();
-        let (focus, focusc) = Chan::new();
 
         glfw::window_hint::context_version(3, 2);
         glfw::window_hint::opengl_profile(glfw::OpenGlCoreProfile);
@@ -43,10 +33,9 @@ pub fn run(gb: Gb) {
                                           "JBA",
                                           glfw::Windowed);
         let window = window.expect("Failed to create GLFW window.");
-        window.make_context_current();
-        window.set_key_callback(~Keypress(keyc));
-        window.set_focus_callback(~Focus(focusc));
-        window.set_size_callback(~Resize);
+        window.set_key_polling(true);
+        window.set_focus_polling(true);
+        window.set_size_polling(true);
 
         gl::load_with(glfw::get_proc_address);
 
@@ -66,89 +55,64 @@ pub fn run(gb: Gb) {
                 glfw::wait_events();
             }
 
-            loop {
-                match keys.try_recv() {
-                    comm::Data(Down(key)) => gb.keydown(key),
-                    comm::Data(Up(key)) => gb.keyup(key),
-                    comm::Data(ResizeUp) => {
-                        ratio += 1;
-                        window.set_size((gpu::WIDTH as i32) + 10 * ratio,
-                                        (gpu::HEIGHT as i32) + 9 * ratio);
+            for (_, event) in window.flush_events() {
+                match event {
+                    glfw::SizeEvent(width, height) => {
+                        let (width, height) = if width < height {
+                            (width,
+                             width * (gpu::HEIGHT as i32) / (gpu::WIDTH as i32))
+                        } else {
+                            (height * (gpu::WIDTH as i32) / (gpu::HEIGHT as i32),
+                             height)
+                        };
+                        window.set_size(width, height);
                     }
-                    comm::Data(ResizeDown) => {
-                        ratio -= 1;
-                        if ratio <= 0 { ratio = 0; }
-                        window.set_size((gpu::WIDTH as i32) + 10 * ratio,
-                                        (gpu::HEIGHT as i32) + 9 * ratio);
+                    glfw::FocusEvent(f) => {
+                        focused = f;
                     }
-                    _ => break
-                }
-            }
-            loop {
-                match focus.try_recv() {
-                    comm::Data(b) => { focused = b; }
-                    _ => break
+                    glfw::KeyEvent(key, _, action, _) => {
+                        match key {
+                            glfw::KeyEqual => {
+                                ratio += 1;
+                                window.set_size((gpu::WIDTH as i32) + 10 * ratio,
+                                                (gpu::HEIGHT as i32) + 9 * ratio);
+                                continue
+                            }
+                            glfw::KeyMinus => {
+                                ratio -= 1;
+                                if ratio < 0 { ratio = 0; }
+                                window.set_size((gpu::WIDTH as i32) + 10 * ratio,
+                                                (gpu::HEIGHT as i32) + 9 * ratio);
+                                continue
+                            }
+                            _ => {}
+                        }
+
+                        let button = match key {
+                            glfw::KeyZ => input::A,
+                            glfw::KeyX => input::B,
+                            glfw::KeyEnter => input::Select,
+                            glfw::KeyComma => input::Start,
+
+                            glfw::KeyLeft => input::Left,
+                            glfw::KeyRight => input::Right,
+                            glfw::KeyDown => input::Down,
+                            glfw::KeyUp => input::Up,
+
+                            _ => continue
+                        };
+
+                        match action {
+                            glfw::Release => gb.keyup(button),
+                            glfw::Press => gb.keydown(button),
+                            glfw::Repeat => {},
+                        }
+                    }
+                    _ => {}
                 }
             }
         }
     })
-}
-
-struct Keypress(Chan<Event>);
-impl glfw::KeyCallback for Keypress {
-    fn call(&self, _window: &glfw::Window, key: glfw::Key,
-            _scancode: libc::c_int,
-            action: glfw::Action, _modifiers: glfw::Modifiers) {
-        let Keypress(ref chan) = *self;
-
-        match key {
-            glfw::KeyEqual => { return chan.send(ResizeUp); }
-            glfw::KeyMinus => { return chan.send(ResizeDown); }
-            _ => {}
-        }
-
-        let f = match action {
-            glfw::Release => Up,
-            glfw::Press => Down,
-            glfw::Repeat => return,
-        };
-
-        let button = match key {
-            glfw::KeyZ => input::A,
-            glfw::KeyX => input::B,
-            glfw::KeyEnter => input::Select,
-            glfw::KeyComma => input::Start,
-
-            glfw::KeyLeft => input::Left,
-            glfw::KeyRight => input::Right,
-            glfw::KeyDown => input::Down,
-            glfw::KeyUp => input::Up,
-
-            _ => return
-        };
-
-        chan.send(f(button));
-    }
-}
-
-struct Focus(Chan<bool>);
-impl glfw::WindowFocusCallback for Focus {
-    fn call(&self, _window: &glfw::Window, focused: bool) {
-        let Focus(ref chan) = *self;
-        chan.send(focused);
-    }
-}
-
-struct Resize;
-impl glfw::WindowSizeCallback for Resize {
-    fn call(&self, window: &glfw::Window, width: i32, height: i32) {
-        let (width, height) = if width < height {
-            (width, width * (gpu::HEIGHT as i32) / (gpu::WIDTH as i32))
-        } else {
-            (height * (gpu::WIDTH as i32) / (gpu::HEIGHT as i32), height)
-        };
-        window.set_size(width, height);
-    }
 }
 
 // Shader sources
