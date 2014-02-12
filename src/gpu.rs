@@ -304,8 +304,9 @@ impl Gpu {
     }
 
     fn update_tileset(&mut self) {
-        for i in range(0, NUM_TILES * 2).filter(|&i| self.tiles.to_update[i]) {
-            self.tiles.to_update[i] = false;
+        let iter = self.tiles.to_update.mut_iter();
+        for (i, slot) in iter.enumerate().filter(|&(_, &i)| i) {
+            *slot = false;
 
             // Each tile is 16 bytes long. Each pair of bytes represents a line
             // of pixels (making 8 lines). The first byte is the LSB of the
