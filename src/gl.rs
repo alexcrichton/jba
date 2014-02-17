@@ -1,5 +1,5 @@
-extern mod glfw = "glfw-rs";
-extern mod gl;
+extern crate glfw = "glfw-rs";
+extern crate gl;
 
 use std::libc;
 use std::mem;

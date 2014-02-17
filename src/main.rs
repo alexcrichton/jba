@@ -1,9 +1,9 @@
 #[crate_id = "jba-rs"];
 #[feature(macro_rules)];
 
-extern mod extra;
-extern mod getopts;
-extern mod native;
+extern crate extra;
+extern crate getopts;
+extern crate native;
 
 use std::os;
 use std::io::File;
