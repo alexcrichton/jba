@@ -1,7 +1,7 @@
 #[crate_id = "jba-rs"];
 #[feature(macro_rules)];
 
-extern crate extra;
+extern crate time;
 extern crate getopts;
 extern crate native;
 
@@ -82,10 +82,10 @@ fn main() {
 
     // TODO: needs native timers
     if matches.opt_present("fps") {
-        let mut last = extra::time::precise_time_ns();
+        let mut last = time::precise_time_ns();
         loop {
             gb.frame();
-            let cur = extra::time::precise_time_ns();
+            let cur = time::precise_time_ns();
             if cur - last >= 1000000000 {
                 println!("{}", gb.frames());
                 last = cur;
