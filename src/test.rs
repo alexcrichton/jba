@@ -1,3 +1,4 @@
+use std::hash;
 use gb;
 
 pub fn run(gb: &mut gb::Gb, file: &str) {
@@ -5,7 +6,7 @@ pub fn run(gb: &mut gb::Gb, file: &str) {
         gb.frame();
     }
 
-    let hash = gb.image().hash();
+    let hash = hash::hash(&gb.image());
     if file == "-" {
         println!("{}", hash);
     } else if file.to_owned() != hash.to_str() {

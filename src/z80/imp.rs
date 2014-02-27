@@ -1,3 +1,5 @@
+#[allow(unnecessary_parens)];
+
 use cpu::z80;
 use mem;
 
