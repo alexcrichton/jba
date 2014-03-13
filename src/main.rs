@@ -62,10 +62,10 @@ fn main() {
         }
     };
 
-    let mut gb = gb::Gb::new(match matches.opt_str("gb") {
-        Some(~"gb") => gb::GameBoy,
-        Some(~"cgb") => gb::GameBoyColor,
-        Some(~"sgb") => gb::SuperGameBoy,
+    let mut gb = gb::Gb::new(match matches.opt_str("gb").as_ref().map(|s| s.as_slice()) {
+        Some("gb") => gb::GameBoy,
+        Some("cgb") => gb::GameBoyColor,
+        Some("sgb") => gb::SuperGameBoy,
         Some(s) => {
             println!("Invalid gameboy type: {}", s);
             println!("Supported types: gb, cgb, sgb");
