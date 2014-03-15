@@ -1,5 +1,6 @@
 #[crate_id = "jba-rs"];
 #[feature(macro_rules)];
+#[allow(deprecated_owned_vector)];
 
 extern crate time;
 extern crate getopts;

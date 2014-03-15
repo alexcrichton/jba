@@ -1,6 +1,6 @@
 RUSTC = rustc
 BUILDDIR = build
-RUSTFLAGS = -O --cfg glfw -C link-args=-lglfw
+RUSTFLAGS = -O --cfg glfw
 
 S = src
 MAIN_RS = $(S)/main.rs
@@ -51,11 +51,9 @@ $(BUILDDIR)/glfw-trigger: src/glfw-trigger | $(BUILDDIR)
 	touch $@
 
 $(GLFWRS): $(GLFWRS_LIB) | $(BUILDDIR)
-	$(RUSTC) $(RUSTFLAGS) --crate-type=rlib --dep-info $(BUILDDIR)/glfw.d $< \
-	    --out-dir $(BUILDDIR)
+	$(MAKE) -C src/glfw-rs LIB_DIR=$(realpath $(BUILDDIR)) lib
 $(GLRS): $(GLRS_LIB) | $(BUILDDIR)
-	$(RUSTC) $(RUSTFLAGS) --crate-type=rlib --dep-info $(BUILDDIR)/gl.d $< \
-	    --out-dir $(BUILDDIR)
+	$(MAKE) -C src/gl-rs LIB_DIR=$(realpath $(BUILDDIR)) lib
 
 # Testing
 
