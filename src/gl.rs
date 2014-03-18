@@ -1,4 +1,4 @@
-extern crate glfw = "glfw-rs";
+extern crate glfw;
 extern crate gl;
 
 use std::libc;
