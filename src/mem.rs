@@ -565,7 +565,7 @@ impl Memory {
 
 #[cfg(test)]
 mod test {
-    use std::vec;
+    use std::slice;
     use super::Memory;
     use GB = gb::GameBoy;
 
@@ -642,7 +642,7 @@ mod test {
 
     macro_rules! load( ($($k:expr => $v:expr),+) => ({
         let mut m = Memory::new(GB);
-        let mut ram = vec::from_elem(0x1000000, 0u8);
+        let mut ram = slice::from_elem(0x1000000, 0u8);
         ram[0x0149] = 0x03;
         $(ram[$k] = $v;)+
         m.load_cartridge(ram);
