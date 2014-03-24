@@ -55,11 +55,11 @@ fn main() {
         return usage(args[0], opts);
     }
 
-    let rom = File::open(&Path::new(matches.free[0].as_slice())).read_to_end();
+    let rom = File::open(&Path::new(matches.free.get(0).as_slice())).read_to_end();
     let rom = match rom {
         Ok(rom) => rom,
         Err(e) => {
-            println!("failed to read {}: {}", matches.free[0].as_slice(), e);
+            println!("failed to read {}: {}", matches.free.get(0).as_slice(), e);
             return
         }
     };
