@@ -19,100 +19,93 @@ struct Glcx {
     vao: glt::GLuint,
 }
 
-pub fn run(gb: Gb) {
-    glfw::start(proc() {
-        let mut gb = gb;
+pub fn run(mut gb: Gb) {
+    let (glfw, errors) = glfw::init().unwrap();
+    glfw::fail_on_error(&errors);
 
-        glfw::window_hint::context_version(3, 2);
-        glfw::window_hint::opengl_profile(glfw::OpenGlCoreProfile);
-        glfw::window_hint::opengl_forward_compat(true);
-        //glfw::window_hint::resizable(false);
+    let (window, events) = glfw.create_window(gpu::WIDTH as u32,
+                                              gpu::HEIGHT as u32,
+                                              "JBA",
+                                              glfw::Windowed).unwrap();
+    window.set_key_polling(true);
+    window.set_focus_polling(true);
+    window.set_size_polling(true);
+    window.make_context_current();
 
-        let window = glfw::Window::create(gpu::WIDTH as u32,
-                                          gpu::HEIGHT as u32,
-                                          "JBA",
-                                          glfw::Windowed);
-        let window = window.expect("Failed to create GLFW window.");
-        window.set_key_polling(true);
-        window.set_focus_polling(true);
-        window.set_size_polling(true);
+    let cx = Glcx::new();
 
-        gl::load_with(glfw::get_proc_address);
+    let mut focused = true;
+    let mut ratio = 1 + (gpu::WIDTH as i32 / 10);
+    window.set_size((gpu::WIDTH as i32) + 10 * ratio,
+                    (gpu::HEIGHT as i32) + 9 * ratio);
+    while !window.should_close() {
+        if focused {
+            gb.frame();
+            cx.draw(gb.image());
+            window.swap_buffers();
+            glfw.poll_events();
+            glfw::fail_on_error(&errors);
+        } else {
+            glfw.wait_events();
+        }
 
-        let cx = Glcx::new();
-
-        let mut focused = true;
-        let mut ratio = 1 + (gpu::WIDTH as i32 / 10);
-        window.set_size((gpu::WIDTH as i32) + 10 * ratio,
-                        (gpu::HEIGHT as i32) + 9 * ratio);
-        while !window.should_close() {
-            if focused {
-                gb.frame();
-                cx.draw(gb.image());
-                window.swap_buffers();
-                glfw::poll_events();
-            } else {
-                glfw::wait_events();
-            }
-
-            for (_, event) in window.flush_events() {
-                match event {
-                    glfw::SizeEvent(width, height) => {
-                        let (width, height) = if width < height {
-                            (width,
-                             width * (gpu::HEIGHT as i32) / (gpu::WIDTH as i32))
-                        } else {
-                            (height * (gpu::WIDTH as i32) / (gpu::HEIGHT as i32),
-                             height)
-                        };
-                        window.set_size(width, height);
-                    }
-                    glfw::FocusEvent(f) => {
-                        focused = f;
-                    }
-                    glfw::KeyEvent(key, _, action, _) => {
-                        match key {
-                            glfw::KeyEqual => {
-                                ratio += 1;
-                                window.set_size((gpu::WIDTH as i32) + 10 * ratio,
-                                                (gpu::HEIGHT as i32) + 9 * ratio);
-                                continue
-                            }
-                            glfw::KeyMinus => {
-                                ratio -= 1;
-                                if ratio < 0 { ratio = 0; }
-                                window.set_size((gpu::WIDTH as i32) + 10 * ratio,
-                                                (gpu::HEIGHT as i32) + 9 * ratio);
-                                continue
-                            }
-                            _ => {}
-                        }
-
-                        let button = match key {
-                            glfw::KeyZ => input::A,
-                            glfw::KeyX => input::B,
-                            glfw::KeyEnter => input::Select,
-                            glfw::KeyComma => input::Start,
-
-                            glfw::KeyLeft => input::Left,
-                            glfw::KeyRight => input::Right,
-                            glfw::KeyDown => input::Down,
-                            glfw::KeyUp => input::Up,
-
-                            _ => continue
-                        };
-
-                        match action {
-                            glfw::Release => gb.keyup(button),
-                            glfw::Press => gb.keydown(button),
-                            glfw::Repeat => {},
-                        }
-                    }
-                    _ => {}
+        for (_, event) in glfw::flush_messages(&events) {
+            match event {
+                glfw::SizeEvent(width, height) => {
+                    let (width, height) = if width < height {
+                        (width,
+                         width * (gpu::HEIGHT as i32) / (gpu::WIDTH as i32))
+                    } else {
+                        (height * (gpu::WIDTH as i32) / (gpu::HEIGHT as i32),
+                         height)
+                    };
+                    window.set_size(width, height);
                 }
+                glfw::FocusEvent(f) => {
+                    focused = f;
+                }
+                glfw::KeyEvent(key, _, action, _) => {
+                    match key {
+                        glfw::KeyEqual => {
+                            ratio += 1;
+                            window.set_size((gpu::WIDTH as i32) + 10 * ratio,
+                                            (gpu::HEIGHT as i32) + 9 * ratio);
+                            continue
+                        }
+                        glfw::KeyMinus => {
+                            ratio -= 1;
+                            if ratio < 0 { ratio = 0; }
+                            window.set_size((gpu::WIDTH as i32) + 10 * ratio,
+                                            (gpu::HEIGHT as i32) + 9 * ratio);
+                            continue
+                        }
+                        _ => {}
+                    }
+
+                    let button = match key {
+                        glfw::KeyZ => input::A,
+                        glfw::KeyX => input::B,
+                        glfw::KeyEnter => input::Select,
+                        glfw::KeyComma => input::Start,
+
+                        glfw::KeyLeft => input::Left,
+                        glfw::KeyRight => input::Right,
+                        glfw::KeyDown => input::Down,
+                        glfw::KeyUp => input::Up,
+
+                        _ => continue
+                    };
+
+                    match action {
+                        glfw::Release => gb.keyup(button),
+                        glfw::Press => gb.keydown(button),
+                        glfw::Repeat => {},
+                    }
+                }
+                _ => {}
             }
         }
-    })
+    }
 }
 
 // Shader sources
