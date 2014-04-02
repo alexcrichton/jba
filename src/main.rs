@@ -1,6 +1,6 @@
-#[crate_id = "jba-rs"];
-#[feature(macro_rules, phase)];
-#[allow(deprecated_owned_vector)];
+#![crate_id = "jba-rs"]
+#![feature(macro_rules, phase)]
+#![allow(deprecated_owned_vector)]
 
 #[phase(syntax, link)] extern crate log;
 extern crate time;

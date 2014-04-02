@@ -1,17 +1,17 @@
 //! Real Time Clock (RTC) for GB
 
 pub struct Rtc {
-    current: u8,
-    regs: [u8, ..8],
+    pub current: u8,
+    pub regs: [u8, ..8],
 
-    priv s: u8,
-    priv m: u8,
-    priv h: u8,
-    priv d: u16,
-    priv t: u8,
-    priv carry: u8,
-    priv stop: u8,
-    priv readylatch: bool,
+    s: u8,
+    m: u8,
+    h: u8,
+    d: u16,
+    t: u8,
+    carry: u8,
+    stop: u8,
+    readylatch: bool,
 }
 
 impl Rtc {

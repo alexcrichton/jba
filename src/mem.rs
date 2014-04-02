@@ -21,50 +21,50 @@ static HIRAM_SIZE: uint = 0x7f;    // hiram is from 0xff80 - 0xfffe
 pub struct Memory {
     /// Interrupt flags, http://nocash.emubase.de/pandocs.htm#interrupts.
     /// The master enable flag is on the cpu
-    if_: u8,
-    ie_: u8,
+    pub if_: u8,
+    pub ie_: u8,
 
     /// The speed that the gameboy is operating at and whether a switch has been
     /// requested
-    speed: Speed,
-    speedswitch: bool,
+    pub speed: Speed,
+    pub speedswitch: bool,
 
     /// currently only used in testing.
-    sound_on: bool,
+    pub sound_on: bool,
 
     /// Target that this memory was instantiated for
-    priv target: gb::Target,
+    target: gb::Target,
 
     /// Flag if this cartridge uses a battery or not
-    priv battery: bool,
+    battery: bool,
     /// Flag if this is a CGB cartridge or not
-    priv is_cgb: bool,
+    is_cgb: bool,
     /// Flag if this is a SGB cartridge or not
-    priv is_sgb: bool,
+    is_sgb: bool,
 
-    priv rom: ~[u8],
-    priv ram: ~[u8],
-    priv wram: ~[u8, ..WRAM_SIZE],
-    priv hiram: ~[u8, ..HIRAM_SIZE],
+    rom: ~[u8],
+    ram: ~[u8],
+    wram: ~[u8, ..WRAM_SIZE],
+    hiram: ~[u8, ..HIRAM_SIZE],
     /// The number of the rom bank currently swapped in
-    priv rombank: u16,
+    rombank: u16,
     /// The number of the ram bank currently swapped in
-    priv rambank: u8,
+    rambank: u8,
     /// The number of the wram bank currently swapped in
-    priv wrambank: u8,
+    wrambank: u8,
     /// A flag whether ram is enabled or not.
-    priv ramon: bool,
+    ramon: bool,
     /// Flag whether in ROM banking (0) or RAM banking mode
-    priv mode: bool,
+    mode: bool,
     /// MBC of the current cartridge,
-    priv mbc: Mbc,
+    mbc: Mbc,
 
     // Owned components
-    rtc: ~rtc::Rtc,
-    input: ~input::Input,
-    timer: ~timer::Timer,
-    gpu: ~gpu::Gpu,
-    sgb: Option<~sgb::Sgb>,
+    pub rtc: ~rtc::Rtc,
+    pub input: ~input::Input,
+    pub timer: ~timer::Timer,
+    pub gpu: ~gpu::Gpu,
+    pub sgb: Option<~sgb::Sgb>,
 }
 
 pub enum Speed {

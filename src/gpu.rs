@@ -32,81 +32,81 @@ static PALETTE: [Color, ..4] = [
 type Color = [u8, ..4];
 
 pub struct Gpu {
-    oam: [u8, ..OAM_SIZE],
+    pub oam: [u8, ..OAM_SIZE],
 
-    image_data: ~[u8, ..WIDTH * HEIGHT * 4],
+    pub image_data: ~[u8, ..WIDTH * HEIGHT * 4],
 
-    is_cgb: bool,
-    is_sgb: bool,
+    pub is_cgb: bool,
+    pub is_sgb: bool,
 
-    priv mode: Mode,
+    mode: Mode,
 
     // CGB supports only 2 banks of vram
-    priv vrambanks: ~([[u8, ..VRAM_SIZE], ..2]),
+    vrambanks: ~([[u8, ..VRAM_SIZE], ..2]),
     // Selected vram bank
-    priv vrambank: u8,
+    vrambank: u8,
 
-    priv clock: uint,
+    clock: uint,
 
     // Registers used by the GPU
 
     // 0xff40 - LCD control (LCDC) - in order from most to least significant bit
-         lcdon: bool,    // LCD monitor turned on or off?
-    priv winmap: bool,   // Window Tile Map Display (0=9800-9BFF, 1=9C00-9FFF)
-    priv winon: bool,    // Window Display Enable   (0=Off, 1=On)
-         tiledata: bool, // BG & Window Tile Data   (0=8800-97FF, 1=8000-8FFF)
-    priv bgmap: bool,    // BG Tile Map Display     (0=9800-9BFF, 1=9C00-9FFF)
-    priv objsize: bool,  // OBJ (Sprite) Size       (0=8x8, 1=8x16)
-    priv objon: bool,    // OBJ (Sprite) Display    (0=Off, 1=On)
-    priv bgon: bool,     // BG Display              (0=Off, 1=On)
+    pub lcdon: bool,    // LCD monitor turned on or off?
+        winmap: bool,   // Window Tile Map Display (0=9800-9BFF, 1=9C00-9FFF)
+        winon: bool,    // Window Display Enable   (0=Off, 1=On)
+    pub tiledata: bool, // BG & Window Tile Data   (0=8800-97FF, 1=8000-8FFF)
+        bgmap: bool,    // BG Tile Map Display     (0=9800-9BFF, 1=9C00-9FFF)
+        objsize: bool,  // OBJ (Sprite) Size       (0=8x8, 1=8x16)
+        objon: bool,    // OBJ (Sprite) Display    (0=Off, 1=On)
+        bgon: bool,     // BG Display              (0=Off, 1=On)
 
     // 0xff41 - STAT - LCDC Status - starts with bit 6
-    priv lycly: bool,    // LYC=LY Coincidence Interrupt (1=Enable)
-    priv mode2int: bool, // Mode 2 OAM Interrupt         (1=Enable)
-    priv mode1int: bool, // Mode 1 V-Blank Interrupt     (1=Enable)
-    priv mode0int: bool, // Mode 0 H-Blank Interrupt     (1=Enable)
+    lycly: bool,    // LYC=LY Coincidence Interrupt (1=Enable)
+    mode2int: bool, // Mode 2 OAM Interrupt         (1=Enable)
+    mode1int: bool, // Mode 1 V-Blank Interrupt     (1=Enable)
+    mode0int: bool, // Mode 0 H-Blank Interrupt     (1=Enable)
 
     // 0xff42 - SCY - Scroll Y
-    priv scy: u8,
+    scy: u8,
     // 0xff43 - SCX - Scroll X
-    priv scx: u8,
+    scx: u8,
     // 0xff44 - LY - LCDC Y-Coordinate
-    priv ly: u8,
+    ly: u8,
     // 0xff45 - LYC - LY Compare
-    priv lyc: u8,
+    lyc: u8,
 
     // 0xff47 - BGP - BG Palette Data
-    priv bgp: u8,
+    bgp: u8,
     // 0xff48 - OBP0 - Object Palette 0 Data
-    priv obp0: u8,
+    obp0: u8,
     // 0xff49 - OBP1 - Object Palette 1Data
-    priv obp1: u8,
+    obp1: u8,
     // 0xff4a - WY - Window Y Position
-    priv wy: u8,
+    wy: u8,
     // 0xff4b - WX - Window X Position minus 7
-    priv wx: u8,
+    wx: u8,
 
     // CGB VRAM DMA transfer, more info at:
     // http://nocash.emubase.de/pandocs.htm#lcdvramdmatransferscgbonly
-    priv hdma_src: u16,
-    priv hdma_dst: u16,
-    priv hdma5: u8,
+    hdma_src: u16,
+    hdma_dst: u16,
+    hdma5: u8,
 
     // Compiled palettes. These are updated when writing to BGP/OBP0/OBP1. Meant
     // for non CGB use only. Each palette is an array of 4 color schemes. Each
     // color scheme is one in PALETTE.
-    priv pal: ~Palette,
+    pal: ~Palette,
 
     // Compiled tiles
-    priv tiles: ~Tiles,
+    tiles: ~Tiles,
 
     // When in CGB mode, the BGP and OBP memory is stored internally and is only
     // accessible through some I/O registers. Each section of memory is 64 bytes
     // and defines 8 palettes of 4 colors each
-    priv cgb: ~CgbData,
+    cgb: ~CgbData,
 
     // Data related to SGB operation
-    sgb: ~SgbData,
+    pub sgb: ~SgbData,
 }
 
 #[deriving(Eq, Show)]
@@ -145,11 +145,11 @@ pub struct SgbData {
     // This is a 20x18 array which maps palettes to locations on the screen.
     // Each element defines an 8x8 block on the GB screen which should be mapped
     // through these palettes instead of using the normal grayscale.
-    atf: [u8, ..20 * 18],
+    pub atf: [u8, ..20 * 18],
 
     // Actual compiled palettes where each palette is an array of 4 colors where
     // each color has 4 components
-    pal: [[Color, ..4], ..4],
+    pub pal: [[Color, ..4], ..4],
 }
 
 impl Gpu {

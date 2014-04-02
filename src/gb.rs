@@ -12,10 +12,10 @@ pub enum Target {
 }
 
 pub struct Gb {
-    priv cpu: Cpu,
-    priv mem: Memory,
-    priv fps: uint,
-    priv cycles: uint,
+    cpu: Cpu,
+    mem: Memory,
+    fps: uint,
+    cycles: uint,
 }
 
 impl Gb {

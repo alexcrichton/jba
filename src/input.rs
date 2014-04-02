@@ -1,11 +1,11 @@
-#[allow(dead_code)];
+#![allow(dead_code)]
 
 use cpu;
 
 pub struct Input {
     buttons: u8,
     directions: u8,
-    joypad_sel: u8,
+    pub joypad_sel: u8,
     col: Selected,
 }
 

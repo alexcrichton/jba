@@ -2,15 +2,15 @@ use cpu;
 use mem;
 
 pub struct Timer {
-    priv clock: Clock,
+    clock: Clock,
 
     // See http://nocash.emubase.de/pandocs.htm#timeranddividerregisters
-    div: u8,
-    tima: u8,
-    tma: u8,
-    tac: u8,
+    pub div: u8,
+    pub tima: u8,
+    pub tma: u8,
+    pub tac: u8,
 
-    priv tima_speed: uint,
+    tima_speed: uint,
 }
 
 struct Clock {

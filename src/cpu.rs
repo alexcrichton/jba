@@ -8,8 +8,8 @@ use mem;
 mod z80;
 
 pub struct Cpu {
-    priv regs: z80::Registers,
-    priv ticks: uint,
+    regs: z80::Registers,
+    ticks: uint,
 }
 
 pub enum Interrupts {

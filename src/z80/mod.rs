@@ -18,23 +18,23 @@ mod daa;
 /// - halt : flag as to whether a halt has happened or should
 /// - stop : flag as to whether a stop has happened or should
 pub struct Registers {
-    ime: uint,
-    halt: uint,
-    stop: uint,
+    pub ime: uint,
+    pub halt: uint,
+    pub stop: uint,
 
-    priv a: u8,
-    priv b: u8,
-    priv c: u8,
-    priv d: u8,
-    priv e: u8,
-    priv f: u8,
-    priv h: u8,
-    priv l: u8,
+    a: u8,
+    b: u8,
+    c: u8,
+    d: u8,
+    e: u8,
+    f: u8,
+    h: u8,
+    l: u8,
 
-    priv sp: u16,
-    priv pc: u16,
+    sp: u16,
+    pc: u16,
 
-    priv delay: uint,
+    delay: uint,
 }
 
 impl Registers {
