@@ -275,24 +275,25 @@ impl Memory {
         //      http://nocash.emubase.de/pandocs.htm#memorymap
         match addr >> 12 {
             // Always mapped in as first bank of cartridge
-            0x0 | 0x1 | 0x2 | 0x3 => self.rom[addr],
+            0x0 | 0x1 | 0x2 | 0x3 => self.rom[addr as uint],
 
             // Swappable banks of ROM, there may be a total of more than 2^16
             // bytes in the ROM, so we use u32 here.
             0x4 | 0x5 | 0x6 | 0x7 => {
-                self.rom[((self.rombank as u32) << 14) |
-                         ((addr as u32) & 0x3fff)]
+                self.rom[(((self.rombank as u32) << 14) |
+                          ((addr as u32) & 0x3fff)) as uint]
             }
 
-            0x8 | 0x9 => self.gpu.vram()[addr & 0x1fff],
+            0x8 | 0x9 => self.gpu.vram()[(addr & 0x1fff) as uint],
 
             0xa | 0xb => {
                 // Swappable banks of RAM
                 if self.ramon {
                     if self.rtc.current & 0x08 != 0 {
-                        self.rtc.regs[self.rtc.current & 0x7]
+                        self.rtc.regs[(self.rtc.current & 0x7) as uint]
                     } else {
-                        self.ram[((self.rambank as u16) << 12) | (addr & 0x1fff)]
+                        self.ram[(((self.rambank as u16) << 12) |
+                                  (addr & 0x1fff)) as uint]
                     }
                 } else {
                     0xff
@@ -300,20 +301,21 @@ impl Memory {
             }
 
             // e000-fdff same as c000-ddff
-            0xe | 0xc => self.wram[addr & 0xfff],
-            0xd => self.wram[((self.wrambank as u16) << 12) | (addr & 0xfff)],
+            0xe | 0xc => self.wram[(addr & 0xfff) as uint],
+            0xd => self.wram[(((self.wrambank as u16) << 12) |
+                              (addr & 0xfff)) as uint],
 
             0xf => {
                 if addr < 0xfe00 { // mirrored RAM
                     self.rb(addr & 0xdfff)
                 } else if addr < 0xfea0 { // sprite attribute table (oam)
-                    self.gpu.oam[addr & 0xff]
+                    self.gpu.oam[(addr & 0xff) as uint]
                 } else if addr < 0xff00 { // unusable ram
                     0xff
                 } else if addr < 0xff80 { // I/O ports
                     self.ioreg_rb(addr)
                 } else if addr < 0xffff { // High RAM
-                    self.hiram[addr & 0x7f]
+                    self.hiram[(addr & 0x7f) as uint]
                 } else {
                     self.ie_
                 }
@@ -453,7 +455,7 @@ impl Memory {
             }
 
             0x8 | 0x9 => {
-                self.gpu.vram_mut()[addr & 0x1fff] = val;
+                self.gpu.vram_mut()[(addr & 0x1fff) as uint] = val;
                 if addr < 0x9800 {
                     self.gpu.update_tile(addr);
                 }
@@ -465,28 +467,29 @@ impl Memory {
                         self.rtc.wb(addr, val);
                     } else {
                         let val = if self.mbc == Mbc2 {val & 0xf} else {val};
-                        self.ram[((self.rambank as u16) << 12) |
-                                 (addr & 0x1fff)] = val;
+                        self.ram[(((self.rambank as u16) << 12) |
+                                  (addr & 0x1fff)) as uint] = val;
                     }
                 }
             }
 
-            0xc | 0xe => { self.wram[addr & 0xfff] = val; }
+            0xc | 0xe => { self.wram[(addr & 0xfff) as uint] = val; }
             0xd => {
-                self.wram[((self.wrambank as u16) << 12) | (addr & 0xfff)] = val;
+                self.wram[(((self.wrambank as u16) << 12) |
+                           (addr & 0xfff)) as uint] = val;
             }
 
             0xf => {
                 if addr < 0xfe00 {
                     self.wb(addr & 0xdfff, val); // mirrored RAM
                 } else if addr < 0xfea0 {
-                    self.gpu.oam[addr & 0xff] = val;
+                    self.gpu.oam[(addr & 0xff) as uint] = val;
                 } else if addr < 0xff00 {
                     // unusable ram
                 } else if addr < 0xff80 {
                     self.ioreg_wb(addr, val);
                 } else if addr < 0xffff {
-                    self.hiram[addr & 0x7f] = val;
+                    self.hiram[(addr & 0x7f) as uint] = val;
                 } else {
                     self.ie_ = val;
                 }

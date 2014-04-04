@@ -218,14 +218,14 @@ impl Sgb {
                 for x in range(0, 20) {
                     if x > x1 && x < x2 && y > y1 && y < y2 {
                         if insideon {
-                            gpu.sgb.atf[y * 20 + x] = insidepal;
+                            gpu.sgb.atf[(y * 20 + x) as uint] = insidepal;
                         }
                     } else if x < x1 || x > x2 || y < y1 || y > y2 {
                         if outsideon {
-                            gpu.sgb.atf[y * 20 + x] = outsidepal;
+                            gpu.sgb.atf[(y * 20 + x) as uint] = outsidepal;
                         }
                     } else if borderon {
-                        gpu.sgb.atf[y * 20 + x] = borderpal;
+                        gpu.sgb.atf[(y * 20 + x) as uint] = borderpal;
                     }
                 }
             }
@@ -238,15 +238,15 @@ impl Sgb {
     fn pal_set(&mut self, gpu: &mut gpu::Gpu) {
         // Each tile in SGB RAM is 8 bytes (4 colors)
         let pali = [
-            pack(self.data[2], self.data[1]) as int * 8,
-            pack(self.data[4], self.data[3]) as int * 8,
-            pack(self.data[6], self.data[5]) as int * 8,
-            pack(self.data[8], self.data[7]) as int * 8,
+            pack(self.data[2], self.data[1]) as uint * 8,
+            pack(self.data[4], self.data[3]) as uint * 8,
+            pack(self.data[6], self.data[5]) as uint * 8,
+            pack(self.data[8], self.data[7]) as uint * 8,
         ];
 
         // i = palette number, j = color number (4 palettes, 4 colors)
-        for i in range(0, 4) {
-            for j in range(0, 4) {
+        for i in range(0u, 4) {
+            for j in range(0u, 4) {
                 self.pal[i * 4 + j] = pack(self.ram[pali[i] + 2 * j + 1],
                                            self.ram[pali[i] + 2 * j]);
             }
@@ -304,8 +304,8 @@ impl Sgb {
     // four relevant palettes with their first four colors because these are the
     // only ones that are used in colorizing the game screen.
     fn update_palettes(&self, gpu: &mut gpu::Gpu) {
-        for i in range(0, 4) {
-            for j in range(0, 4) {
+        for i in range(0u, 4) {
+            for j in range(0u, 4) {
                 let color = self.pal[i * 4 + j];
                 gpu.sgb.pal[i][j] = [
                     (((color >>  0) & 0x1f) as u8) << 3,

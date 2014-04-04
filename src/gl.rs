@@ -4,6 +4,7 @@ extern crate gl;
 use std::libc;
 use std::mem;
 use glt = self::gl::types;
+use self::glfw::Context;
 
 use input;
 use gpu;
@@ -23,14 +24,14 @@ pub fn run(mut gb: Gb) {
     let (glfw, errors) = glfw::init().unwrap();
     glfw::fail_on_error(&errors);
 
-    let (window, events) = glfw.create_window(gpu::WIDTH as u32,
-                                              gpu::HEIGHT as u32,
-                                              "JBA",
-                                              glfw::Windowed).unwrap();
+    let (mut window, events) = glfw.create_window(gpu::WIDTH as u32,
+                                                  gpu::HEIGHT as u32,
+                                                  "JBA",
+                                                  glfw::Windowed).unwrap();
     window.set_key_polling(true);
     window.set_focus_polling(true);
     window.set_size_polling(true);
-    window.make_context_current();
+    glfw.make_context_current(Some(&window));
 
     let cx = Glcx::new();
 
@@ -38,11 +39,12 @@ pub fn run(mut gb: Gb) {
     let mut ratio = 1 + (gpu::WIDTH as i32 / 10);
     window.set_size((gpu::WIDTH as i32) + 10 * ratio,
                     (gpu::HEIGHT as i32) + 9 * ratio);
+    let context = window.render_context();
     while !window.should_close() {
         if focused {
             gb.frame();
             cx.draw(gb.image());
-            window.swap_buffers();
+            context.swap_buffers();
             glfw.poll_events();
             glfw::fail_on_error(&errors);
         } else {

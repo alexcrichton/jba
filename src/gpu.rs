@@ -210,10 +210,10 @@ impl Gpu {
     }
 
     pub fn vram<'a>(&'a self) -> &'a [u8, ..VRAM_SIZE] {
-        &self.vrambanks[self.vrambank]
+        &self.vrambanks[self.vrambank as uint]
     }
     pub fn vram_mut<'a>(&'a mut self) -> &'a mut [u8, ..VRAM_SIZE] {
-        &mut self.vrambanks[self.vrambank]
+        &mut self.vrambanks[self.vrambank as uint]
     }
 
     fn switch(&mut self, mode: Mode, if_: &mut u8) {
@@ -317,7 +317,7 @@ impl Gpu {
             //      byte 1 : 01101010
             //
             // The colors are [0, 2, 2, 1, 3, 0, 3, 1]
-            for (j, addr) in range(0, 8).zip(iter::count((i % NUM_TILES) * 16, 2)) {
+            for (j, addr) in range(0u, 8).zip(iter::count((i % NUM_TILES) * 16, 2)) {
                 // All tiles are located 0x8000-0x97ff => 0x0000-0x17ff in VRAM
                 // meaning that the index is simply an index into raw VRAM
                 let (mut lsb, mut msb) = if i < NUM_TILES {
@@ -327,7 +327,7 @@ impl Gpu {
                 };
 
                 // LSB is the right-most pixel.
-                for k in range(0, 8).rev() {
+                for k in range(0u, 8).rev() {
                     self.tiles.data[i][j][k] = ((msb & 1) << 1) | (lsb & 1);
                     lsb >>= 1;
                     msb >>= 1;
@@ -411,23 +411,23 @@ impl Gpu {
                                            ((attrs >> 3) & 1) * NUM_TILES];
                 bgpri = attrs & 0x80 != 0;
                 hflip = attrs & 0x20 != 0;
-                row = tile[if attrs & 0x40 != 0 {7 - y} else {y}];
+                row = tile[if attrs & 0x40 != 0 {7 - y} else {y} as uint];
                 bgp = self.cgb.cbgp[attrs & 0x7];
             } else {
                 // Non CGB backgrounds are boring :(
-                row = self.tiles.data[tilebase][y];
+                row = self.tiles.data[tilebase as uint][y as uint];
                 bgpri = false;
                 hflip = false;
                 bgp = self.pal.bg;
             }
 
             while x < 8 && i < WIDTH as u8 {
-                let colori = row[if hflip {7 - x} else {x}];
+                let colori = row[if hflip {7 - x} else {x} as uint];
                 let color;
                 if self.is_sgb && !self.is_cgb {
                     let sgbaddr = (i >> 3) as uint + (self.ly as uint >> 3) * 20;
-                    let mapped = self.sgb.atf[sgbaddr];
-                    match bgp[colori][0] {
+                    let mapped = self.sgb.atf[sgbaddr as uint] as uint;
+                    match bgp[colori as uint][0] {
                           0 => { color = self.sgb.pal[mapped][3]; }
                          96 => { color = self.sgb.pal[mapped][2]; }
                         192 => { color = self.sgb.pal[mapped][1]; }
@@ -437,10 +437,10 @@ impl Gpu {
                         _ => { dfail!(); color = [0, 0, 0, 0]; }
                     }
                 } else {
-                    color = bgp[colori];
+                    color = bgp[colori as uint];
                 }
                 // To indicate bg priority, list a color >= 4
-                scanline[i] = if bgpri {4} else {colori};
+                scanline[i as uint] = if bgpri {4} else {colori};
 
                 self.image_data[coff] = color[0];
                 self.image_data[coff + 1] = color[1];
@@ -511,22 +511,22 @@ impl Gpu {
                                            ((attrs >> 3) & 1) * NUM_TILES];
                 bgpri = attrs & 0x80 != 0;
                 hflip = attrs & 0x20 != 0;
-                row = tile[if attrs & 0x40 != 0 {7 - y} else {y}];
+                row = tile[if attrs & 0x40 != 0 {7 - y} else {y} as uint];
                 bgp = self.cgb.cbgp[attrs & 0x7];
             } else {
-                row = self.tiles.data[tilebase][y];
+                row = self.tiles.data[tilebase as uint][y as uint];
                 bgpri = false;
                 hflip = false;
                 bgp = self.pal.bg;
             }
 
             while x < 8 && i < WIDTH as u8 {
-                let colori = row[if hflip {7 - x} else {x}];
+                let colori = row[if hflip {7 - x} else {x} as uint];
                 let color;
                 if self.is_sgb && !self.is_cgb {
                     let sgbaddr = (i >> 3) + (self.ly >> 3) * 20;
-                    let mapped = self.sgb.atf[sgbaddr];
-                    match bgp[colori][0] {
+                    let mapped = self.sgb.atf[sgbaddr as uint] as uint;
+                    match bgp[colori as uint][0] {
                           0 => { color = self.sgb.pal[mapped][3]; }
                          96 => { color = self.sgb.pal[mapped][2]; }
                         192 => { color = self.sgb.pal[mapped][1]; }
@@ -536,10 +536,10 @@ impl Gpu {
                         _ => { color = [0, 0, 0, 0]; }
                     }
                 } else {
-                    color = bgp[colori];
+                    color = bgp[colori as uint];
                 }
                 // To indicate bg priority, list a color >= 4
-                scanline[i] = if bgpri {4} else {colori};
+                scanline[i as uint] = if bgpri {4} else {colori};
 
                 self.image_data[coff] = color[0];
                 self.image_data[coff + 1] = color[1];
@@ -605,18 +605,18 @@ impl Gpu {
             if self.is_cgb {
                 tiled = self.tiles.data[((flags as uint >> 3) & 1 * NUM_TILES) +
                                         tile as uint];
-                pal = self.cgb.cobp[flags & 0x3];
+                pal = self.cgb.cobp[(flags & 0x3) as uint];
             } else {
                 // bit4 is the palette number. 0 = obp0, 1 = obp1
                 pal = if flags & 0x10 != 0 {self.pal.obp1} else {self.pal.obp0};
-                tiled = self.tiles.data[tile];
+                tiled = self.tiles.data[tile as uint];
             }
 
             // bit6 is the vertical flip bit
             let row = if flags & 0x40 != 0 {
-                tiled[7 - (line - yoff)]
+                tiled[(7 - (line - yoff)) as uint]
             } else {
-                tiled[line - yoff]
+                tiled[(line - yoff) as uint]
             };
 
             for x in range(0, 8) {
@@ -626,11 +626,11 @@ impl Gpu {
                 // anything. Also, if the background tile at this pixel has
                 // priority, don't render this sprite at all.
                 if xoff + x < 0 || xoff + x >= WIDTH as int ||
-                   scanline[x + xoff] > 3 {
+                   scanline[(x + xoff) as uint] > 3 {
                     continue
                 }
                 // bit5 is the horizontal flip flag
-                let colori = row[if flags & 0x20 != 0 {7-x} else {x}];
+                let colori = row[if flags & 0x20 != 0 {7-x} else {x} as uint];
 
                 // A color index of 0 for sprites means transparent
                 if colori == 0 { continue }
@@ -639,30 +639,32 @@ impl Gpu {
                 // sprite has this flag set and the data at this location
                 // already contains data (nonzero), then don't render this
                 // sprite
-                if flags & 0x80 != 0 && scanline[xoff + x] != 0 { continue }
+                if flags & 0x80 != 0 && scanline[(xoff + x) as uint] != 0 {
+                    continue
+                }
 
                 let color;
                 if self.is_sgb && !self.is_cgb {
                     let sgbaddr = ((xoff as uint + x as uint) >> 3) +
                                   (line as uint >> 3) * 20;
-                    let mapped = self.sgb.atf[sgbaddr];
-                    match pal[colori][0] {
-                          0 => { color = self.sgb.pal[mapped][3]; }
-                         96 => { color = self.sgb.pal[mapped][2]; }
-                        192 => { color = self.sgb.pal[mapped][1]; }
-                        255 => { color = self.sgb.pal[mapped][0]; }
+                    let mapped = self.sgb.atf[sgbaddr as uint];
+                    match pal[colori as uint][0] {
+                          0 => { color = self.sgb.pal[mapped as uint][3]; }
+                         96 => { color = self.sgb.pal[mapped as uint][2]; }
+                        192 => { color = self.sgb.pal[mapped as uint][1]; }
+                        255 => { color = self.sgb.pal[mapped as uint][0]; }
 
                         // not actually reachable
                         _ => { dfail!(); color = [0, 0, 0, 0]; }
                     }
                 } else {
-                    color = pal[colori];
+                    color = pal[colori as uint];
                 }
 
-                self.image_data[coff - 4] = color[0];
-                self.image_data[coff - 3] = color[1];
-                self.image_data[coff - 2] = color[2];
-                self.image_data[coff - 1] = color[3];
+                self.image_data[(coff - 4) as uint] = color[0];
+                self.image_data[(coff - 3) as uint] = color[1];
+                self.image_data[(coff - 2) as uint] = color[2];
+                self.image_data[(coff - 1) as uint] = color[3];
             }
         }
     }
@@ -710,9 +712,9 @@ impl Gpu {
 
             // http://nocash.emubase.de/pandocs.htm#lcdcolorpalettescgbonly
             0x68 => self.cgb.bgpi,
-            0x69 => self.cgb.bgp[self.cgb.bgpi & 0x3f],
+            0x69 => self.cgb.bgp[(self.cgb.bgpi & 0x3f) as uint],
             0x6a => self.cgb.obpi,
-            0x6b => self.cgb.obp[self.cgb.obpi & 0x3f],
+            0x6b => self.cgb.obp[(self.cgb.obpi & 0x3f) as uint],
 
             _ => 0xff
         }
@@ -778,14 +780,14 @@ impl Gpu {
             0x68 => { self.cgb.bgpi = val & 0xbf; }
             0x6a => { self.cgb.obpi = val & 0xbf; }
             0x69 => {
-                self.cgb.bgp[self.cgb.bgpi & 0x3f] = val;
+                self.cgb.bgp[(self.cgb.bgpi & 0x3f) as uint] = val;
                 update_cgb_pal(&mut self.cgb.cbgp, &self.cgb.bgp, self.cgb.bgpi);
                 if self.cgb.bgpi & 0x80 != 0 {
                     self.cgb.bgpi = (self.cgb.bgpi + 1) & 0xbf;
                 }
             }
             0x6b => {
-                self.cgb.obp[self.cgb.obpi & 0x3f] = val;
+                self.cgb.obp[(self.cgb.obpi & 0x3f) as uint] = val;
                 update_cgb_pal(&mut self.cgb.cobp, &self.cgb.obp, self.cgb.obpi);
                 if self.cgb.obpi & 0x80 != 0 {
                     self.cgb.obpi = (self.cgb.obpi + 1) & 0xbf;
@@ -801,7 +803,7 @@ impl Gpu {
         let tilei = (addr & 0x1fff) / 16; // each tile is 16 bytes, divide by 16
         let tilei = tilei + (self.vrambank as u16) * (NUM_TILES as u16);
         self.tiles.need_update = true;
-        self.tiles.to_update[tilei] = true;
+        self.tiles.to_update[tilei as uint] = true;
     }
 
     // Trigger a DMA transfer into OAM. This happens whenever something is
@@ -820,7 +822,7 @@ impl Gpu {
 
         debug!("oam dma transfer from {:x}", orval);
         for i in range(0, OAM_SIZE as u16) {
-            mem.gpu.oam[i] = mem.rb(orval | i);
+            mem.gpu.oam[i as uint] = mem.rb(orval | i);
         }
     }
 
@@ -844,10 +846,10 @@ impl Gpu {
 fn update_pal(pal: &mut [Color, ..4], val: u8) {
     // These registers are indices into the actual palette. See
     // http://nocash.emubase.de/pandocs.htm#lcdmonochromepalettes
-    pal[0] = PALETTE[(val >> 0) & 0x3];
-    pal[1] = PALETTE[(val >> 2) & 0x3];
-    pal[2] = PALETTE[(val >> 4) & 0x3];
-    pal[3] = PALETTE[(val >> 6) & 0x3];
+    pal[0] = PALETTE[((val >> 0) & 0x3) as uint];
+    pal[1] = PALETTE[((val >> 2) & 0x3) as uint];
+    pal[2] = PALETTE[((val >> 4) & 0x3) as uint];
+    pal[3] = PALETTE[((val >> 6) & 0x3) as uint];
 }
 
 // Update the cached CGB palette that was just written to
@@ -859,10 +861,10 @@ fn update_cgb_pal(pal: &mut [[Color, ..4], ..8], mem: &[u8, ..CGB_BP_SIZE],
     let pali = addr / 8; // divide by 8 (size of one palette)
     let colori = (addr % 8) / 2; // 2 bytes per color, divide by 2
 
-    let byte1 = mem[addr & 0x3e];
-    let byte2 = mem[(addr & 0x3e) + 1];
+    let byte1 = mem[(addr & 0x3e) as uint];
+    let byte2 = mem[((addr & 0x3e) + 1) as uint];
 
-    let color = &mut pal[pali][colori];
+    let color = &mut pal[pali as uint][colori as uint];
 
     // Bits 0-7 in byte1, others in byte2
     //  Bit 0-4   Red Intensity   (00-1F)
@@ -1133,8 +1135,8 @@ mod test {
         }
 
         mem.gpu.ly = 10;
-        let offset = 10u16 * 160 * 4;
-        for i in range(0u16, 160 * 4) {
+        let offset = 10 * 160 * 4;
+        for i in range(0u, 160 * 4) {
             mem.gpu.image_data[offset + i] = 10;
         }
 
@@ -1142,7 +1144,7 @@ mod test {
         mem.gpu.wb(LCDC, 0);
         mem.gpu.ly = 10;
         mem.gpu.render_line();
-        for i in range(0u16, 160 * 4) {
+        for i in range(0u, 160 * 4) {
             assert_eq!(mem.gpu.image_data[offset + i], 10);
         }
 
@@ -1152,7 +1154,7 @@ mod test {
 
         // First 3 pixels are all black. SCX = 5 so only 3 pixels of first tile
         // should be shown
-        for i in range(0u16, 3) {
+        for i in range(0u, 3) {
             assert_eq!(mem.gpu.image_data[offset + i * 4], 0);
             assert_eq!(mem.gpu.image_data[offset + i * 4 + 1], 0);
             assert_eq!(mem.gpu.image_data[offset + i * 4 + 2], 0);
@@ -1160,7 +1162,7 @@ mod test {
         }
 
         // Next 8 pixels should all be next color (dark grey)
-        for i in range(3u16, 11) {
+        for i in range(3u, 11) {
             assert_eq!(mem.gpu.image_data[offset + i * 4], 96);
             assert_eq!(mem.gpu.image_data[offset + i * 4 + 1], 96);
             assert_eq!(mem.gpu.image_data[offset + i * 4 + 2], 96);
@@ -1168,7 +1170,7 @@ mod test {
         }
 
         // Next 8 pixels should all be next color (light grey)
-        for i in range(11u16, 19) {
+        for i in range(11u, 19) {
             assert_eq!(mem.gpu.image_data[offset + i * 4], 192);
             assert_eq!(mem.gpu.image_data[offset + i * 4 + 1], 192);
             assert_eq!(mem.gpu.image_data[offset + i * 4 + 2], 192);
@@ -1176,7 +1178,7 @@ mod test {
         }
 
         // Next 8 pixels should all be next color (light grey)
-        for i in range(19u16, 27) {
+        for i in range(19u, 27) {
             assert_eq!(mem.gpu.image_data[offset + i * 4], 255);
             assert_eq!(mem.gpu.image_data[offset + i * 4 + 1], 255);
             assert_eq!(mem.gpu.image_data[offset + i * 4 + 2], 255);
@@ -1184,7 +1186,7 @@ mod test {
         }
 
         // Finally, the next 8 should be black
-        for i in range(27u16, 35) {
+        for i in range(27u, 35) {
             assert_eq!(mem.gpu.image_data[offset + i * 4], 0);
             assert_eq!(mem.gpu.image_data[offset + i * 4 + 1], 0);
             assert_eq!(mem.gpu.image_data[offset + i * 4 + 2], 0);

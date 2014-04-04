@@ -39,7 +39,8 @@ fn daa(r: &mut z80::Registers) {
     //    r.f &= !Z;
     //}
 
-    let d = z80::DAA_TABLE[(r.a as u16) | (((r.f & (N | H | C)) as u16) << 4)];
+    let idx = (r.a as u16) | (((r.f & (N | H | C)) as u16) << 4);
+    let d = z80::DAA_TABLE[idx as uint];
     r.a = (d >> 8) as u8;
     r.f = d as u8;
 }
