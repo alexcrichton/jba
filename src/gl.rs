@@ -1,7 +1,7 @@
 extern crate glfw;
 extern crate gl;
+extern crate libc;
 
-use std::libc;
 use std::mem;
 use glt = self::gl::types;
 use self::glfw::Context;
@@ -21,8 +21,7 @@ struct Glcx {
 }
 
 pub fn run(mut gb: Gb) {
-    let (glfw, errors) = glfw::init().unwrap();
-    glfw::fail_on_error(&errors);
+    let glfw = glfw::init(glfw::FAIL_ON_ERRORS).unwrap();
 
     let (mut window, events) = glfw.create_window(gpu::WIDTH as u32,
                                                   gpu::HEIGHT as u32,
@@ -46,7 +45,6 @@ pub fn run(mut gb: Gb) {
             cx.draw(gb.image());
             context.swap_buffers();
             glfw.poll_events();
-            glfw::fail_on_error(&errors);
         } else {
             glfw.wait_events();
         }

@@ -74,13 +74,13 @@ fn main() {
             return usage(args[0], opts);
         }
         None => {
-            match mem::Memory::guess_target(rom) {
+            match mem::Memory::guess_target(rom.as_slice()) {
                 Some(target) => target,
                 None => gb::GameBoyColor,
             }
         }
     });
-    gb.load(rom);
+    gb.load(rom.move_iter().collect());
 
     // TODO: needs native timers
     if matches.opt_present("fps") {
