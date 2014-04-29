@@ -6,8 +6,6 @@
 //! For more information about how these work, see this url:
 //!     http://nocash.emubase.de/pandocs.htm#memorybankcontrollers
 
-use std::slice;
-
 use gb;
 use gpu;
 use input;
@@ -234,7 +232,7 @@ impl Memory {
             n => { fail!("unknown cartridge inserted: {:x}", n); }
         }
 
-        self.ram = slice::from_elem(self.ram_size(), 0u8);
+        self.ram = Vec::from_elem(self.ram_size(), 0u8).move_iter().collect();
         if self.target == gb::GameBoyColor {
             self.is_cgb = self.rom[0x0143] & 0x80 != 0;
             self.gpu.is_cgb = self.is_cgb;
@@ -568,7 +566,6 @@ impl Memory {
 
 #[cfg(test)]
 mod test {
-    use std::slice;
     use super::Memory;
     use GB = gb::GameBoy;
 
@@ -645,10 +642,10 @@ mod test {
 
     macro_rules! load( ($($k:expr => $v:expr),+) => ({
         let mut m = Memory::new(GB);
-        let mut ram = slice::from_elem(0x1000000, 0u8);
-        ram[0x0149] = 0x03;
-        $(ram[$k] = $v;)+
-        m.load_cartridge(ram);
+        let mut ram = Vec::from_elem(0x1000000, 0u8);
+        *ram.get_mut(0x0149) = 0x03;
+        $(*ram.get_mut($k) = $v;)+
+        m.load_cartridge(ram.move_iter().collect());
         m
     }) )
 
