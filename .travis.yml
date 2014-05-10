@@ -1,12 +1,8 @@
 language: rust
-branches:
-    only:
-        - rust
-before_install:
-    - yes | sudo add-apt-repository ppa:hansjorg/rust
-    - sudo apt-get update
 install:
-    - sudo apt-get install rust-nightly
+    - curl -O http://static.rust-lang.org/dist/rust-nightly-x86_64-unknown-linux-gnu.tar.gz
+    - tar xfz rust-nightly-x86_64-unknown-linux-gnu.tar.gz
+    - (cd rust-nightly-x86_64-unknown-linux-gnu/ && sudo ./install.sh)
 # Voodoo to get glfw on the system
 before_script:
     - sudo apt-get install libXxf86vm-dev
@@ -18,5 +14,9 @@ before_script:
     - sudo make install
     - cd ..
 script:
+    - rustc --version
     - make
     - make check
+branches:
+    only:
+        - rust
