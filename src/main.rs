@@ -52,7 +52,7 @@ fn main() {
     };
     if matches.opt_present("h") || matches.opt_present("help") ||
        matches.free.len() == 0 {
-        return usage(args[0], opts);
+        return usage(*args.get(0), opts);
     }
 
     let rom = File::open(&Path::new(matches.free.get(0).as_slice())).read_to_end();
@@ -71,7 +71,7 @@ fn main() {
         Some(s) => {
             println!("Invalid gameboy type: {}", s);
             println!("Supported types: gb, cgb, sgb");
-            return usage(args[0], opts);
+            return usage(*args.get(0), opts);
         }
         None => {
             match mem::Memory::guess_target(rom.as_slice()) {
@@ -80,7 +80,7 @@ fn main() {
             }
         }
     });
-    gb.load(rom.move_iter().collect());
+    gb.load(rom.as_slice().to_owned());
 
     // TODO: needs native timers
     if matches.opt_present("fps") {

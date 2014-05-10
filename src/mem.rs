@@ -232,7 +232,7 @@ impl Memory {
             n => { fail!("unknown cartridge inserted: {:x}", n); }
         }
 
-        self.ram = Vec::from_elem(self.ram_size(), 0u8).move_iter().collect();
+        self.ram = Vec::from_elem(self.ram_size(), 0u8).as_slice().to_owned();
         if self.target == gb::GameBoyColor {
             self.is_cgb = self.rom[0x0143] & 0x80 != 0;
             self.gpu.is_cgb = self.is_cgb;
@@ -645,7 +645,7 @@ mod test {
         let mut ram = Vec::from_elem(0x1000000, 0u8);
         *ram.get_mut(0x0149) = 0x03;
         $(*ram.get_mut($k) = $v;)+
-        m.load_cartridge(ram.move_iter().collect());
+        m.load_cartridge(ram.as_slice().to_owned());
         m
     }) )
 
