@@ -34,7 +34,7 @@ type Color = [u8, ..4];
 pub struct Gpu {
     pub oam: [u8, ..OAM_SIZE],
 
-    pub image_data: ~[u8, ..WIDTH * HEIGHT * 4],
+    pub image_data: Box<[u8, ..WIDTH * HEIGHT * 4]>,
 
     pub is_cgb: bool,
     pub is_sgb: bool,
@@ -42,7 +42,7 @@ pub struct Gpu {
     mode: Mode,
 
     // CGB supports only 2 banks of vram
-    vrambanks: ~([[u8, ..VRAM_SIZE], ..2]),
+    vrambanks: Box<[[u8, ..VRAM_SIZE], ..2]>,
     // Selected vram bank
     vrambank: u8,
 
@@ -95,18 +95,18 @@ pub struct Gpu {
     // Compiled palettes. These are updated when writing to BGP/OBP0/OBP1. Meant
     // for non CGB use only. Each palette is an array of 4 color schemes. Each
     // color scheme is one in PALETTE.
-    pal: ~Palette,
+    pal: Box<Palette>,
 
     // Compiled tiles
-    tiles: ~Tiles,
+    tiles: Box<Tiles>,
 
     // When in CGB mode, the BGP and OBP memory is stored internally and is only
     // accessible through some I/O registers. Each section of memory is 64 bytes
     // and defines 8 palettes of 4 colors each
-    cgb: ~CgbData,
+    cgb: Box<CgbData>,
 
     // Data related to SGB operation
-    pub sgb: ~SgbData,
+    pub sgb: Box<SgbData>,
 }
 
 #[deriving(Eq, Show)]
@@ -155,12 +155,12 @@ pub struct SgbData {
 impl Gpu {
     pub fn new(_targ: gb::Target) -> Gpu {
         Gpu {
-            vrambanks: ~([[0, ..VRAM_SIZE], .. 2]),
+            vrambanks: box () ([[0, ..VRAM_SIZE], .. 2]),
             vrambank: 0,
             oam: [0, ..OAM_SIZE],
             is_cgb: false,
             is_sgb: false,
-            image_data: ~([255, ..HEIGHT * WIDTH * 4]),
+            image_data: box () ([255, ..HEIGHT * WIDTH * 4]),
 
             mode: RdOam,
             wx: 0, wy: 0, obp1: 0, obp0: 0, bgp: 0,
@@ -175,19 +175,19 @@ impl Gpu {
             hdma_dst: 0,
             hdma5: 0,
 
-            pal: ~Palette {
+            pal: box Palette {
                 bg: [[0, ..4], ..4],
                 obp0: [[0, ..4], ..4],
                 obp1: [[0, ..4], ..4],
             },
 
-            tiles: ~Tiles {
+            tiles: box Tiles {
                 need_update: false,
                 to_update: [false, .. NUM_TILES * 2],
                 data: [[[0, ..8], ..8], ..NUM_TILES * 2],
             },
 
-            cgb: ~CgbData {
+            cgb: box CgbData {
                 bgp: [255, ..CGB_BP_SIZE],
                 obp: [0, ..CGB_BP_SIZE],
                 bgpi: 0,
@@ -196,7 +196,7 @@ impl Gpu {
                 cobp: [[[  0,   0,   0, 255], ..4], ..8],
             },
 
-            sgb: ~SgbData {
+            sgb: box SgbData {
                 atf: [0, .. 20 * 18],
                 pal: [[[0, 0, 0, 255], ..4], ..4],
             }

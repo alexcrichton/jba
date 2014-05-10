@@ -42,8 +42,8 @@ pub struct Memory {
 
     rom: ~[u8],
     ram: ~[u8],
-    wram: ~[u8, ..WRAM_SIZE],
-    hiram: ~[u8, ..HIRAM_SIZE],
+    wram: Box<[u8, ..WRAM_SIZE]>,
+    hiram: Box<[u8, ..HIRAM_SIZE]>,
     /// The number of the rom bank currently swapped in
     rombank: u16,
     /// The number of the ram bank currently swapped in
@@ -58,11 +58,11 @@ pub struct Memory {
     mbc: Mbc,
 
     // Owned components
-    pub rtc: ~rtc::Rtc,
-    pub input: ~input::Input,
-    pub timer: ~timer::Timer,
-    pub gpu: ~gpu::Gpu,
-    pub sgb: Option<~sgb::Sgb>,
+    pub rtc: Box<rtc::Rtc>,
+    pub input: Box<input::Input>,
+    pub timer: Box<timer::Timer>,
+    pub gpu: Box<gpu::Gpu>,
+    pub sgb: Option<Box<sgb::Sgb>>,
 }
 
 pub enum Speed {
@@ -89,15 +89,15 @@ impl Memory {
             if_: 0, ie_: 0, battery: false, is_cgb: false, is_sgb: false,
             rom: ~[],
             ram: ~[],
-            wram: ~([0, ..WRAM_SIZE]),
-            hiram: ~([0, ..HIRAM_SIZE]),
+            wram: box () ([0, ..WRAM_SIZE]),
+            hiram: box () ([0, ..HIRAM_SIZE]),
             rombank: 1, rambank: 0, wrambank: 1,
             ramon: false, mode: false, mbc: Unknown,
 
-            rtc: ~rtc::Rtc::new(),
-            input: ~input::Input::new(),
-            timer: ~timer::Timer::new(),
-            gpu: ~gpu::Gpu::new(target),
+            rtc: box rtc::Rtc::new(),
+            input: box input::Input::new(),
+            timer: box timer::Timer::new(),
+            gpu: box gpu::Gpu::new(target),
             sgb: None,
         }
     }
@@ -241,7 +241,7 @@ impl Memory {
         if self.target == gb::SuperGameBoy || self.target == gb::GameBoyColor {
             self.is_sgb = self.rom[0x0146] == 0x03;
             if self.is_sgb {
-                self.sgb = Some(~sgb::Sgb::new());
+                self.sgb = Some(box sgb::Sgb::new());
                 self.gpu.is_sgb = self.is_sgb;
             }
         }
