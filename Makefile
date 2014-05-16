@@ -53,7 +53,9 @@ $(BUILDDIR)/glfw-trigger: src/glfw-trigger | $(BUILDDIR)
 $(GLFWRS): $(GLFWRS_LIB) | $(BUILDDIR)
 	$(MAKE) -C src/glfw-rs LIB_DIR=$(realpath $(BUILDDIR)) lib
 $(GLRS): $(GLRS_LIB) | $(BUILDDIR)
-	$(MAKE) -C src/gl-rs LIB_DIR=$(realpath $(BUILDDIR)) lib
+	$(MAKE) -C src/gl-rs lib \
+	  LIB_DIR=$(realpath $(BUILDDIR)) \
+	  BIN_DIR=$(realpath $(BUILDDIR))
 
 # Testing
 
