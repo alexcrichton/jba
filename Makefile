@@ -7,18 +7,16 @@ MAIN_RS = $(S)/main.rs
 
 ifeq ($(EXTERNAL_GL),)
     JBA_DEPS += $(GLRS) $(GLFWRS)
-    RUSTFLAGS += -L build
+    RUSTFLAGS += -L build -L src/glfw-rs/lib -L src/gl-rs/lib
     GLFWRS_LIB = src/glfw-rs/src/lib/lib.rs
-    GLFWRS = $(BUILDDIR)/$(filter-out %.dylib,\
+    GLFWRS = src/glfw-rs/lib/$(filter-out %.dylib,\
 	                   $(shell $(RUSTC) --crate-file-name $(GLFWRS_LIB)))
     GLRS_LIB = src/gl-rs/src/gl/lib.rs
-    GLRS = $(BUILDDIR)/$(shell $(RUSTC) --crate-file-name $(GLRS_LIB))
+    GLRS = src/gl-rs/lib/$(shell $(RUSTC) --crate-file-name $(GLRS_LIB))
 endif
 
 all: jba-rs
 
--include $(BUILDDIR)/glfw.d
--include $(BUILDDIR)/gl.d
 -include $(BUILDDIR)/main.d
 -include $(BUILDDIR)/test.d
 
@@ -39,6 +37,8 @@ $(BUILDDIR):
 
 clean:
 	rm -rf $(BUILDDIR) jba-rs
+	$(MAKE) -C src/glfw-rs clean
+	$(MAKE) -C src/gl-rs clean
 
 # Building gl-rs and glfw-rs
 
@@ -51,11 +51,9 @@ $(BUILDDIR)/glfw-trigger: src/glfw-trigger | $(BUILDDIR)
 	touch $@
 
 $(GLFWRS): $(GLFWRS_LIB) | $(BUILDDIR)
-	$(MAKE) -C src/glfw-rs LIB_DIR=$(realpath $(BUILDDIR)) lib
+	$(MAKE) -C src/glfw-rs lib
 $(GLRS): $(GLRS_LIB) | $(BUILDDIR)
-	$(MAKE) -C src/gl-rs lib \
-	  LIB_DIR=$(realpath $(BUILDDIR)) \
-	  BIN_DIR=$(realpath $(BUILDDIR))
+	$(MAKE) -C src/gl-rs lib
 
 # Testing
 
