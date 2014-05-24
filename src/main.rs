@@ -34,7 +34,7 @@ mod test;
 fn start(argc: int, argv: **u8) -> int { native::start(argc, argv, main) }
 
 fn usage(prog: &str, opts: &[opts::OptGroup]) {
-    let h = opts::usage(format!("usage: {} [options] <rom>", prog), opts);
+    let h = opts::usage(format!("usage: {} [options] <rom>", prog).as_slice(), opts);
     println!("{}", h);
 }
 
