@@ -39,7 +39,7 @@ fn usage(prog: &str, opts: &[opts::OptGroup]) {
 }
 
 fn main() {
-    let args = os::args().iter().map(|s| s.to_strbuf()).collect::<Vec<StrBuf>>();
+    let args = os::args();
     let opts = ~[
         opts::optflag("h", "help", "show this message"),
         opts::optflag("", "fps", "don't run a display, just print FPS"),
