@@ -9,7 +9,7 @@ pub fn run(gb: &mut gb::Gb, file: &str) {
     let hash = hash::hash(&gb.image());
     if file == "-" {
         println!("{}", hash);
-    } else if file.to_owned() != hash.to_str() {
+    } else if file.to_string() != hash.to_str() {
         fail!("failed test");
     }
 }
