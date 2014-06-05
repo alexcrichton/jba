@@ -4,7 +4,7 @@ use cpu::Cpu;
 use input;
 use mem::Memory;
 
-#[deriving(Eq)]
+#[deriving(PartialEq, Eq)]
 pub enum Target {
     GameBoy,
     GameBoyColor,

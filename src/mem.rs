@@ -70,7 +70,7 @@ pub enum Speed {
     Double,
 }
 
-#[deriving(Eq, Show)]
+#[deriving(PartialEq, Eq, Show)]
 enum Mbc {
     Unknown,
     Omitted,
