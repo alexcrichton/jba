@@ -48,6 +48,8 @@ $(GLRS_LIB): $(BUILDDIR)/glfw-trigger
 $(BUILDDIR)/glfw-trigger: src/glfw-trigger | $(BUILDDIR)
 	git submodule init
 	git submodule update --recursive
+	-make -C src/glfw-rs submodule-update
+	-make -C src/gl-rs submodule-update
 	touch $@
 
 $(GLFWRS): $(GLFWRS_LIB) | $(BUILDDIR)
