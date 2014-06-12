@@ -1,8 +1,7 @@
 #![crate_id = "jba-rs"]
 #![feature(macro_rules, phase)]
-#![allow(deprecated_owned_vector)]
 
-#[phase(syntax, link)] extern crate log;
+#[phase(plugin, link)] extern crate log;
 extern crate time;
 extern crate getopts;
 extern crate native;
@@ -40,7 +39,7 @@ fn usage(prog: &str, opts: &[opts::OptGroup]) {
 
 fn main() {
     let args = os::args();
-    let opts = ~[
+    let opts = [
         opts::optflag("h", "help", "show this message"),
         opts::optflag("", "fps", "don't run a display, just print FPS"),
         opts::optopt("g", "gb", "type of gameboy to run", "[gb|cgb|sgb]"),

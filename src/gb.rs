@@ -30,7 +30,7 @@ impl Gb {
         return gb;
     }
 
-    pub fn load(&mut self, rom: ~[u8]) {
+    pub fn load(&mut self, rom: Vec<u8>) {
         self.mem.load_cartridge(rom);
     }
 
