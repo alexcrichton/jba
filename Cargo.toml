@@ -1,0 +1,20 @@
+[project]
+
+name = "jba"
+version = "0.1.0"
+authors = ["acrichto"]
+
+[[bin]]
+
+path = "src/main.rs"
+name = "jba"
+
+[dependencies.gl]
+
+version = "0.1.0"
+git = "git://github.com/alexcrichton/gl-rs"
+
+[dependencies.glfw]
+
+version = "0.1.0"
+git = "git://github.com/alexcrichton/glfw-rs"

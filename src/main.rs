@@ -26,7 +26,7 @@ mod sgb;
 mod timer;
 mod test;
 
-#[cfg(glfw)] #[path = "gl.rs"] mod app;
+#[path = "gl.rs"] mod app;
 
 #[start]
 #[cfg(not(test))]
