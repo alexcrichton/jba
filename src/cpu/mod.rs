@@ -1,7 +1,5 @@
 //! Contains logic for the CPU of the GB.
 
-use std::num::Bitwise;
-
 use gb;
 use mem;
 
