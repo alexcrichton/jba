@@ -9,12 +9,10 @@ authors = ["acrichto"]
 path = "src/main.rs"
 name = "jba"
 
-[dependencies.gl]
+[dependencies.gl-rs]
 
-version = "0.1.0"
-git = "git://github.com/alexcrichton/gl-rs"
+git = "git://github.com/bjz/gl-rs"
 
-[dependencies.glfw]
+[dependencies.glfw-rs]
 
-version = "0.1.0"
-git = "git://github.com/alexcrichton/glfw-rs"
+git = "git://github.com/bjz/glfw-rs"

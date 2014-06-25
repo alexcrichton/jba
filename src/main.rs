@@ -46,8 +46,8 @@ fn main() {
         opts::optopt("", "test", "run a test rom", "TESTFILE"),
     ];
     let matches = match opts::getopts(args.tail(), opts) {
-        Ok(m) => { m }
-        Err(f) => { fail!(f.to_err_msg()) }
+        Ok(m) => m,
+        Err(f) => fail!("{}", f),
     };
     if matches.opt_present("h") || matches.opt_present("help") ||
        matches.free.len() == 0 {
