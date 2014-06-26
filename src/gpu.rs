@@ -619,7 +619,7 @@ impl Gpu {
                 tiled[(line - yoff) as uint]
             };
 
-            for x in range(0, 8) {
+            for x in range(0i, 8) {
                 coff += 4;
 
                 // If these pixels are off screen, don't bother drawing
@@ -1057,7 +1057,7 @@ mod test {
         if_ = 0x0;
 
         // When in VBLANK, this lasts for 10 lines
-        for _ in range(0, 10) {
+        for _ in range(0i, 10) {
             assert_eq!(gpu.mode, super::VBlank);
             assert_eq!(if_, 0x0);
             gpu.step(456, &mut if_);

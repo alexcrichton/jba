@@ -9,7 +9,7 @@ authors = ["acrichto"]
 path = "src/main.rs"
 name = "jba"
 
-[dependencies.gl-rs]
+[dependencies.gl]
 
 git = "git://github.com/bjz/gl-rs"
 

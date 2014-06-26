@@ -50,7 +50,7 @@ impl Cpu {
             if ints != 0 {
                 let i = ints.trailing_zeros();
                 if self.regs.ime != 0 {
-                    mem.if_ &= !(1 << i);
+                    mem.if_ &= !(1 << (i as uint));
                 }
                 self.regs.ime = 0;
                 self.regs.halt = 0;

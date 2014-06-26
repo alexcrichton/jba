@@ -214,8 +214,8 @@ impl Sgb {
             let outsidepal = (self.data[off + 1] >> 4) & 3;
 
             // Apply to the attribute file for each block of data
-            for y in range(0, 18) {
-                for x in range(0, 20) {
+            for y in range(0i, 18) {
+                for x in range(0i, 20) {
                     if x > x1 && x < x2 && y > y1 && y < y2 {
                         if insideon {
                             gpu.sgb.atf[(y * 20 + x) as uint] = insidepal;
@@ -285,8 +285,8 @@ impl Sgb {
         let mut sgboffset = 0;
 
         // Why 13x20? Talk to the macboyadvance people.
-        for _ in range(0, 13) {
-            for _ in range(0, 20) {
+        for _ in range(0i, 13) {
+            for _ in range(0i, 20) {
                 let tilei = gpu.vram()[mapbase + offset];
                 offset += 1;
                 let tilei = gpu.add_tilei(0, tilei);

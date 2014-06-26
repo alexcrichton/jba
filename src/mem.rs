@@ -508,8 +508,9 @@ impl Memory {
                         self.input.wb(addr, val);
                         match self.sgb {
                             Some(ref mut sgb) => {
-                                sgb.receive((val >> 4) & 0x3, self.gpu,
-                                            self.input);
+                                sgb.receive((val >> 4) & 0x3,
+                                            &mut *self.gpu,
+                                            &mut *self.input);
                             }
                             None => {}
                         }
