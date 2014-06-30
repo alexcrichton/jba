@@ -13,6 +13,6 @@ name = "jba"
 
 git = "git://github.com/bjz/gl-rs"
 
-[dependencies.glfw-rs]
+[dependencies.glfw]
 
 git = "git://github.com/bjz/glfw-rs"
