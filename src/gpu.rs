@@ -492,7 +492,7 @@ impl Gpu {
 
         debug!("render window from {:x}", mapbase);
 
-        let mut mapoff = 0;
+        let mut mapoff = 0i;
         loop {
             let tilei = self.vrambanks[0][mapbase + mapoff as uint];
             mapoff += 1;

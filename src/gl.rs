@@ -154,7 +154,7 @@ impl Glcx {
             gl::BindBuffer(gl::ARRAY_BUFFER, vbo);
             gl::BufferData(gl::ARRAY_BUFFER,
                            (VERTICES.len() * 4) as i64,
-                           VERTICES.as_ptr() as *libc::c_void,
+                           VERTICES.as_ptr() as *const libc::c_void,
                            gl::STATIC_DRAW);
 
             let mut ebo = 0;
@@ -168,20 +168,20 @@ impl Glcx {
             gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, ebo);
             gl::BufferData(gl::ELEMENT_ARRAY_BUFFER,
                         (ELEMENTS.len() * mem::size_of::<glt::GLuint>()) as i64,
-                        ELEMENTS.as_ptr() as *libc::c_void,
+                        ELEMENTS.as_ptr() as *const libc::c_void,
                         gl::STATIC_DRAW);
 
             // Create and compile the vertex shader
             let vert = gl::CreateShader(gl::VERTEX_SHADER);
             VERTEX.with_c_str(|src| {
-                gl::ShaderSource(vert, 1, &src, 0 as *i32);
+                gl::ShaderSource(vert, 1, &src, 0 as *const i32);
             });
             gl::CompileShader(vert);
 
             // Create and compile the fragment shader
             let frag = gl::CreateShader(gl::FRAGMENT_SHADER);
             FRAGMENT.with_c_str(|src| {
-                gl::ShaderSource(frag, 1, &src, 0 as *i32);
+                gl::ShaderSource(frag, 1, &src, 0 as *const i32);
             });
             gl::CompileShader(frag);
 
@@ -203,7 +203,7 @@ impl Glcx {
             gl::EnableVertexAttribArray(posAttrib as u32);
             gl::VertexAttribPointer(posAttrib as u32, 2, gl::FLOAT, gl::FALSE,
                         (7 * mem::size_of::<glt::GLfloat>()) as i32,
-                        0 as *libc::c_void);
+                        0 as *const libc::c_void);
 
             let colAttrib = "color".with_c_str(|buf| {
                 gl::GetAttribLocation(program, buf)
@@ -211,7 +211,7 @@ impl Glcx {
             gl::EnableVertexAttribArray(colAttrib as u32);
             gl::VertexAttribPointer(colAttrib as u32, 3, gl::FLOAT, gl::FALSE,
                         (7 * mem::size_of::<glt::GLfloat>()) as i32,
-                        (2 * mem::size_of::<glt::GLfloat>()) as *libc::c_void);
+                        (2 * mem::size_of::<glt::GLfloat>()) as *const libc::c_void);
 
             let texAttrib = "texcoord".with_c_str(|buf| {
                 gl::GetAttribLocation(program, buf)
@@ -219,7 +219,7 @@ impl Glcx {
             gl::EnableVertexAttribArray(texAttrib as u32);
             gl::VertexAttribPointer(texAttrib as u32, 2, gl::FLOAT, gl::FALSE,
                         (7 * mem::size_of::<glt::GLfloat>()) as i32,
-                        (5 * mem::size_of::<glt::GLfloat>()) as *libc::c_void);
+                        (5 * mem::size_of::<glt::GLfloat>()) as *const libc::c_void);
 
             // Load textures
             let mut tex = 0;
@@ -260,13 +260,13 @@ impl Glcx {
             gl::TexImage2D(gl::TEXTURE_2D, 0, gl::RGB as i32,
                            gpu::WIDTH as i32, gpu::HEIGHT as i32,
                            0, gl::RGBA, gl::UNSIGNED_BYTE,
-                           data.as_ptr() as *libc::c_void);
+                           data.as_ptr() as *const libc::c_void);
             assert_eq!(gl::GetError(), 0);
 
             // Draw a rectangle from the 2 triangles using 6
             // indices
             gl::DrawElements(gl::TRIANGLES, 6, gl::UNSIGNED_INT,
-                             0 as *libc::c_void);
+                             0 as *const libc::c_void);
         }
     }
 }

@@ -4,7 +4,6 @@
 #[phase(plugin, link)] extern crate log;
 extern crate time;
 extern crate getopts;
-extern crate native;
 
 use std::os;
 use std::io::File;
@@ -27,10 +26,6 @@ mod timer;
 mod test;
 
 #[path = "gl.rs"] mod app;
-
-#[start]
-#[cfg(not(test))]
-fn start(argc: int, argv: **u8) -> int { native::start(argc, argv, main) }
 
 fn usage(prog: &str, opts: &[opts::OptGroup]) {
     let h = opts::usage(format!("usage: {} [options] <rom>", prog).as_slice(), opts);
