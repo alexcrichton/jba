@@ -3,6 +3,9 @@ install:
     - curl -O http://static.rust-lang.org/dist/rust-nightly-x86_64-unknown-linux-gnu.tar.gz
     - tar xfz rust-nightly-x86_64-unknown-linux-gnu.tar.gz
     - (cd rust-nightly-x86_64-unknown-linux-gnu/ && sudo ./install.sh)
+    - yes | sudo add-apt-repository ppa:cmrx64/cargo
+    - sudo apt-get update
+    - sudo apt-get install cargo
 # Voodoo to get glfw on the system
 before_script:
     - sudo apt-get install libXxf86vm-dev
@@ -15,8 +18,8 @@ before_script:
     - cd ..
 script:
     - rustc --version
-    - make
-    - make check
+    - cargo build
+    - cargo test
 branches:
     only:
         - rust

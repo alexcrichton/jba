@@ -877,6 +877,7 @@ fn update_cgb_pal(pal: &mut [[Color, ..4], ..8], mem: &[u8, ..CGB_BP_SIZE],
 }
 
 #[cfg(test)]
+#[allow(dead_code)]
 mod test {
     use GB = gb::GameBoy;
     use gpu::Gpu;
