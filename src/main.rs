@@ -1,4 +1,4 @@
-#![crate_id = "jba-rs"]
+#![crate_name = "jba-rs"]
 #![feature(macro_rules, phase)]
 
 #[phase(plugin, link)] extern crate log;

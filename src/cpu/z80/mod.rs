@@ -130,6 +130,7 @@ impl Registers {
         self.delay = 0;
     }
 
+    #[cfg(test)]
     pub fn is_loopback(&self, m: &mem::Memory) -> bool {
         m.rb(self.pc) == 0x18 && // jr
         m.rb(self.pc + 1) == 0xfe // jump back to self

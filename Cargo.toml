@@ -11,8 +11,8 @@ name = "jba"
 
 [dependencies.gl]
 
-git = "git://github.com/bjz/gl-rs"
+git = "https://github.com/bjz/gl-rs"
 
 [dependencies.glfw]
 
-git = "git://github.com/bjz/glfw-rs"
+git = "https://github.com/bjz/glfw-rs"

@@ -65,6 +65,7 @@ impl Gb {
         self.mem.input.keyup(key);
     }
 
+    #[cfg(test)]
     pub fn test_done(&self) -> bool {
         !self.mem.sound_on && self.cpu.is_loopback(&self.mem)
     }

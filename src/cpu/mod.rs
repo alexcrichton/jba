@@ -75,6 +75,7 @@ impl Cpu {
         return ticks;
     }
 
+    #[cfg(test)]
     pub fn is_loopback(&self, m: &mem::Memory) -> bool {
         self.regs.is_loopback(m)
     }
