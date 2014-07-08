@@ -4,11 +4,6 @@ name = "jba"
 version = "0.1.0"
 authors = ["acrichto"]
 
-[[bin]]
-
-path = "src/main.rs"
-name = "jba"
-
 [dependencies.gl]
 
 git = "https://github.com/bjz/gl-rs"
