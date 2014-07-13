@@ -22,7 +22,7 @@ mod mem;
 mod rtc;
 mod sgb;
 mod timer;
-#[cfg(test)] mod test;
+#[cfg(test)] mod tests;
 
 #[path = "gl.rs"] mod app;
 
