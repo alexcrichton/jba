@@ -1,7 +1,5 @@
 language: rust
 install:
-    - curl http://static.rust-lang.org/cargo-dist/cargo-nightly-linux.tar.gz |
-      sudo tar --strip-components 1 -C /usr -xzf -
     - curl http://www.rust-lang.org/rustup.sh | sudo sh -
 # Voodoo to get glfw on the system
 before_script:
