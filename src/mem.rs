@@ -107,7 +107,7 @@ impl Memory {
     /// to what extent the cartridge will use it.
     pub fn ram_size(&self) -> uint {
         // See http://nocash.emubase.de/pandocs.htm#thecartridgeheader
-        match *self.rom.get(0x0149) {
+        match self.rom[0x0149] {
             0x00 =>  0,
             0x01 =>  2 << 10, // 2KB
             0x02 =>  8 << 10, // 8KB
@@ -178,7 +178,7 @@ impl Memory {
 
         self.battery = true;
         self.mbc = Unknown;
-        match *self.rom.get(0x0147) {
+        match self.rom[0x0147] {
             0x00 |      // rom only
             0x08 => {   // rom + ram
                 self.battery = false;
@@ -232,14 +232,14 @@ impl Memory {
             n => { fail!("unknown cartridge inserted: {:x}", n); }
         }
 
-        self.ram = Vec::from_elem(self.ram_size(), 0u8).as_slice().to_owned();
+        self.ram = Vec::from_elem(self.ram_size(), 0u8);
         if self.target == gb::GameBoyColor {
-            self.is_cgb = *self.rom.get(0x0143) & 0x80 != 0;
+            self.is_cgb = self.rom[0x0143] & 0x80 != 0;
             self.gpu.is_cgb = self.is_cgb;
         }
 
         if self.target == gb::SuperGameBoy || self.target == gb::GameBoyColor {
-            self.is_sgb = *self.rom.get(0x0146) == 0x03;
+            self.is_sgb = self.rom[0x0146] == 0x03;
             if self.is_sgb {
                 self.sgb = Some(box sgb::Sgb::new());
                 self.gpu.is_sgb = self.is_sgb;
@@ -273,13 +273,13 @@ impl Memory {
         //      http://nocash.emubase.de/pandocs.htm#memorymap
         match addr >> 12 {
             // Always mapped in as first bank of cartridge
-            0x0 | 0x1 | 0x2 | 0x3 => *self.rom.get(addr as uint),
+            0x0 | 0x1 | 0x2 | 0x3 => self.rom[addr as uint],
 
             // Swappable banks of ROM, there may be a total of more than 2^16
             // bytes in the ROM, so we use u32 here.
             0x4 | 0x5 | 0x6 | 0x7 => {
-                *self.rom.get((((self.rombank as u32) << 14) |
-                              ((addr as u32) & 0x3fff)) as uint)
+                self.rom[(((self.rombank as u32) << 14) |
+                         ((addr as u32) & 0x3fff)) as uint]
             }
 
             0x8 | 0x9 => self.gpu.vram()[(addr & 0x1fff) as uint],
@@ -290,8 +290,8 @@ impl Memory {
                     if self.rtc.current & 0x08 != 0 {
                         self.rtc.regs[(self.rtc.current & 0x7) as uint]
                     } else {
-                        *self.ram.get((((self.rambank as u16) << 12) |
-                                      (addr & 0x1fff)) as uint)
+                        self.ram[(((self.rambank as u16) << 12) |
+                                 (addr & 0x1fff)) as uint]
                     }
                 } else {
                     0xff

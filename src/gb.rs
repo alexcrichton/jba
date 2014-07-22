@@ -49,7 +49,7 @@ impl Gb {
         self.fps += 1;
     }
 
-    pub fn image<'a>(&'a self) -> &'a [u8] {
+    pub fn image(&self) -> &[u8] {
         self.mem.gpu.image_data.as_slice()
     }
 

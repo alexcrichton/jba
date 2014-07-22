@@ -209,10 +209,10 @@ impl Gpu {
         }
     }
 
-    pub fn vram<'a>(&'a self) -> &'a [u8, ..VRAM_SIZE] {
+    pub fn vram(&self) -> &[u8, ..VRAM_SIZE] {
         &self.vrambanks[self.vrambank as uint]
     }
-    pub fn vram_mut<'a>(&'a mut self) -> &'a mut [u8, ..VRAM_SIZE] {
+    pub fn vram_mut(&mut self) -> &mut [u8, ..VRAM_SIZE] {
         &mut self.vrambanks[self.vrambank as uint]
     }
 
