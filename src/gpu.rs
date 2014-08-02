@@ -304,7 +304,8 @@ impl Gpu {
     }
 
     fn update_tileset(&mut self) {
-        let iter = self.tiles.to_update.mut_iter();
+        let tiles = &mut *self.tiles;
+        let iter = tiles.to_update.mut_iter();
         for (i, slot) in iter.enumerate().filter(|&(_, &i)| i) {
             *slot = false;
 
@@ -328,7 +329,7 @@ impl Gpu {
 
                 // LSB is the right-most pixel.
                 for k in range(0u, 8).rev() {
-                    self.tiles.data[i][j][k] = ((msb & 1) << 1) | (lsb & 1);
+                    tiles.data[i][j][k] = ((msb & 1) << 1) | (lsb & 1);
                     lsb >>= 1;
                     msb >>= 1;
                 }
@@ -780,17 +781,19 @@ impl Gpu {
             0x68 => { self.cgb.bgpi = val & 0xbf; }
             0x6a => { self.cgb.obpi = val & 0xbf; }
             0x69 => {
-                self.cgb.bgp[(self.cgb.bgpi & 0x3f) as uint] = val;
-                update_cgb_pal(&mut self.cgb.cbgp, &self.cgb.bgp, self.cgb.bgpi);
-                if self.cgb.bgpi & 0x80 != 0 {
-                    self.cgb.bgpi = (self.cgb.bgpi + 1) & 0xbf;
+                let cgb = &mut *self.cgb;
+                cgb.bgp[(cgb.bgpi & 0x3f) as uint] = val;
+                update_cgb_pal(&mut cgb.cbgp, &cgb.bgp, cgb.bgpi);
+                if cgb.bgpi & 0x80 != 0 {
+                    cgb.bgpi = (cgb.bgpi + 1) & 0xbf;
                 }
             }
             0x6b => {
-                self.cgb.obp[(self.cgb.obpi & 0x3f) as uint] = val;
-                update_cgb_pal(&mut self.cgb.cobp, &self.cgb.obp, self.cgb.obpi);
-                if self.cgb.obpi & 0x80 != 0 {
-                    self.cgb.obpi = (self.cgb.obpi + 1) & 0xbf;
+                let cgb = &mut *self.cgb;
+                cgb.obp[(cgb.obpi & 0x3f) as uint] = val;
+                update_cgb_pal(&mut cgb.cobp, &cgb.obp, cgb.obpi);
+                if cgb.obpi & 0x80 != 0 {
+                    cgb.obpi = (cgb.obpi + 1) & 0xbf;
                 }
             }
 
