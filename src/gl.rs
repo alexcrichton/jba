@@ -3,7 +3,7 @@ extern crate gl;
 extern crate libc;
 
 use std::mem;
-use glt = self::gl::types;
+use self::gl::types as glt;
 use self::glfw::Context;
 
 use input;

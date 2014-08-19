@@ -159,7 +159,7 @@ impl fmt::Signed for Registers {
 #[cfg(test)]
 mod test {
     use super::Registers;
-    use GB = gb::GameBoy;
+    use gb::GameBoy as GB;
 
     #[test]
     fn init_values() {

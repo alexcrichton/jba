@@ -568,7 +568,7 @@ impl Memory {
 #[cfg(test)]
 mod test {
     use super::Memory;
-    use GB = gb::GameBoy;
+    use gb::GameBoy as GB;
 
     #[test]
     fn mirroring() {

@@ -6,7 +6,7 @@ extern crate getopts;
 
 use std::os;
 use std::io::File;
-use opts = getopts;
+use getopts as opts;
 
 macro_rules! dfail( ($($e:tt)*) => ({
     if cfg!(not(ndebug)) {
