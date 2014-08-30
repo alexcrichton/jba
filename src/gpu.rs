@@ -684,12 +684,12 @@ impl Gpu {
             }
 
             0x41 => {
-                (self.lycly as u8                                  << 6) |
-                (self.mode2int as u8                               << 5) |
-                (self.mode1int as u8                               << 4) |
-                (self.mode0int as u8                               << 3) |
-                (if self.lycly as u8 == self.ly {1} else {0} as u8 << 2) |
-                (self.mode as u8                                   << 0)
+                (self.lycly as u8                                   << 6) |
+                (self.mode2int as u8                                << 5) |
+                (self.mode1int as u8                                << 4) |
+                (self.mode0int as u8                                << 3) |
+                (if self.lycly as u8 == self.ly {1u} else {0} as u8 << 2) |
+                (self.mode as u8                                    << 0)
             }
 
             0x42 => self.scy,
