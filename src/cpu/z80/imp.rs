@@ -1,5 +1,5 @@
 #![allow(unnecessary_parens)]
-#![allow(non_snake_case_functions)]
+#![allow(bad_style)]
 
 use cpu::z80;
 use mem;

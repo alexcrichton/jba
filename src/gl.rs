@@ -197,27 +197,27 @@ impl Glcx {
             gl::UseProgram(program);
 
             // Specify the layout of the vertex data
-            let posAttrib = "position".with_c_str(|buf| {
+            let pos_attrib = "position".with_c_str(|buf| {
                 gl::GetAttribLocation(program, buf)
             });
-            gl::EnableVertexAttribArray(posAttrib as u32);
-            gl::VertexAttribPointer(posAttrib as u32, 2, gl::FLOAT, gl::FALSE,
+            gl::EnableVertexAttribArray(pos_attrib as u32);
+            gl::VertexAttribPointer(pos_attrib as u32, 2, gl::FLOAT, gl::FALSE,
                         (7 * mem::size_of::<glt::GLfloat>()) as i32,
                         0 as *const libc::c_void);
 
-            let colAttrib = "color".with_c_str(|buf| {
+            let col_attrib = "color".with_c_str(|buf| {
                 gl::GetAttribLocation(program, buf)
             });
-            gl::EnableVertexAttribArray(colAttrib as u32);
-            gl::VertexAttribPointer(colAttrib as u32, 3, gl::FLOAT, gl::FALSE,
+            gl::EnableVertexAttribArray(col_attrib as u32);
+            gl::VertexAttribPointer(col_attrib as u32, 3, gl::FLOAT, gl::FALSE,
                         (7 * mem::size_of::<glt::GLfloat>()) as i32,
                         (2 * mem::size_of::<glt::GLfloat>()) as *const libc::c_void);
 
-            let texAttrib = "texcoord".with_c_str(|buf| {
+            let tex_attrib = "texcoord".with_c_str(|buf| {
                 gl::GetAttribLocation(program, buf)
             });
-            gl::EnableVertexAttribArray(texAttrib as u32);
-            gl::VertexAttribPointer(texAttrib as u32, 2, gl::FLOAT, gl::FALSE,
+            gl::EnableVertexAttribArray(tex_attrib as u32);
+            gl::VertexAttribPointer(tex_attrib as u32, 2, gl::FLOAT, gl::FALSE,
                         (7 * mem::size_of::<glt::GLfloat>()) as i32,
                         (5 * mem::size_of::<glt::GLfloat>()) as *const libc::c_void);
 
