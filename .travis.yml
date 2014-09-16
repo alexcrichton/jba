@@ -1,6 +1,4 @@
 language: rust
-install:
-    - curl http://www.rust-lang.org/rustup.sh | sudo sh -
 # Voodoo to get glfw on the system
 before_script:
     - sudo apt-get install libXxf86vm-dev
