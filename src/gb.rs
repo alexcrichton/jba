@@ -57,11 +57,11 @@ impl Gb {
         mem::replace(&mut self.fps, 0)
     }
 
-    pub fn keydown(&mut self, key: input::Button) {
+    pub fn keydown(&mut self, key: input::ButtonKey) {
         self.mem.input.keydown(key, &mut self.mem.if_);
     }
 
-    pub fn keyup(&mut self, key: input::Button) {
+    pub fn keyup(&mut self, key: input::ButtonKey) {
         self.mem.input.keyup(key);
     }
 
