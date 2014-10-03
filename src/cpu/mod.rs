@@ -10,6 +10,7 @@ pub struct Cpu {
     ticks: uint,
 }
 
+#[allow(dead_code)]
 pub enum Interrupts {
     IntVblank  = 0x01,
     IntLCDStat = 0x02,

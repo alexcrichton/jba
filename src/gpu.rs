@@ -204,7 +204,7 @@ impl Gpu {
     }
 
     pub fn white(&mut self) {
-        for slot in self.image_data.mut_iter() {
+        for slot in self.image_data.iter_mut() {
             *slot = 0xff;
         }
     }
@@ -305,7 +305,7 @@ impl Gpu {
 
     fn update_tileset(&mut self) {
         let tiles = &mut *self.tiles;
-        let iter = tiles.to_update.mut_iter();
+        let iter = tiles.to_update.iter_mut();
         for (i, slot) in iter.enumerate().filter(|&(_, &i)| i) {
             *slot = false;
 
