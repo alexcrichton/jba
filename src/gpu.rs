@@ -8,13 +8,13 @@ use gb;
 use cpu;
 use mem;
 
-static VRAM_SIZE: uint = 8 << 10; // 8K
-static OAM_SIZE: uint = 0xa0;     // 0xffe00 - 0xffe9f is OAM
-static CGB_BP_SIZE: uint = 64;    // 64 bytes of extra memory
-static NUM_TILES: uint = 384;     // number of in-memory tiles
+const VRAM_SIZE: uint = 8 << 10; // 8K
+const OAM_SIZE: uint = 0xa0;     // 0xffe00 - 0xffe9f is OAM
+const CGB_BP_SIZE: uint = 64;    // 64 bytes of extra memory
+const NUM_TILES: uint = 384;     // number of in-memory tiles
 
-pub static HEIGHT: uint = 144;
-pub static WIDTH: uint = 160;
+pub const HEIGHT: uint = 144;
+pub const WIDTH: uint = 160;
 
 // The palette for the monochrome GB. The possible values are:
 //
@@ -22,7 +22,7 @@ pub static WIDTH: uint = 160;
 // 1 - light gray
 // 2 - dark gray
 // 3 - black
-static PALETTE: [Color, ..4] = [
+const PALETTE: [Color, ..4] = [
     [255, 255, 255, 255],
     [192, 192, 192, 255],
     [ 96,  96,  96, 255],
@@ -886,19 +886,19 @@ mod test {
     use gpu::Gpu;
     use mem::Memory;
 
-    static BGP: u16  = 0xff47;
-    static LCDC: u16 = 0xff40;
-    static SCY: u16  = 0xff42;
-    static SCX: u16  = 0xff43;
-    static STAT: u16 = 0xff41;
-    static LY: u16   = 0xff44;
-    static LYC: u16  = 0xff45;
+    const BGP: u16  = 0xff47;
+    const LCDC: u16 = 0xff40;
+    const SCY: u16  = 0xff42;
+    const SCX: u16  = 0xff43;
+    const STAT: u16 = 0xff41;
+    const LY: u16   = 0xff44;
+    const LYC: u16  = 0xff45;
 
-    static LCDON: u8   = 0x80;
-    static TILESEL: u8 = 0x10;
-    static BGSEL: u8   = 0x08;
-    static OBJON: u8   = 0x02;
-    static BGON: u8    = 0x01;
+    const LCDON: u8   = 0x80;
+    const TILESEL: u8 = 0x10;
+    const BGSEL: u8   = 0x08;
+    const OBJON: u8   = 0x02;
+    const BGON: u8    = 0x01;
 
     #[test]
     fn read_regs() {

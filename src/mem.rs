@@ -13,8 +13,8 @@ use rtc;
 use sgb;
 use timer;
 
-static WRAM_SIZE: uint = 32 << 10; // CGB has 32K (8 banks * 4 KB/bank), GB has 8K
-static HIRAM_SIZE: uint = 0x7f;    // hiram is from 0xff80 - 0xfffe
+const WRAM_SIZE: uint = 32 << 10; // CGB has 32K (8 banks * 4 KB/bank), GB has 8K
+const HIRAM_SIZE: uint = 0x7f;    // hiram is from 0xff80 - 0xfffe
 
 pub struct Memory {
     /// Interrupt flags, http://nocash.emubase.de/pandocs.htm#interrupts.

@@ -109,7 +109,7 @@ pub fn run(mut gb: Gb) {
 }
 
 // Shader sources
-static VERTEX: &'static str = r"#version 150 core
+const VERTEX: &'static str = r"#version 150 core
 in vec2 position;
 in vec3 color;
 in vec2 texcoord;
@@ -122,7 +122,7 @@ void main() {
 }
 ";
 
-static FRAGMENT: &'static str = r"#version 150 core
+const FRAGMENT: &'static str = r"#version 150 core
 in vec3 Color;
 in vec2 Texcoord;
 out vec4 outColor;
@@ -144,7 +144,7 @@ impl Glcx {
             let mut vbo = 0;
             gl::GenBuffers(1, &mut vbo);
 
-            static VERTICES: &'static [f32] = &[
+            const VERTICES: &'static [f32] = &[
             //  Position   Color             Texcoords
                 -1.0,  1.0, 1.0, 0.0, 0.0, 0.0, 0.0, // Top-left
                  1.0,  1.0, 0.0, 1.0, 0.0, 1.0, 0.0, // Top-right
@@ -160,7 +160,7 @@ impl Glcx {
             let mut ebo = 0;
             gl::GenBuffers(1, &mut ebo);
 
-            static ELEMENTS: &'static [glt::GLuint] = &[
+            const ELEMENTS: &'static [glt::GLuint] = &[
                 0, 1, 2,
                 2, 3, 0
             ];

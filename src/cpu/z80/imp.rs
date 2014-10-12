@@ -4,10 +4,10 @@
 use cpu::z80;
 use mem;
 
-pub static Z: u8 = 0x80;
-pub static N: u8 = 0x40;
-pub static H: u8 = 0x20;
-pub static C: u8 = 0x10;
+pub const Z: u8 = 0x80;
+pub const N: u8 = 0x40;
+pub const H: u8 = 0x20;
+pub const C: u8 = 0x10;
 
 fn add(a: u16, b: u8) -> u16 {
     (a as i16 + (b as i8 as i16)) as u16
