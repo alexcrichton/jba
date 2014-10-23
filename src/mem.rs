@@ -646,7 +646,7 @@ mod test {
         let mut ram = Vec::from_elem(0x1000000, 0u8);
         *ram.get_mut(0x0149) = 0x03;
         $(*ram.get_mut($k) = $v;)+
-        m.load_cartridge(ram.as_slice().to_owned());
+        m.load_cartridge(ram.as_slice().to_vec());
         m
     }) )
 

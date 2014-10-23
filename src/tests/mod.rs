@@ -16,7 +16,7 @@ fn run(compressed_rom: &'static [u8], answer: &str) {
         Some(target) => target,
         None => gb::GameBoyColor,
     });
-    gb.load(rom.to_owned());
+    gb.load(rom.to_vec());
 
     while !gb.test_done() {
         gb.frame();
