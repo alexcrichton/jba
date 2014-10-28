@@ -2,8 +2,8 @@
 name = "jba"
 version = "0.1.0"
 dependencies = [
- "gl 0.0.1 (git+https://github.com/bjz/gl-rs#c78c3b02e99c06ff978b39a400b9b37004714662)",
- "glfw 0.0.1 (git+https://github.com/bjz/glfw-rs#84b7ec32b4acead41f0bfde224604a2cf5a21d8a)",
+ "gl 0.0.1 (git+https://github.com/bjz/gl-rs)",
+ "glfw 0.0.1 (git+https://github.com/bjz/glfw-rs)",
 ]
 
 [[package]]
@@ -11,7 +11,7 @@ name = "gl"
 version = "0.0.1"
 source = "git+https://github.com/bjz/gl-rs#c78c3b02e99c06ff978b39a400b9b37004714662"
 dependencies = [
- "gl_generator 0.0.1 (git+https://github.com/bjz/gl-rs#c78c3b02e99c06ff978b39a400b9b37004714662)",
+ "gl_generator 0.0.1 (git+https://github.com/bjz/gl-rs)",
 ]
 
 [[package]]
@@ -19,8 +19,8 @@ name = "gl_generator"
 version = "0.0.1"
 source = "git+https://github.com/bjz/gl-rs#c78c3b02e99c06ff978b39a400b9b37004714662"
 dependencies = [
- "khronos_api 0.0.1 (git+https://github.com/bjz/gl-rs#c78c3b02e99c06ff978b39a400b9b37004714662)",
- "rust-xml 0.1.0 (git+https://github.com/netvl/rust-xml#cdcadd4761a1e3aa5f937321e4d30507604c6fc2)",
+ "khronos_api 0.0.1 (git+https://github.com/bjz/gl-rs)",
+ "rust-xml 0.1.0 (git+https://github.com/netvl/rust-xml)",
 ]
 
 [[package]]
@@ -28,8 +28,8 @@ name = "glfw"
 version = "0.0.1"
 source = "git+https://github.com/bjz/glfw-rs#84b7ec32b4acead41f0bfde224604a2cf5a21d8a"
 dependencies = [
- "glfw-sys 3.0.4 (git+https://github.com/servo/glfw?ref=cargo-3.0.4#65a2b4721276589d9de24f6a9999a2db37286cae)",
- "semver 0.1.0 (git+https://github.com/rust-lang/semver#5dee918159d4e3d84c1ee54cf6a5305e6f7bd557)",
+ "glfw-sys 3.0.4 (git+https://github.com/servo/glfw?ref=cargo-3.0.4)",
+ "semver 0.1.0 (git+https://github.com/rust-lang/semver)",
 ]
 
 [[package]]
