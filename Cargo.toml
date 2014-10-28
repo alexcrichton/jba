@@ -2,12 +2,10 @@
 
 name = "jba"
 version = "0.1.0"
-authors = ["acrichto"]
+authors = []
 
 [dependencies.gl]
-
 git = "https://github.com/bjz/gl-rs"
 
 [dependencies.glfw]
-
 git = "https://github.com/bjz/glfw-rs"
