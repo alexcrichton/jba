@@ -18,3 +18,7 @@ branches:
         - rust
 env:
     - LD_LIBRARY_PATH=/usr/local/lib
+
+notifications:
+  email:
+    on_success: never
