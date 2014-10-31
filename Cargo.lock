@@ -9,7 +9,7 @@ dependencies = [
 [[package]]
 name = "gl"
 version = "0.0.1"
-source = "git+https://github.com/bjz/gl-rs#c78c3b02e99c06ff978b39a400b9b37004714662"
+source = "git+https://github.com/bjz/gl-rs#df380704256f6eb9c9cf6850181bb7250995c50a"
 dependencies = [
  "gl_generator 0.0.1 (git+https://github.com/bjz/gl-rs)",
 ]
@@ -17,7 +17,7 @@ dependencies = [
 [[package]]
 name = "gl_generator"
 version = "0.0.1"
-source = "git+https://github.com/bjz/gl-rs#c78c3b02e99c06ff978b39a400b9b37004714662"
+source = "git+https://github.com/bjz/gl-rs#df380704256f6eb9c9cf6850181bb7250995c50a"
 dependencies = [
  "khronos_api 0.0.1 (git+https://github.com/bjz/gl-rs)",
  "rust-xml 0.1.0 (git+https://github.com/netvl/rust-xml)",
@@ -26,7 +26,7 @@ dependencies = [
 [[package]]
 name = "glfw"
 version = "0.0.1"
-source = "git+https://github.com/bjz/glfw-rs#84b7ec32b4acead41f0bfde224604a2cf5a21d8a"
+source = "git+https://github.com/bjz/glfw-rs#848816edfdaf3cca21fbb9172ea6635f623d558c"
 dependencies = [
  "glfw-sys 3.0.4 (git+https://github.com/servo/glfw?ref=cargo-3.0.4)",
  "semver 0.1.0 (git+https://github.com/rust-lang/semver)",
@@ -35,20 +35,20 @@ dependencies = [
 [[package]]
 name = "glfw-sys"
 version = "3.0.4"
-source = "git+https://github.com/servo/glfw?ref=cargo-3.0.4#65a2b4721276589d9de24f6a9999a2db37286cae"
+source = "git+https://github.com/servo/glfw?ref=cargo-3.0.4#0e13d32555fb72b38ba1dfcff0c65a486510302e"
 
 [[package]]
 name = "khronos_api"
 version = "0.0.1"
-source = "git+https://github.com/bjz/gl-rs#c78c3b02e99c06ff978b39a400b9b37004714662"
+source = "git+https://github.com/bjz/gl-rs#df380704256f6eb9c9cf6850181bb7250995c50a"
 
 [[package]]
 name = "rust-xml"
 version = "0.1.0"
-source = "git+https://github.com/netvl/rust-xml#cdcadd4761a1e3aa5f937321e4d30507604c6fc2"
+source = "git+https://github.com/netvl/rust-xml#4876722236a9c0f973e4867e3b2971368ed3111b"
 
 [[package]]
 name = "semver"
 version = "0.1.0"
-source = "git+https://github.com/rust-lang/semver#5dee918159d4e3d84c1ee54cf6a5305e6f7bd557"
+source = "git+https://github.com/rust-lang/semver#7dca047a9cd40e929a4545b37a1917daff82f156"
 

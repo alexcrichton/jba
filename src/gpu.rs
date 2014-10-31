@@ -435,7 +435,7 @@ impl Gpu {
                         255 => { color = self.sgb.pal[mapped][0]; }
 
                         // not actually reachable
-                        _ => { dfail!(); color = [0, 0, 0, 0]; }
+                        _ => { dpanic!(); color = [0, 0, 0, 0]; }
                     }
                 } else {
                     color = bgp[colori as uint];
@@ -656,7 +656,7 @@ impl Gpu {
                         255 => { color = self.sgb.pal[mapped as uint][0]; }
 
                         // not actually reachable
-                        _ => { dfail!(); color = [0, 0, 0, 0]; }
+                        _ => { dpanic!(); color = [0, 0, 0, 0]; }
                     }
                 } else {
                     color = pal[colori as uint];
@@ -840,7 +840,7 @@ impl Gpu {
             return
         }
 
-        dfail!("unimplemented HDMA DMA transfer");
+        dpanic!("unimplemented HDMA DMA transfer");
     }
 }
 

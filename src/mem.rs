@@ -112,7 +112,7 @@ impl Memory {
             0x01 =>  2 << 10, // 2KB
             0x02 =>  8 << 10, // 8KB
             0x03 => 32 << 10, // 32KB
-            _ => { dfail!("Unknown ram size"); 0 }
+            _ => { dpanic!("Unknown ram size"); 0 }
         }
     }
 
@@ -229,7 +229,7 @@ impl Memory {
                 self.mbc = Mbc5;
             }
 
-            n => { fail!("unknown cartridge inserted: {:x}", n); }
+            n => { panic!("unknown cartridge inserted: {:x}", n); }
         }
 
         self.ram = Vec::from_elem(self.ram_size(), 0u8);
@@ -319,7 +319,7 @@ impl Memory {
                 }
             }
 
-            _ => { dfail!(); 0 }
+            _ => { dpanic!(); 0 }
         }
     }
 
@@ -362,11 +362,11 @@ impl Memory {
                 if self.is_cgb && addr == 0xff70 {
                     self.wrambank as u8
                 } else {
-                    dfail!(); 0xff
+                    dpanic!(); 0xff
                 }
             }
 
-            _ => { dfail!(); 0xff }
+            _ => { dpanic!(); 0xff }
         }
     }
 
@@ -465,8 +465,8 @@ impl Memory {
                         self.rtc.wb(addr, val);
                     } else {
                         let val = if self.mbc == Mbc2 {val & 0xf} else {val};
-                        *self.ram.get_mut((((self.rambank as u16) << 12) |
-                                          (addr & 0x1fff)) as uint) = val;
+                        self.ram[(((self.rambank as u16) << 12) |
+                                 (addr & 0x1fff)) as uint] = val;
                     }
                 }
             }
@@ -493,7 +493,7 @@ impl Memory {
                 }
             }
 
-            _ => dfail!()
+            _ => dpanic!()
         }
     }
 
@@ -560,7 +560,7 @@ impl Memory {
                 }
             }
 
-            _ => { dfail!("unimplemented address {:x}", addr); }
+            _ => { dpanic!("unimplemented address {:x}", addr); }
         }
     }
 }

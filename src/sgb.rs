@@ -140,21 +140,21 @@ impl Sgb {
             0x13 => {} // CHR_TRN Transfer Character Font Data
             0x14 => {} // PCT_TRN Set Screen Data Color Data
 
-            0x05 => dfail!(), // ATTR_LIN "Line" Area Designation Mode
-            0x06 => dfail!(), // ATTR_DIV "Divide" Area Designation Mode
-            0x07 => dfail!(), // ATTR_CHR "1CHR" Area Designation Mode
-            0x08 => dfail!(), // SOUND Sound On/Off
-            0x09 => dfail!(), // SOU_TRN Transfer Sound PRG/DATA
-            0x0C => dfail!(), // ATRC_EN Enable/disable Attraction Mode
-            0x0D => dfail!(), // TEST_EN Speed Function
-            0x0E => dfail!(), // ICON_EN SGB Function
-            0x10 => dfail!(), // DATA_TRN SUPER NES WRAM Transfer 2
-            0x12 => dfail!(), // JUMP Set SNES Program Counter
-            0x15 => dfail!(), // ATTR_TRN Set Attribute from ATF
-            0x16 => dfail!(), // ATTR_SET Set Data to ATF
-            0x18 => dfail!(), // OBJ_TRN Super NES OBJ Mode
+            0x05 => dpanic!(), // ATTR_LIN "Line" Area Designation Mode
+            0x06 => dpanic!(), // ATTR_DIV "Divide" Area Designation Mode
+            0x07 => dpanic!(), // ATTR_CHR "1CHR" Area Designation Mode
+            0x08 => dpanic!(), // SOUND Sound On/Off
+            0x09 => dpanic!(), // SOU_TRN Transfer Sound PRG/DATA
+            0x0C => dpanic!(), // ATRC_EN Enable/disable Attraction Mode
+            0x0D => dpanic!(), // TEST_EN Speed Function
+            0x0E => dpanic!(), // ICON_EN SGB Function
+            0x10 => dpanic!(), // DATA_TRN SUPER NES WRAM Transfer 2
+            0x12 => dpanic!(), // JUMP Set SNES Program Counter
+            0x15 => dpanic!(), // ATTR_TRN Set Attribute from ATF
+            0x16 => dpanic!(), // ATTR_SET Set Data to ATF
+            0x18 => dpanic!(), // OBJ_TRN Super NES OBJ Mode
 
-            _ => dfail!(),
+            _ => dpanic!(),
         }
     }
 
@@ -255,7 +255,7 @@ impl Sgb {
         // Not really sure what to do with this yet. Make sure we don't miss
         // any functionality by throwing an exception.
         if self.data[9] & 0x80 != 0 {
-            dfail!("unsure what an attribute file is just yet");
+            dpanic!("unsure what an attribute file is just yet");
         }
         // Recompile the palettes
         self.update_palettes(gpu);

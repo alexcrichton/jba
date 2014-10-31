@@ -8,9 +8,9 @@ use std::os;
 use std::io::File;
 use getopts as opts;
 
-macro_rules! dfail( ($($e:tt)*) => ({
+macro_rules! dpanic( ($($e:tt)*) => ({
     if cfg!(not(ndebug)) {
-        fail!($($e)*);
+        panic!($($e)*);
     }
 }) )
 
@@ -40,7 +40,7 @@ fn main() {
     ];
     let matches = match opts::getopts(args.tail(), opts) {
         Ok(m) => m,
-        Err(f) => fail!("{}", f),
+        Err(f) => panic!("{}", f),
     };
     if matches.opt_present("h") || matches.opt_present("help") ||
        matches.free.len() == 0 {

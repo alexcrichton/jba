@@ -62,7 +62,7 @@ impl Cpu {
                     2 => { self.regs.rst(0x50, mem); }
                     3 => { self.regs.rst(0x58, mem); }
                     4 => { self.regs.rst(0x60, mem); }
-                    _ => { dfail!(); }
+                    _ => { dpanic!(); }
                 }
                 ticks += 1;
             }

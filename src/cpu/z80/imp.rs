@@ -1,4 +1,4 @@
-#![allow(unnecessary_parens)]
+#![allow(unused_parens)]
 #![allow(bad_style)]
 
 use cpu::z80;
@@ -102,7 +102,7 @@ fn pop_af(r: &mut z80::Registers, m: &mut mem::Memory) {
     r.sp += 2;
 }
 
-fn xx() -> uint { dfail!(); 0 }
+fn xx() -> uint { dpanic!(); 0 }
 
 pub fn exec(inst: u8, r: &mut z80::Registers, m: &mut mem::Memory) -> uint {
     macro_rules! ld( ($reg1:ident, $reg2:ident) => ({ r.$reg1 = r.$reg2; 1 }) )

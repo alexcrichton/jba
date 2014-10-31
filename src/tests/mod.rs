@@ -24,9 +24,9 @@ fn run(compressed_rom: &'static [u8], answer: &str) {
 
     let hash = hash::hash(&gb.image());
     if answer == "-" {
-        fail!("{}", hash)
+        panic!("{}", hash)
     } else if answer.to_string() != hash.to_string() {
-        fail!("failed test");
+        panic!("failed test");
     }
 }
 
