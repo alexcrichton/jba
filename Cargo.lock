@@ -45,7 +45,7 @@ source = "git+https://github.com/bjz/gl-rs#325b34c470b18f83756fe86e48cce56dba28d
 [[package]]
 name = "rust-xml"
 version = "0.1.0"
-source = "git+https://github.com/netvl/rust-xml#7d867d8020e6ee845d198e012124c698738804a2"
+source = "git+https://github.com/netvl/rust-xml#a4109a2b99e602a26f157f052f4d2677f9b4aa8e"
 
 [[package]]
 name = "semver"
