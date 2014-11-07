@@ -644,8 +644,8 @@ mod test {
     macro_rules! load( ($($k:expr => $v:expr),+) => ({
         let mut m = Memory::new(GB);
         let mut ram = Vec::from_elem(0x1000000, 0u8);
-        *ram.get_mut(0x0149) = 0x03;
-        $(*ram.get_mut($k) = $v;)+
+        ram[0x0149] = 0x03;
+        $(ram[$k] = $v;)+
         m.load_cartridge(ram.as_slice().to_vec());
         m
     }) )
