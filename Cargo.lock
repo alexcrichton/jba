@@ -9,7 +9,7 @@ dependencies = [
 [[package]]
 name = "gl"
 version = "0.0.1"
-source = "git+https://github.com/bjz/gl-rs#678346eb5f8ba95f50a8d0f7ff9d87a7338953dc"
+source = "git+https://github.com/bjz/gl-rs#79cd3b3f9f19aa0e39f6af572fc8673a6d9760bc"
 dependencies = [
  "gl_generator 0.0.1 (git+https://github.com/bjz/gl-rs)",
 ]
@@ -17,12 +17,12 @@ dependencies = [
 [[package]]
 name = "gl_common"
 version = "0.0.1"
-source = "git+https://github.com/bjz/gl-rs#678346eb5f8ba95f50a8d0f7ff9d87a7338953dc"
+source = "git+https://github.com/bjz/gl-rs#79cd3b3f9f19aa0e39f6af572fc8673a6d9760bc"
 
 [[package]]
 name = "gl_generator"
 version = "0.0.1"
-source = "git+https://github.com/bjz/gl-rs#678346eb5f8ba95f50a8d0f7ff9d87a7338953dc"
+source = "git+https://github.com/bjz/gl-rs#79cd3b3f9f19aa0e39f6af572fc8673a6d9760bc"
 dependencies = [
  "gl_common 0.0.1 (git+https://github.com/bjz/gl-rs)",
  "khronos_api 0.0.1 (git+https://github.com/bjz/gl-rs)",
@@ -46,7 +46,7 @@ source = "git+https://github.com/servo/glfw?ref=cargo-3.0.4#765dace7e4125b87c764
 [[package]]
 name = "khronos_api"
 version = "0.0.1"
-source = "git+https://github.com/bjz/gl-rs#678346eb5f8ba95f50a8d0f7ff9d87a7338953dc"
+source = "git+https://github.com/bjz/gl-rs#79cd3b3f9f19aa0e39f6af572fc8673a6d9760bc"
 
 [[package]]
 name = "rust-xml"
