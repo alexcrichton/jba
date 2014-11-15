@@ -1,5 +1,7 @@
 //! Contains logic for the CPU of the GB.
 
+use std::num::Int;
+
 use gb;
 use mem;
 
