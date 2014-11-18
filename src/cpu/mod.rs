@@ -3,7 +3,7 @@
 use std::num::Int;
 
 use gb;
-use mem;
+use mem::{mod, Speed};
 
 mod z80;
 
@@ -13,12 +13,12 @@ pub struct Cpu {
 }
 
 #[allow(dead_code)]
-pub enum Interrupts {
-    IntVblank  = 0x01,
-    IntLCDStat = 0x02,
-    IntTimer   = 0x04,
-    IntSerial  = 0x08,
-    IntJoypad  = 0x10,
+pub enum Interrupt {
+    Vblank  = 0x01,
+    LCDStat = 0x02,
+    Timer   = 0x04,
+    Serial  = 0x08,
+    Joypad  = 0x10,
 }
 
 impl Cpu {
@@ -71,8 +71,8 @@ impl Cpu {
         }
 
         match mem.speed {
-            mem::Normal => { ticks *= 4; }
-            mem::Double => { ticks *= 2; }
+            Speed::Normal => { ticks *= 4; }
+            Speed::Double => { ticks *= 2; }
         }
         self.ticks += ticks;
         return ticks;

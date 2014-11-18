@@ -38,7 +38,7 @@ impl Sgb {
     pub fn new() -> Sgb {
         Sgb {
             ram: [0, ..0x1000],
-            state: Default,
+            state: State::Default,
             packets: 0,
             datai: 0,
             byte: 0,
@@ -54,18 +54,18 @@ impl Sgb {
                    gpu: &mut gpu::Gpu,
                    input: &mut input::Input) {
         match self.state {
-            Default => {
+            State::Default => {
                 if val == 0 {
-                    self.state = Reset;
+                    self.state = State::Reset;
                     self.packets = 0;
                 } else if val == 3 {
                     input.joypad_sel = (input.joypad_sel + 1) % 4;
                 }
             }
 
-            Reset => {
+            State::Reset => {
                 if val == 3 {
-                    self.state = Read;
+                    self.state = State::Read;
                     if self.packets == 0 {
                         self.packets = 1;
                         self.datai = 0;
@@ -73,13 +73,13 @@ impl Sgb {
                     self.byte = 0;
                     self.read = 0;
                 } else if val != 0 {
-                    self.state = Default;
+                    self.state = State::Default;
                 }
             }
 
-            Read => {
+            State::Read => {
                 if val == 0 {
-                    self.state = Reset;
+                    self.state = State::Reset;
                     if self.datai == self.packets * 16 {
                         self.packets = 0;
                     }
@@ -89,7 +89,7 @@ impl Sgb {
                         // Have we read all the packets?
                         if self.datai == self.packets * 16 {
                             self.process(gpu, input);
-                            self.state = Default;
+                            self.state = State::Default;
 
                         // We have to read another packet
                         } else {

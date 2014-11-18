@@ -4,6 +4,8 @@ use cpu::Cpu;
 use input;
 use mem::Memory;
 
+pub use self::Target::{GameBoy, GameBoyColor, SuperGameBoy};
+
 #[deriving(PartialEq, Eq)]
 pub enum Target {
     GameBoy,
@@ -57,11 +59,11 @@ impl Gb {
         mem::replace(&mut self.fps, 0)
     }
 
-    pub fn keydown(&mut self, key: input::ButtonKey) {
+    pub fn keydown(&mut self, key: input::Button) {
         self.mem.input.keydown(key, &mut self.mem.if_);
     }
 
-    pub fn keyup(&mut self, key: input::ButtonKey) {
+    pub fn keyup(&mut self, key: input::Button) {
         self.mem.input.keyup(key);
     }
 

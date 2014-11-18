@@ -84,7 +84,7 @@ impl Memory {
     pub fn new(target: gb::Target) -> Memory {
         Memory {
             target: target,
-            speed: Normal, speedswitch: false,
+            speed: Speed::Normal, speedswitch: false,
             sound_on: false,
             if_: 0, ie_: 0, battery: false, is_cgb: false, is_sgb: false,
             rom: Vec::new(),
@@ -92,7 +92,7 @@ impl Memory {
             wram: box () ([0, ..WRAM_SIZE]),
             hiram: box () ([0, ..HIRAM_SIZE]),
             rombank: 1, rambank: 0, wrambank: 1,
-            ramon: false, mode: false, mbc: Unknown,
+            ramon: false, mode: false, mbc: Mbc::Unknown,
 
             rtc: box rtc::Rtc::new(),
             input: box input::Input::new(),
@@ -177,44 +177,44 @@ impl Memory {
         // header information.
 
         self.battery = true;
-        self.mbc = Unknown;
+        self.mbc = Mbc::Unknown;
         match self.rom[0x0147] {
             0x00 |      // rom only
             0x08 => {   // rom + ram
                 self.battery = false;
-                self.mbc = Omitted;
+                self.mbc = Mbc::Omitted;
             }
 
             0x09 => {   // rom + ram + battery
-                self.mbc = Omitted;
+                self.mbc = Mbc::Omitted;
             }
 
             0x01 |      // rom + mbc1
             0x02 => {   // rom + mbc1 + ram
                 self.battery = false;
-                self.mbc = Mbc1;
+                self.mbc = Mbc::Mbc1;
             }
             0x03 => {   // rom + mbc1 + ram + batt
-                self.mbc = Mbc1;
+                self.mbc = Mbc::Mbc1;
             }
 
             0x05 => {   // rom + mbc2
                 self.battery = false;
-                self.mbc = Mbc2;
+                self.mbc = Mbc::Mbc2;
             }
             0x06 => {   // rom + mbc2 + batt
-                self.mbc = Mbc2;
+                self.mbc = Mbc::Mbc2;
             }
 
             0x11 |      // rom + mbc3
             0x12 => {   // rom + mbc3 + ram
                 self.battery = false;
-                self.mbc = Mbc3;
+                self.mbc = Mbc::Mbc3;
             }
             0x0f |      // rom + mbc3 + timer + batt
             0x10 |      // rom + mbc3 + timer + ram + batt
             0x13 => {   // rom + mbc3 + ram + batt
-                self.mbc = Mbc3;
+                self.mbc = Mbc::Mbc3;
             }
 
             0x19 |      // <>
@@ -222,11 +222,11 @@ impl Memory {
             0x1c |      // rumble
             0x1d => {   // rumble + ram
                 self.battery = false;
-                self.mbc = Mbc5;
+                self.mbc = Mbc::Mbc5;
             }
             0x1b |      // ram + battery
             0x1e => {   // rumble + ram + batter
-                self.mbc = Mbc5;
+                self.mbc = Mbc::Mbc5;
             }
 
             n => { panic!("unknown cartridge inserted: {:x}", n); }
@@ -251,8 +251,8 @@ impl Memory {
     pub fn switch_speeds(&mut self) {
         self.speedswitch = false;
         self.speed = match self.speed {
-            Normal => Double,
-            Double => Normal,
+            Speed::Normal => Speed::Double,
+            Speed::Double => Speed::Normal,
         };
     }
 
@@ -350,7 +350,10 @@ impl Memory {
 
             0x4 => {
                 if self.is_cgb && addr == 0xff4d {
-                    let b = match self.speed { Normal => 0x00, Double => 0x80 };
+                    let b = match self.speed {
+                        Speed::Normal => 0x00,
+                        Speed::Double => 0x80,
+                    };
                     b | (self.speedswitch as u8)
                 } else {
                     self.gpu.rb(addr)
@@ -377,37 +380,37 @@ impl Memory {
         match addr >> 12 {
             0x0 | 0x1 => {
                 match self.mbc {
-                    Mbc1 | Mbc3 | Mbc5 => {
+                    Mbc::Mbc1 | Mbc::Mbc3 | Mbc::Mbc5 => {
                         self.ramon = val & 0xf == 0xa;
                     }
-                    Mbc2 => {
+                    Mbc::Mbc2 => {
                         if addr & 0x100 == 0 {
                             self.ramon = !self.ramon;
                         }
                     }
-                    Unknown | Omitted => {}
+                    Mbc::Unknown | Mbc::Omitted => {}
                 }
             }
 
             0x2 | 0x3 => {
                 let val = val as u16;
                 match self.mbc {
-                    Mbc1 => {
+                    Mbc::Mbc1 => {
                         self.rombank = (self.rombank & 0x60) | (val & 0x1f);
                         if self.rombank == 0 {
                             self.rombank = 1;
                         }
                     }
-                    Mbc2 => {
+                    Mbc::Mbc2 => {
                         if addr & 0x100 != 0 {
                             self.rombank = val & 0xf;
                         }
                     }
-                    Mbc3 => {
+                    Mbc::Mbc3 => {
                         let val = val & 0x7f;
                         self.rombank = val + if val != 0 {0} else {1};
                     }
-                    Mbc5 => {
+                    Mbc::Mbc5 => {
                         if addr >> 12 == 0x2 {
                             self.rombank = (self.rombank & 0xff00) | val;
                         } else {
@@ -415,13 +418,13 @@ impl Memory {
                             self.rombank = (self.rombank & 0x00ff) | val;
                         }
                     }
-                    Unknown | Omitted => {}
+                    Mbc::Unknown | Mbc::Omitted => {}
                 }
             }
 
             0x4 | 0x5 => {
                 match self.mbc {
-                    Mbc1 => {
+                    Mbc::Mbc1 => {
                         if !self.mode { // ROM banking mode
                             self.rombank = (self.rombank & 0x1f) |
                                            (((val as u16) & 0x3) << 5);
@@ -429,23 +432,23 @@ impl Memory {
                             self.rambank = val & 0x3;
                         }
                     }
-                    Mbc3 => {
+                    Mbc::Mbc3 => {
                         self.rtc.current = val & 0xf;
                         self.rambank = val & 0x3
                     }
-                    Mbc5 => {
+                    Mbc::Mbc5 => {
                         self.rambank = val & 0xf;
                     }
-                    Unknown | Omitted | Mbc2 => {}
+                    Mbc::Unknown | Mbc::Omitted | Mbc::Mbc2 => {}
                 }
             }
 
             0x6 | 0x7 => {
                 match self.mbc {
-                    Mbc1 => {
+                    Mbc::Mbc1 => {
                         self.mode = val & 0x1 != 0;
                     }
-                    Mbc3 => {
+                    Mbc::Mbc3 => {
                         self.rtc.latch(val);
                     }
                     _ => {}
@@ -464,7 +467,7 @@ impl Memory {
                     if self.rtc.current & 0x8 != 0 {
                         self.rtc.wb(addr, val);
                     } else {
-                        let val = if self.mbc == Mbc2 {val & 0xf} else {val};
+                        let val = if self.mbc == Mbc::Mbc2 {val & 0xf} else {val};
                         self.ram[(((self.rambank as u16) << 12) |
                                  (addr & 0x1fff)) as uint] = val;
                     }
@@ -567,7 +570,7 @@ impl Memory {
 
 #[cfg(test)]
 mod test {
-    use super::Memory;
+    use super::{Memory, Mbc};
     use gb::GameBoy as GB;
 
     #[test]
@@ -658,7 +661,7 @@ mod test {
             0x0998 => 0x29,
             0x7fff => 0x24
         );
-        assert_eq!(mem.mbc, super::Omitted);
+        assert_eq!(mem.mbc, Mbc::Omitted);
 
         assert_eq!(mem.rb(0x2283), 0x31);
         assert_eq!(mem.rb(0x0998), 0x29);
@@ -670,7 +673,7 @@ mod test {
         let mut mem = load!(
             0x0147 => 0x00
         );
-        assert_eq!(mem.mbc, super::Omitted);
+        assert_eq!(mem.mbc, Mbc::Omitted);
 
         mem.ramon = true;
         assert_eq!(mem.rb(0xa042), 0x00);
@@ -690,7 +693,7 @@ mod test {
             0x0998 => 0x28,
             0x7fff => 0x24
         );
-        assert_eq!(mem.mbc, super::Mbc1);
+        assert_eq!(mem.mbc, Mbc::Mbc1);
 
         assert_eq!(mem.rb(0x2283), 0x31);
         assert_eq!(mem.rb(0x998), 0x28);
@@ -704,7 +707,7 @@ mod test {
             0x80f3 => 0x24,
             0xd0e8 => 0x25
         );
-        assert_eq!(mem.mbc, super::Mbc1);
+        assert_eq!(mem.mbc, Mbc::Mbc1);
 
         mem.wb(0x2001, 0x02); // Trigger the 2nd rom page
         assert_eq!(mem.rb(0x40f3), 0x24);
@@ -719,7 +722,7 @@ mod test {
     #[test]
     fn mbc1_ram_disabled() {
         let mut mem = load!(0x0147 => 0x01);
-        assert_eq!(mem.mbc, super::Mbc1);
+        assert_eq!(mem.mbc, Mbc::Mbc1);
         mem.wb(0xa032, 0x24);
         assert_eq!(mem.rb(0xa032), 0xff);
 
@@ -735,7 +738,7 @@ mod test {
     #[test]
     fn mbc1_read_hiram() {
         let mut mem = load!(0x0147 => 0x01);
-        assert_eq!(mem.mbc, super::Mbc1);
+        assert_eq!(mem.mbc, Mbc::Mbc1);
         mem.ramon = true;
         assert_eq!(mem.rb(0xa042), 0x00);
 
@@ -749,7 +752,7 @@ mod test {
     #[test]
     fn mbc1_ram_banks() {
         let mut mem = load!(0x0147 => 0x01);
-        assert_eq!(mem.mbc, super::Mbc1);
+        assert_eq!(mem.mbc, Mbc::Mbc1);
         mem.wb(0x0000, 0xa); // enable ram
         mem.wb(0x6000, 0x1); // enable ram bank selection mode
 
@@ -784,7 +787,7 @@ mod test {
             (0x2 << 19) | (0x14 << 14) | 0x0eef => 0x43,
             (0x1 << 19) | (0x05 << 14) | 0x1bc4 => 0x78
         );
-        assert_eq!(mem.mbc, super::Mbc1);
+        assert_eq!(mem.mbc, Mbc::Mbc1);
 
         mem.wb(0x2000, 0xf4); // low 5 bits, making sure extra chopped off
         mem.wb(0x4000, 0xfe); // high 2 bits, making sure extra chopped off
@@ -805,7 +808,7 @@ mod test {
             0x0998 => 0x28,
             0x7fff => 0x24
         );
-        assert_eq!(mem.mbc, super::Mbc2);
+        assert_eq!(mem.mbc, Mbc::Mbc2);
 
         assert_eq!(mem.rb(0x2283), 0x31);
         assert_eq!(mem.rb(0x998), 0x28);
@@ -815,7 +818,7 @@ mod test {
     #[test]
     fn mbc2_write_lower_4_bits() {
         let mut mem = load!(0x0147 => 0x05);
-        assert_eq!(mem.mbc, super::Mbc2);
+        assert_eq!(mem.mbc, Mbc::Mbc2);
 
         mem.ramon = true;
         assert_eq!(mem.rb(0xa042), 0x00);
@@ -830,7 +833,7 @@ mod test {
     #[test]
     fn mbc2_toggles_ram_operation() {
         let mut mem = load!(0x0147 => 0x05);
-        assert_eq!(mem.mbc, super::Mbc2);
+        assert_eq!(mem.mbc, Mbc::Mbc2);
 
         mem.ramon = false;
         mem.wb(0x0000, 0x42);
@@ -854,7 +857,7 @@ mod test {
             0x8094 => 0x24,
             0x74ae => 0x27
         );
-        assert_eq!(mem.mbc, super::Mbc2);
+        assert_eq!(mem.mbc, Mbc::Mbc2);
 
         assert_eq!(mem.rb(0x74ae), 0x27);
 
@@ -876,7 +879,7 @@ mod test {
             0xd428 => 0x91,
             0x1fe3ea => 0x28
         );
-        assert_eq!(mem.mbc, super::Mbc3);
+        assert_eq!(mem.mbc, Mbc::Mbc3);
 
         assert_eq!(mem.rb(0x7ffe), 0x90);
 
@@ -893,7 +896,7 @@ mod test {
     #[test]
     fn mbc3_read_rtc() {
         let mut mem = load!(0x0147 => 0x0f);
-        assert_eq!(mem.mbc, super::Mbc3);
+        assert_eq!(mem.mbc, Mbc::Mbc3);
 
         mem.wb(0x0000, 0xa); // enable ram
 
@@ -909,7 +912,7 @@ mod test {
     #[test]
     fn mbc3_swapping_ram_banks() {
         let mut mem = load!(0x0147 => 0x0f);
-        assert_eq!(mem.mbc, super::Mbc3);
+        assert_eq!(mem.mbc, Mbc::Mbc3);
 
         mem.wb(0x0000, 0xa); // enable ram
 

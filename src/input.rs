@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-use cpu;
+use cpu::Interrupt;
 
 pub struct Input {
     buttons: u8,
@@ -9,7 +9,7 @@ pub struct Input {
     col: Selected,
 }
 
-pub enum ButtonKey {
+pub enum Button {
     A,
     B,
     Start,
@@ -35,16 +35,16 @@ impl Input {
         Input {
             buttons: 0xf,
             directions: 0xf,
-            col: Direction,
+            col: Selected::Direction,
             joypad_sel: 0,
         }
     }
 
     pub fn rb(&self, _addr: u16) -> u8 {
         match self.col {
-            Button => self.buttons,
-            Direction => self.directions,
-            MltReq => 0xf - self.joypad_sel,
+            Selected::Button => self.buttons,
+            Selected::Direction => self.directions,
+            Selected::MltReq => 0xf - self.joypad_sel,
         }
     }
 
@@ -66,30 +66,30 @@ impl Input {
     // Bit 1 - P11 Input Left or Button B (0=Pressed) 1101 = 0xd
     // Bit 0 - P10 Input Right or Button A (0=Pressed) 1110 = 0xe
 
-    pub fn keydown(&mut self, key: ButtonKey, if_: &mut u8) {
-        *if_ |= cpu::IntJoypad as u8;
+    pub fn keydown(&mut self, key: Button, if_: &mut u8) {
+        *if_ |= Interrupt::Joypad as u8;
         match key {
-            A      => { self.buttons &= 0xe; }
-            B      => { self.buttons &= 0xd; }
-            Start  => { self.buttons &= 0x7; }
-            Select => { self.buttons &= 0xb; }
-            Left   => { self.directions &= 0xd; }
-            Up     => { self.directions &= 0xb; }
-            Down   => { self.directions &= 0x7; }
-            Right  => { self.directions &= 0xe; }
+            Button::A      => { self.buttons &= 0xe; }
+            Button::B      => { self.buttons &= 0xd; }
+            Button::Start  => { self.buttons &= 0x7; }
+            Button::Select => { self.buttons &= 0xb; }
+            Button::Left   => { self.directions &= 0xd; }
+            Button::Up     => { self.directions &= 0xb; }
+            Button::Down   => { self.directions &= 0x7; }
+            Button::Right  => { self.directions &= 0xe; }
         }
     }
 
-    pub fn keyup(&mut self, key: ButtonKey) {
+    pub fn keyup(&mut self, key: Button) {
         match key {
-            A      => { self.buttons |= !0xe; }
-            B      => { self.buttons |= !0xd; }
-            Start  => { self.buttons |= !0x7; }
-            Select => { self.buttons |= !0xb; }
-            Left   => { self.directions |= !0xd; }
-            Up     => { self.directions |= !0xb; }
-            Down   => { self.directions |= !0x7; }
-            Right  => { self.directions |= !0xe; }
+            Button::A      => { self.buttons |= !0xe; }
+            Button::B      => { self.buttons |= !0xd; }
+            Button::Start  => { self.buttons |= !0x7; }
+            Button::Select => { self.buttons |= !0xb; }
+            Button::Left   => { self.directions |= !0xd; }
+            Button::Up     => { self.directions |= !0xb; }
+            Button::Down   => { self.directions |= !0x7; }
+            Button::Right  => { self.directions |= !0xe; }
         }
     }
 }

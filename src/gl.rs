@@ -4,9 +4,9 @@ extern crate libc;
 
 use std::mem;
 use self::gl::types as glt;
-use self::glfw::Context;
+use self::glfw::{Context, Key};
 
-use input;
+use input::Button;
 use gpu;
 use gb::Gb;
 
@@ -66,13 +66,13 @@ pub fn run(mut gb: Gb) {
                 }
                 glfw::KeyEvent(key, _, action, _) => {
                     match key {
-                        glfw::KeyEqual => {
+                        Key::Equal => {
                             ratio += 1;
                             window.set_size((gpu::WIDTH as i32) + 10 * ratio,
                                             (gpu::HEIGHT as i32) + 9 * ratio);
                             continue
                         }
-                        glfw::KeyMinus => {
+                        Key::Minus => {
                             ratio -= 1;
                             if ratio < 0 { ratio = 0; }
                             window.set_size((gpu::WIDTH as i32) + 10 * ratio,
@@ -83,15 +83,15 @@ pub fn run(mut gb: Gb) {
                     }
 
                     let button = match key {
-                        glfw::KeyZ => input::A,
-                        glfw::KeyX => input::B,
-                        glfw::KeyEnter => input::Select,
-                        glfw::KeyComma => input::Start,
+                        Key::Z => Button::A,
+                        Key::X => Button::B,
+                        Key::Enter => Button::Select,
+                        Key::Comma => Button::Start,
 
-                        glfw::KeyLeft => input::Left,
-                        glfw::KeyRight => input::Right,
-                        glfw::KeyDown => input::Down,
-                        glfw::KeyUp => input::Up,
+                        Key::Left => Button::Left,
+                        Key::Right => Button::Right,
+                        Key::Down => Button::Down,
+                        Key::Up => Button::Up,
 
                         _ => continue
                     };

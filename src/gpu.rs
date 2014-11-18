@@ -5,7 +5,7 @@
 use std::iter;
 
 use gb;
-use cpu;
+use cpu::Interrupt;
 use mem;
 
 const VRAM_SIZE: uint = 8 << 10; // 8K
@@ -162,7 +162,7 @@ impl Gpu {
             is_sgb: false,
             image_data: box () ([255, ..HEIGHT * WIDTH * 4]),
 
-            mode: RdOam,
+            mode: Mode::RdOam,
             wx: 0, wy: 0, obp1: 0, obp0: 0, bgp: 0,
             lyc: 0, ly: 0, scx: 0, scy: 0,
             mode0int: false, mode1int: false, mode2int: false, lycly: false,
@@ -219,26 +219,26 @@ impl Gpu {
     fn switch(&mut self, mode: Mode, if_: &mut u8) {
         self.mode = mode;
         match mode {
-            HBlank => {
+            Mode::HBlank => {
                 self.render_line();
                 if self.mode0int {
-                    *if_ |= cpu::IntLCDStat as u8;
+                    *if_ |= Interrupt::LCDStat as u8;
                 }
             }
-            VBlank => {
+            Mode::VBlank => {
                 // TODO: a frame is ready, it should be put on screen at this
                 // point
-                *if_ |= cpu::IntVblank as u8;
+                *if_ |= Interrupt::Vblank as u8;
                 if self.mode1int {
-                    *if_ |= cpu::IntLCDStat as u8;
+                    *if_ |= Interrupt::LCDStat as u8;
                 }
             }
-            RdOam => {
+            Mode::RdOam => {
                 if self.mode2int {
-                    *if_ |= cpu::IntLCDStat as u8;
+                    *if_ |= Interrupt::LCDStat as u8;
                 }
             }
-            RdVram => {}
+            Mode::RdVram => {}
         }
     }
 
@@ -261,23 +261,23 @@ impl Gpu {
             self.clock -= 456;
             self.ly = (self.ly + 1) % 154; // 144 lines tall, 10 for a vblank
 
-            if self.ly >= 144 && self.mode != VBlank {
-                self.switch(VBlank, if_);
+            if self.ly >= 144 && self.mode != Mode::VBlank {
+                self.switch(Mode::VBlank, if_);
             }
 
             if self.ly == self.lyc && self.lycly {
-                *if_ |= cpu::IntLCDStat as u8;
+                *if_ |= Interrupt::LCDStat as u8;
             }
         }
 
         // Hop between modes if we're not in vblank
         if self.ly < 144 {
             if self.clock <= 80 { // RDOAM takes 80 cycles
-                if self.mode != RdOam { self.switch(RdOam, if_); }
+                if self.mode != Mode::RdOam { self.switch(Mode::RdOam, if_); }
             } else if self.clock <= 252 { // RDVRAM takes 172 cycles
-                if self.mode != RdVram { self.switch(RdVram, if_); }
+                if self.mode != Mode::RdVram { self.switch(Mode::RdVram, if_); }
             } else { // HBLANK takes rest of time before line rendered
-                if self.mode != HBlank { self.switch(HBlank, if_); }
+                if self.mode != Mode::HBlank { self.switch(Mode::HBlank, if_); }
             }
         }
     }
@@ -883,7 +883,7 @@ fn update_cgb_pal(pal: &mut [[Color, ..4], ..8], mem: &[u8, ..CGB_BP_SIZE],
 #[allow(dead_code)]
 mod test {
     use gb::GameBoy as GB;
-    use gpu::Gpu;
+    use gpu::{Gpu, Mode};
     use mem::Memory;
 
     const BGP: u16  = 0xff47;
@@ -918,7 +918,7 @@ mod test {
         gpu.mode2int = false;
         gpu.mode1int = true;
         gpu.mode0int = true;
-        gpu.mode     = super::RdOam;
+        gpu.mode     = Mode::RdOam;
         assert_eq!(gpu.rb(STAT), 0x5a);
 
         gpu.scy = 0x98;
@@ -962,7 +962,7 @@ mod test {
         assert_eq!(gpu.mode2int, false);
         assert_eq!(gpu.mode1int, true);
         assert_eq!(gpu.mode0int, true);
-        assert_eq!(gpu.mode, super::RdOam);
+        assert_eq!(gpu.mode, Mode::RdOam);
 
         gpu.wb(SCY, 0x98);
         gpu.wb(SCX, 0x32);
@@ -1019,23 +1019,23 @@ mod test {
         // Initially at line 0 with 1 tick on the clock in RDOAM (mode 2)
         gpu.ly = 0;
         gpu.step(1, &mut if_);
-        gpu.mode = super::RdOam;
+        gpu.mode = Mode::RdOam;
 
         // Test going into RDVRAM and staying there
         gpu.step(80, &mut if_);
-        assert_eq!(gpu.mode, super::RdVram);
+        assert_eq!(gpu.mode, Mode::RdVram);
         gpu.step(0, &mut if_);
-        assert_eq!(gpu.mode, super::RdVram);
+        assert_eq!(gpu.mode, Mode::RdVram);
 
         // Test entering HBLANK and the IF is set. Also test that we stay there
         // and don't request another interrupt
         gpu.step(172, &mut if_);
         assert_eq!(if_, 0x2);
-        assert_eq!(gpu.mode, super::HBlank);
+        assert_eq!(gpu.mode, Mode::HBlank);
 
         if_ = 0;
         gpu.step(0, &mut if_);
-        assert_eq!(gpu.mode, super::HBlank);
+        assert_eq!(gpu.mode, Mode::HBlank);
         assert_eq!(if_, 0x0);
 
         // Test reentering RDOAM and the IF is set. Also test that we stay there
@@ -1043,11 +1043,11 @@ mod test {
         gpu.step(204, &mut if_);
         assert_eq!(gpu.ly, 1);
         assert_eq!(if_, 0x2);
-        assert_eq!(gpu.mode, super::RdOam);
+        assert_eq!(gpu.mode, Mode::RdOam);
 
         if_ = 0;
         gpu.step(0, &mut if_);
-        assert_eq!(gpu.mode, super::RdOam);
+        assert_eq!(gpu.mode, Mode::RdOam);
         assert_eq!(if_, 0x0);
 
         // Now simulate that we're at the end of the screen and we're gonna
@@ -1062,7 +1062,7 @@ mod test {
 
         // When in VBLANK, this lasts for 10 lines
         for _ in range(0i, 10) {
-            assert_eq!(gpu.mode, super::VBlank);
+            assert_eq!(gpu.mode, Mode::VBlank);
             assert_eq!(if_, 0x0);
             gpu.step(456, &mut if_);
         }
@@ -1070,7 +1070,7 @@ mod test {
         // Coming out of a VBLANK, we should be in RDOAM with an LCD STAT
         // interrupt requested because mode2int is set
         assert_eq!(if_, 0x2);
-        assert_eq!(gpu.mode, super::RdOam);
+        assert_eq!(gpu.mode, Mode::RdOam);
     }
 
     #[test]

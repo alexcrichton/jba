@@ -1,4 +1,4 @@
-use cpu;
+use cpu::Interrupt;
 use mem;
 
 pub struct Timer {
@@ -48,8 +48,8 @@ impl Timer {
     pub fn step(&mut self, ticks: uint, if_: &mut u8, speed: mem::Speed) {
         // undo the multiplication in the cpu
         let ticks = match speed {
-            mem::Normal => ticks / 4,
-            mem::Double => ticks,
+            mem::Speed::Normal => ticks / 4,
+            mem::Speed::Double => ticks,
         };
         self.clock.div += ticks;
 
@@ -81,7 +81,7 @@ impl Timer {
                 self.tima += 1;
                 if self.tima == 0 {
                     self.tima = self.tma;
-                    *if_ |= cpu::IntTimer as u8;
+                    *if_ |= Interrupt::Timer as u8;
                 }
                 self.clock.tima -= self.tima_speed;
             }
