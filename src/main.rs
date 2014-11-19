@@ -38,13 +38,13 @@ fn main() {
         opts::optflag("", "fps", "don't run a display, just print FPS"),
         opts::optopt("g", "gb", "type of gameboy to run", "[gb|cgb|sgb]"),
     ];
-    let matches = match opts::getopts(args.tail(), opts) {
+    let matches = match opts::getopts(args.tail(), &opts) {
         Ok(m) => m,
         Err(f) => panic!("{}", f),
     };
     if matches.opt_present("h") || matches.opt_present("help") ||
        matches.free.len() == 0 {
-        return usage(args[0].as_slice(), opts);
+        return usage(args[0].as_slice(), &opts);
     }
 
     let rom = File::open(&Path::new(matches.free[0].as_slice())).read_to_end();
@@ -63,7 +63,7 @@ fn main() {
         Some(s) => {
             println!("Invalid gameboy type: {}", s);
             println!("Supported types: gb, cgb, sgb");
-            return usage(args[0].as_slice(), opts);
+            return usage(args[0].as_slice(), &opts);
         }
         None => {
             match mem::Memory::guess_target(rom.as_slice()) {
