@@ -147,15 +147,6 @@ impl fmt::Show for Registers {
     }
 }
 
-impl fmt::Signed for Registers {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "a:{} b:{} c:{} d:{} e:{} \
-                   f:{} h:{} l:{} pc:{} sp:{}",
-               self.a, self.b, self.c, self.d, self.e, self.f, self.h, self.l,
-               self.pc, self.sp)
-    }
-}
-
 #[cfg(test)]
 mod test {
     use super::Registers;
