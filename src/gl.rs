@@ -26,7 +26,7 @@ pub fn run(mut gb: Gb) {
     let (mut window, events) = glfw.create_window(gpu::WIDTH as u32,
                                                   gpu::HEIGHT as u32,
                                                   "JBA",
-                                                  glfw::Windowed).unwrap();
+                                                  glfw::WindowMode::Windowed).unwrap();
     window.set_key_polling(true);
     window.set_focus_polling(true);
     window.set_size_polling(true);
@@ -51,7 +51,7 @@ pub fn run(mut gb: Gb) {
 
         for (_, event) in glfw::flush_messages(&events) {
             match event {
-                glfw::SizeEvent(width, height) => {
+                glfw::WindowEvent::Size(width, height) => {
                     let (width, height) = if width < height {
                         (width,
                          width * (gpu::HEIGHT as i32) / (gpu::WIDTH as i32))
@@ -61,10 +61,10 @@ pub fn run(mut gb: Gb) {
                     };
                     window.set_size(width, height);
                 }
-                glfw::FocusEvent(f) => {
+                glfw::WindowEvent::Focus(f) => {
                     focused = f;
                 }
-                glfw::KeyEvent(key, _, action, _) => {
+                glfw::WindowEvent::Key(key, _, action, _) => {
                     match key {
                         Key::Equal => {
                             ratio += 1;
@@ -97,9 +97,9 @@ pub fn run(mut gb: Gb) {
                     };
 
                     match action {
-                        glfw::Release => gb.keyup(button),
-                        glfw::Press => gb.keydown(button),
-                        glfw::Repeat => {},
+                        glfw::Action::Release => gb.keyup(button),
+                        glfw::Action::Press => gb.keydown(button),
+                        glfw::Action::Repeat => {},
                     }
                 }
                 _ => {}
