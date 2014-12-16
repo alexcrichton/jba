@@ -7,7 +7,7 @@ use mem;
 fn run(compressed_rom: &'static [u8], answer: &str) {
     let mut p = Command::new("gunzip").arg("-c").arg("-d").spawn().unwrap();
     let i = p.stdin.take().unwrap();
-    spawn(proc() { let mut i = i; i.write(compressed_rom).unwrap(); });
+    spawn(move|| { let mut i = i; i.write(compressed_rom).unwrap(); });
     let rom = p.stdout.take().unwrap().read_to_end().unwrap();
     drop(p);
 
