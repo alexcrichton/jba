@@ -14,7 +14,7 @@ macro_rules! dpanic( ($($e:tt)*) => ({
     if cfg!(not(ndebug)) {
         panic!($($e)*);
     }
-}) )
+}) );
 
 mod cpu;
 mod gb;
@@ -29,7 +29,8 @@ mod timer;
 #[path = "gl.rs"] mod app;
 
 fn usage(prog: &str, opts: &[opts::OptGroup]) {
-    let h = opts::usage(format!("usage: {} [options] <rom>", prog).as_slice(), opts);
+    let h = opts::usage(format!("usage: {} [options] <rom>", prog).as_slice(),
+                        opts);
     println!("{}", h);
 }
 

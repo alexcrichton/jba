@@ -4,11 +4,12 @@ name = "jba"
 version = "0.1.0"
 authors = []
 
+[dependencies]
+time = "0.1"
+log = "0.1"
+
 [dependencies.gl]
 git = "https://github.com/bjz/gl-rs"
 
 [dependencies.glfw]
 git = "https://github.com/bjz/glfw-rs"
-
-[dependencies.time]
-git = "https://github.com/rust-lang/time"

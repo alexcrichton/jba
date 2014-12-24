@@ -105,39 +105,39 @@ fn pop_af(r: &mut z80::Registers, m: &mut mem::Memory) {
 fn xx() -> uint { dpanic!(); 0 }
 
 pub fn exec(inst: u8, r: &mut z80::Registers, m: &mut mem::Memory) -> uint {
-    macro_rules! ld( ($reg1:ident, $reg2:ident) => ({ r.$reg1 = r.$reg2; 1 }) )
-    macro_rules! ld_n( ($reg:ident) => ({ r.$reg = m.rb(r.bump()); 2 }) )
+    macro_rules! ld( ($reg1:ident, $reg2:ident) => ({ r.$reg1 = r.$reg2; 1 }) );
+    macro_rules! ld_n( ($reg:ident) => ({ r.$reg = m.rb(r.bump()); 2 }) );
     macro_rules! ld_nn( ($reg1:ident, $reg2: ident) => ({
         r.$reg2 = m.rb(r.bump());
         r.$reg1 = m.rb(r.bump());
         3
-    }) )
-    macro_rules! ld_Xhlm( ($reg:ident) => ({ r.$reg = m.rb(r.hl()); 2 }) )
-    macro_rules! ld_hlmX( ($reg:ident) => ({ m.wb(r.hl(), r.$reg); 2 }) )
+    }) );
+    macro_rules! ld_Xhlm( ($reg:ident) => ({ r.$reg = m.rb(r.hl()); 2 }) );
+    macro_rules! ld_hlmX( ($reg:ident) => ({ m.wb(r.hl(), r.$reg); 2 }) );
     macro_rules! dec_16( ($reg1:ident, $reg2: ident) => ({
         r.$reg2 -= 1;
         if r.$reg2 == 0xff { r.$reg1 -= 1; }
         2
-    }) )
+    }) );
     macro_rules! inc_16( ($reg1:ident, $reg2: ident) => ({
         r.$reg2 += 1;
         if r.$reg2 == 0 { r.$reg1 += 1; }
         2
-    }) )
+    }) );
     macro_rules! inc( ($reg:ident) => ({
         r.$reg += 1;
         r.f = (r.f & C) |
               if r.$reg == 0 {Z} else {0} |
               if r.$reg & 0xf == 0 {H} else {0};
         1
-    }) )
+    }) );
     macro_rules! dec( ($reg:ident) => ({
         r.$reg -= 1;
         r.f &= 0x1f;
         r.f |= N | (if r.$reg == 0 {Z} else {0})
                  | (((r.$reg & 0xf) == 0xf) as u8 << 5);
         1
-    }) )
+    }) );
     macro_rules! add_hl( ($reg:expr) => ({
         let a = r.hl() as u32;
         let b = $reg as u32;
@@ -148,28 +148,28 @@ pub fn exec(inst: u8, r: &mut z80::Registers, m: &mut mem::Memory) -> uint {
         r.l = hl as u8;
         r.h = (hl >> 8) as u8;
         2
-    }) )
+    }) );
     macro_rules! jr( () => ({
         let val = m.rb(r.bump());
         r.pc = add(r.pc, val);
         3
-    }) )
+    }) );
     macro_rules! jr_n( ($e:expr) => (
         if $e {jr!()} else {r.bump(); 2}
-    ) )
-    macro_rules! jp( () => ({ r.pc = m.rw(r.pc); 4 }) )
+    ) );
+    macro_rules! jp( () => ({ r.pc = m.rw(r.pc); 4 }) );
     macro_rules! jp_n( ($e:expr) => (
         if $e {jp!()} else {r.pc += 2; 3}
-    ) )
+    ) );
     macro_rules! call( () => ({
         r.sp -= 2;
         m.ww(r.sp, r.pc + 2);
         r.pc = m.rw(r.pc);
         6
-    }) )
+    }) );
     macro_rules! call_if( ($e:expr) => ({
         if $e {call!()} else { r.pc += 2; 3 }
-    }) )
+    }) );
     macro_rules! add_a( ($r:expr) => ({
         let i = r.a;
         let j = $r;
@@ -178,7 +178,7 @@ pub fn exec(inst: u8, r: &mut z80::Registers, m: &mut mem::Memory) -> uint {
         r.a = i + j;
         r.f |= if r.a != 0 {0} else {Z};
         1u
-    }) )
+    }) );
     macro_rules! adc_a( ($r:expr) => ({
         let i = r.a;
         let j = $r;
@@ -188,7 +188,7 @@ pub fn exec(inst: u8, r: &mut z80::Registers, m: &mut mem::Memory) -> uint {
         r.a = i + j + k;
         r.f |= if r.a != 0 {0} else {Z};
         1u
-    }) )
+    }) );
     macro_rules! sub_a( ($r:expr) => ({
         let a = r.a;
         let b = $r;
@@ -196,7 +196,7 @@ pub fn exec(inst: u8, r: &mut z80::Registers, m: &mut mem::Memory) -> uint {
         r.a = a - b;
         r.f |= if r.a != 0 {0} else {Z};
         1u
-    }) )
+    }) );
     macro_rules! sbc_a( ($r:expr) => ({
         let a = r.a as u16;
         let b = $r as u16;
@@ -207,41 +207,41 @@ pub fn exec(inst: u8, r: &mut z80::Registers, m: &mut mem::Memory) -> uint {
         r.a = (a - b - c) as u8;
         r.f |= if r.a != 0 {0} else {Z};
         1u
-    }) )
+    }) );
     macro_rules! and_a( ($r:expr) => ({
         r.a &= $r;
         r.f = H | if r.a != 0 {0} else {Z};
         1u
-    }) )
+    }) );
     macro_rules! xor_a( ($r:expr) => ({
         r.a ^= $r;
         r.f = if r.a != 0 {0} else {Z};
         1u
-    }) )
+    }) );
     macro_rules! or_a( ($r:expr) => ({
         r.a |= $r;
         r.f = if r.a != 0 {0} else {Z};
         1u
-    }) )
+    }) );
     macro_rules! cp_a( ($b:expr) => ({
         let b = $b;
         r.f = N | if r.a == b {Z} else {0} |
                   if r.a < b {C} else {0} |
                   if (r.a & 0xf) < (b & 0xf) {H} else {0};
         1u
-    }) )
-    macro_rules! ret_if( ($e:expr) => ({ if $e { r.ret(m); 5 } else { 2 } }) )
+    }) );
+    macro_rules! ret_if( ($e:expr) => ({ if $e { r.ret(m); 5 } else { 2 } }) );
     macro_rules! pop( ($reg1:ident, $reg2:ident) => ({
         r.$reg2 = m.rb(r.sp);
         r.$reg1 = m.rb(r.sp + 1);
         r.sp += 2; 3u
-    }) )
+    }) );
     macro_rules! push( ($reg1:ident, $reg2:ident) => ({
         m.wb(r.sp - 1, r.$reg1);
         m.wb(r.sp - 2, r.$reg2);
         r.sp -= 2; 4u
-    }) )
-    macro_rules! rst( ($e:expr) => ({ r.rst($e, m); 4 }) )
+    }) );
+    macro_rules! rst( ($e:expr) => ({ r.rst($e, m); 4 }) );
 
     macro_rules! rl( ($reg:expr, $cy:expr) => ({
         let ci = if (r.f & C) != 0 {1} else {0};
@@ -249,14 +249,14 @@ pub fn exec(inst: u8, r: &mut z80::Registers, m: &mut mem::Memory) -> uint {
         $reg = ($reg << 1) | ci;
         r.f = if co != 0 {C} else {0};
         $cy
-    }) )
+    }) );
 
     macro_rules! rlc( ($reg:expr, $cy:expr) => ({
         let ci = if ($reg & 0x80) != 0 {1} else {0};
         $reg = ($reg << 1) | ci;
         r.f = if ci != 0 {C} else {0};
         $cy
-    }) )
+    }) );
 
     macro_rules! rr( ($reg:expr, $cy:expr) => ({
         let ci = if (r.f & C) != 0 {0x80} else {0};
@@ -264,14 +264,14 @@ pub fn exec(inst: u8, r: &mut z80::Registers, m: &mut mem::Memory) -> uint {
         $reg = ($reg >> 1) | ci;
         r.f = co;
         $cy
-    }) )
+    }) );
 
     macro_rules! rrc( ($reg:expr, $cy:expr) => ({
         let ci = $reg & 0x01;
         $reg = ($reg >> 1) | (ci << 7);
         r.f = if ci != 0 {C} else {0};
         $cy
-    }) )
+    }) );
 
     debug!("executing {} at {}", inst, *r);
 
@@ -559,14 +559,14 @@ pub fn exec_cb(inst: u8, r: &mut z80::Registers, m: &mut mem::Memory) -> uint {
         $reg = ($reg << 1) | ci;
         r.f = if $reg != 0 {0} else {Z} | if co != 0 {C} else {0};
         $cy as uint
-    }) )
+    }) );
 
     macro_rules! rlc( ($reg:expr, $cy:expr) => ({
         let ci = if ($reg & 0x80) != 0 {1} else {0};
         $reg = ($reg << 1) | ci;
         r.f = if $reg != 0 {0} else {Z} | if ci != 0 {C} else {0};
         $cy as uint
-    }) )
+    }) );
 
     macro_rules! rr( ($reg:expr, $cy:expr) => ({
         let ci = if (r.f & C) != 0 {0x80} else {0};
@@ -574,50 +574,50 @@ pub fn exec_cb(inst: u8, r: &mut z80::Registers, m: &mut mem::Memory) -> uint {
         $reg = ($reg >> 1) | ci;
         r.f = if $reg != 0 {0} else {Z} | co;
         $cy as uint
-    }) )
+    }) );
 
     macro_rules! rrc( ($reg:expr, $cy:expr) => ({
         let ci = $reg & 0x01;
         $reg = ($reg >> 1) | (ci << 7);
         r.f = if $reg != 0 {0} else {Z} | if ci != 0 {C} else {0};
         $cy as uint
-    }) )
+    }) );
     macro_rules! hlm( ($i:ident, $s:stmt) => ({
         let mut $i = m.rb(r.hl());
         $s;
         m.wb(r.hl(), $i);
-    }) )
+    }) );
     macro_rules! hlfrob( ($i:ident, $e:expr) => ({
         let $i = m.rb(r.hl());
         m.wb(r.hl(), $e);
-    }) )
+    }) );
     macro_rules! sra( ($e:expr, $cy:expr) => ({
         let co = $e & 1;
         $e = (($e as i8) >> 1) as u8;
         r.f = if $e != 0 {0} else {Z} | if co != 0 {C} else {0};
         $cy as uint
-    }) )
+    }) );
     macro_rules! srl( ($e:expr, $cy:expr) => ({
         let co = $e & 1;
         $e = $e >> 1;
         r.f = if $e != 0 {0} else {Z} | if co != 0 {C} else {0};
         $cy as uint
-    }) )
+    }) );
     macro_rules! sla( ($e:expr, $cy:expr) => ({
         let co = ($e >> 7) & 1;
         $e = $e << 1;
         r.f = if $e != 0 {0} else {Z} | if co != 0 {C} else {0};
         $cy as uint
-    }) )
+    }) );
     macro_rules! swap( ($e:expr) => ({
         $e = ($e << 4) | (($e & 0xf0) >> 4);
         r.f = if $e != 0 {0} else {Z};
         2 as uint
-    }) )
+    }) );
     macro_rules! bit( ($e:expr, $bit:expr) => ({
         r.f = (r.f & C) | H | if $e & (1 << $bit) != 0 {0} else {Z};
         2 as uint
-    }) )
+    }) );
     match inst {
         0x00 => rlc!(r.b, 2),                                       // rlc_b
         0x01 => rlc!(r.c, 2),                                       // rlc_c

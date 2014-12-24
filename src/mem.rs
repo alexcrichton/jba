@@ -652,7 +652,7 @@ mod test {
         $(ram[$k] = $v;)+
         m.load_cartridge(ram.as_slice().to_vec());
         m
-    }) )
+    }) );
 
     #[test]
     fn nombc_rom() {
