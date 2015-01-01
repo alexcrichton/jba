@@ -6,6 +6,8 @@
 //! For more information about how these work, see this url:
 //!     http://nocash.emubase.de/pandocs.htm#memorybankcontrollers
 
+use std::iter::repeat;
+
 use gb;
 use gpu;
 use input;
@@ -233,7 +235,7 @@ impl Memory {
             n => { panic!("unknown cartridge inserted: {:x}", n); }
         }
 
-        self.ram = Vec::from_elem(self.ram_size(), 0u8);
+        self.ram = repeat(0u8).take(self.ram_size()).collect();
         if self.target == gb::GameBoyColor {
             self.is_cgb = self.rom[0x0143] & 0x80 != 0;
             self.gpu.is_cgb = self.is_cgb;
