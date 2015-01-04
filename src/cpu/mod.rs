@@ -3,7 +3,7 @@
 use std::num::Int;
 
 use gb;
-use mem::{mod, Speed};
+use mem::{self, Speed};
 
 mod z80;
 

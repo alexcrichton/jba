@@ -3,6 +3,7 @@ extern crate gl;
 extern crate libc;
 
 use std::mem;
+use std::c_str::ToCStr;
 use self::gl::types as glt;
 use self::glfw::{Context, Key};
 

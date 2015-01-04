@@ -12,7 +12,7 @@ enum State {
 }
 
 pub struct Sgb {
-    ram: [u8, ..0x1000],
+    ram: [u8; 0x1000],
     state: State,
     datai: uint,
     read: uint,
@@ -20,7 +20,7 @@ pub struct Sgb {
     byte: u8,
     bit: u8,
     command: u8,
-    data: [u8, ..8 * 16],
+    data: [u8; 8 * 16],
 
     // The SGB has 8 palettes of 16 colors each. The first four are for the game
     // screen and the last four are for the border. We don't care about the
@@ -31,13 +31,13 @@ pub struct Sgb {
     // This array provides the 32 bytes needed.
     //
     // Each element is one color (16 bits), and each quadruple is one palette.
-    pal: [u16, ..16],
+    pal: [u16; 16],
 }
 
 impl Sgb {
     pub fn new() -> Sgb {
         Sgb {
-            ram: [0, ..0x1000],
+            ram: [0; 0x1000],
             state: State::Default,
             packets: 0,
             datai: 0,
@@ -45,8 +45,8 @@ impl Sgb {
             read: 0,
             bit: 0,
             command: 0,
-            data: [0, ..8 * 16],
-            pal: [0, ..16],
+            data: [0; 8 * 16],
+            pal: [0; 16],
         }
     }
 

@@ -135,7 +135,7 @@ pub fn exec(inst: u8, r: &mut z80::Registers, m: &mut mem::Memory) -> uint {
         r.$reg -= 1;
         r.f &= 0x1f;
         r.f |= N | (if r.$reg == 0 {Z} else {0})
-                 | (((r.$reg & 0xf) == 0xf) as u8 << 5);
+                 | ((((r.$reg & 0xf) == 0xf) as u8) << 5);
         1
     }) );
     macro_rules! add_hl( ($reg:expr) => ({

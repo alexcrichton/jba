@@ -44,8 +44,8 @@ pub struct Memory {
 
     rom: Vec<u8>,
     ram: Vec<u8>,
-    wram: Box<[u8, ..WRAM_SIZE]>,
-    hiram: Box<[u8, ..HIRAM_SIZE]>,
+    wram: Box<[u8; WRAM_SIZE]>,
+    hiram: Box<[u8; HIRAM_SIZE]>,
     /// The number of the rom bank currently swapped in
     rombank: u16,
     /// The number of the ram bank currently swapped in
@@ -67,13 +67,13 @@ pub struct Memory {
     pub sgb: Option<Box<sgb::Sgb>>,
 }
 
-#[deriving(Copy)]
+#[derive(Copy)]
 pub enum Speed {
     Normal,
     Double,
 }
 
-#[deriving(PartialEq, Eq, Show, Copy)]
+#[derive(PartialEq, Eq, Show, Copy)]
 enum Mbc {
     Unknown,
     Omitted,
@@ -92,8 +92,8 @@ impl Memory {
             if_: 0, ie_: 0, battery: false, is_cgb: false, is_sgb: false,
             rom: Vec::new(),
             ram: Vec::new(),
-            wram: box () ([0, ..WRAM_SIZE]),
-            hiram: box () ([0, ..HIRAM_SIZE]),
+            wram: box () ([0; WRAM_SIZE]),
+            hiram: box () ([0; HIRAM_SIZE]),
             rombank: 1, rambank: 0, wrambank: 1,
             ramon: false, mode: false, mbc: Mbc::Unknown,
 

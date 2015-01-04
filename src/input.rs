@@ -1,5 +1,6 @@
 #![allow(dead_code)]
 
+use std::num::FromPrimitive;
 use cpu::Interrupt;
 
 pub struct Input {
@@ -23,7 +24,7 @@ pub enum Button {
 // Enum for which column of inputs is selected. See
 // http://nocash.emubase.de/pandocs.htm#joypadinput for codes and what each
 // column is.
-#[deriving(FromPrimitive)]
+#[derive(FromPrimitive)]
 pub enum Selected {
     Button = 0x20,
     Direction = 0x10,

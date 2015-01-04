@@ -22,19 +22,19 @@ pub const WIDTH: uint = 160;
 // 1 - light gray
 // 2 - dark gray
 // 3 - black
-const PALETTE: [Color, ..4] = [
+const PALETTE: [Color; 4] = [
     [255, 255, 255, 255],
     [192, 192, 192, 255],
     [ 96,  96,  96, 255],
     [  0,   0,   0, 255],
 ];
 
-type Color = [u8, ..4];
+type Color = [u8; 4];
 
 pub struct Gpu {
-    pub oam: [u8, ..OAM_SIZE],
+    pub oam: [u8; OAM_SIZE],
 
-    pub image_data: Box<[u8, ..WIDTH * HEIGHT * 4]>,
+    pub image_data: Box<[u8; WIDTH * HEIGHT * 4]>,
 
     pub is_cgb: bool,
     pub is_sgb: bool,
@@ -42,7 +42,7 @@ pub struct Gpu {
     mode: Mode,
 
     // CGB supports only 2 banks of vram
-    vrambanks: Box<[[u8, ..VRAM_SIZE], ..2]>,
+    vrambanks: Box<[[u8; VRAM_SIZE]; 2]>,
     // Selected vram bank
     vrambank: u8,
 
@@ -109,7 +109,7 @@ pub struct Gpu {
     pub sgb: Box<SgbData>,
 }
 
-#[deriving(PartialEq, Eq, Show, Copy)]
+#[derive(PartialEq, Eq, Show, Copy)]
 enum Mode {
     HBlank = 0x00, // mode 0
     VBlank = 0x01, // mode 1
@@ -118,49 +118,49 @@ enum Mode {
 }
 
 struct Palette {
-    bg: [Color, ..4],
-    obp0: [Color, ..4],
-    obp1: [Color, ..4],
+    bg: [Color; 4],
+    obp0: [Color; 4],
+    obp1: [Color; 4],
 }
 
 struct Tiles {
-    data: [[[u8, ..8], ..8], ..NUM_TILES * 2],
+    data: [[[u8; 8]; 8]; NUM_TILES * 2],
     need_update: bool,
-    to_update: [bool, ..NUM_TILES * 2],
+    to_update: [bool; NUM_TILES * 2],
 }
 
 struct CgbData {
     // Raw memory
-    bgp: [u8, ..CGB_BP_SIZE],
-    obp: [u8, ..CGB_BP_SIZE],
+    bgp: [u8; CGB_BP_SIZE],
+    obp: [u8; CGB_BP_SIZE],
     // Index registers into memory
     bgpi: u8,
     obpi: u8,
     // Compiled palettes
-    cbgp: [[Color, ..4], ..8],
-    cobp: [[Color, ..4], ..8],
+    cbgp: [[Color; 4]; 8],
+    cobp: [[Color; 4]; 8],
 }
 
 pub struct SgbData {
     // This is a 20x18 array which maps palettes to locations on the screen.
     // Each element defines an 8x8 block on the GB screen which should be mapped
     // through these palettes instead of using the normal grayscale.
-    pub atf: [u8, ..20 * 18],
+    pub atf: [u8; 20 * 18],
 
     // Actual compiled palettes where each palette is an array of 4 colors where
     // each color has 4 components
-    pub pal: [[Color, ..4], ..4],
+    pub pal: [[Color; 4]; 4],
 }
 
 impl Gpu {
     pub fn new(_targ: gb::Target) -> Gpu {
         Gpu {
-            vrambanks: box () ([[0, ..VRAM_SIZE], .. 2]),
+            vrambanks: box () ([[0; VRAM_SIZE];  2]),
             vrambank: 0,
-            oam: [0, ..OAM_SIZE],
+            oam: [0; OAM_SIZE],
             is_cgb: false,
             is_sgb: false,
-            image_data: box () ([255, ..HEIGHT * WIDTH * 4]),
+            image_data: box () ([255; HEIGHT * WIDTH * 4]),
 
             mode: Mode::RdOam,
             wx: 0, wy: 0, obp1: 0, obp0: 0, bgp: 0,
@@ -176,29 +176,29 @@ impl Gpu {
             hdma5: 0,
 
             pal: box Palette {
-                bg: [[0, ..4], ..4],
-                obp0: [[0, ..4], ..4],
-                obp1: [[0, ..4], ..4],
+                bg: [[0; 4]; 4],
+                obp0: [[0; 4]; 4],
+                obp1: [[0; 4]; 4],
             },
 
             tiles: box Tiles {
                 need_update: false,
-                to_update: [false, .. NUM_TILES * 2],
-                data: [[[0, ..8], ..8], ..NUM_TILES * 2],
+                to_update: [false;  NUM_TILES * 2],
+                data: [[[0; 8]; 8]; NUM_TILES * 2],
             },
 
             cgb: box CgbData {
-                bgp: [255, ..CGB_BP_SIZE],
-                obp: [0, ..CGB_BP_SIZE],
+                bgp: [255; CGB_BP_SIZE],
+                obp: [0; CGB_BP_SIZE],
                 bgpi: 0,
                 obpi: 0,
-                cbgp: [[[255, 255, 255, 255], ..4], ..8],
-                cobp: [[[  0,   0,   0, 255], ..4], ..8],
+                cbgp: [[[255, 255, 255, 255]; 4]; 8],
+                cobp: [[[  0,   0,   0, 255]; 4]; 8],
             },
 
             sgb: box SgbData {
-                atf: [0, .. 20 * 18],
-                pal: [[[0, 0, 0, 255], ..4], ..4],
+                atf: [0;  20 * 18],
+                pal: [[[0, 0, 0, 255]; 4]; 4],
             }
         }
     }
@@ -209,10 +209,10 @@ impl Gpu {
         }
     }
 
-    pub fn vram(&self) -> &[u8, ..VRAM_SIZE] {
+    pub fn vram(&self) -> &[u8; VRAM_SIZE] {
         &self.vrambanks[self.vrambank as uint]
     }
-    pub fn vram_mut(&mut self) -> &mut [u8, ..VRAM_SIZE] {
+    pub fn vram_mut(&mut self) -> &mut [u8; VRAM_SIZE] {
         &mut self.vrambanks[self.vrambank as uint]
     }
 
@@ -285,7 +285,7 @@ impl Gpu {
     fn render_line(&mut self) {
         if !self.lcdon { return }
 
-        let mut scanline = [0u8, ..WIDTH];
+        let mut scanline = [0u8; WIDTH];
 
         if self.tiles.need_update {
             self.update_tileset();
@@ -355,7 +355,7 @@ impl Gpu {
         if self.bgmap {0x1c00} else {0x1800}
     }
 
-    fn render_background(&mut self, scanline: &mut [u8, ..WIDTH]) {
+    fn render_background(&mut self, scanline: &mut [u8; WIDTH]) {
         let mapbase = self.bgbase();
         let line = self.ly as uint + self.scy as uint;
 
@@ -458,7 +458,7 @@ impl Gpu {
         }
     }
 
-    fn render_window(&mut self, scanline: &mut [u8, ..WIDTH]) {
+    fn render_window(&mut self, scanline: &mut [u8; WIDTH]) {
         // If our current line is less than the windows initial offset, then
         // there's no window to draw
         if self.ly < self.wy { return }
@@ -557,7 +557,7 @@ impl Gpu {
         }
     }
 
-    fn render_sprites(&mut self, scanline: &mut [u8, ..WIDTH]) {
+    fn render_sprites(&mut self, scanline: &mut [u8; WIDTH]) {
         // More information about sprites is located at:
         // http://nocash.emubase.de/pandocs.htm#vramspriteattributetableoam
 
@@ -673,23 +673,23 @@ impl Gpu {
     pub fn rb(&self, addr: u16) -> u8 {
         match addr & 0xff {
             0x40 => {
-                (self.lcdon as u8    << 7) |
-                (self.winmap as u8   << 6) |
-                (self.winon as u8    << 5) |
-                (self.tiledata as u8 << 4) |
-                (self.bgmap as u8    << 3) |
-                (self.objsize as u8  << 2) |
-                (self.objon as u8    << 1) |
-                (self.bgon as u8     << 0)
+                ((self.lcdon as u8)    << 7) |
+                ((self.winmap as u8)   << 6) |
+                ((self.winon as u8)    << 5) |
+                ((self.tiledata as u8) << 4) |
+                ((self.bgmap as u8)    << 3) |
+                ((self.objsize as u8)  << 2) |
+                ((self.objon as u8)    << 1) |
+                ((self.bgon as u8)     << 0)
             }
 
             0x41 => {
-                (self.lycly as u8                                   << 6) |
-                (self.mode2int as u8                                << 5) |
-                (self.mode1int as u8                                << 4) |
-                (self.mode0int as u8                                << 3) |
-                (if self.lycly as u8 == self.ly {1u} else {0} as u8 << 2) |
-                (self.mode as u8                                    << 0)
+                ((self.lycly as u8)                                   << 6) |
+                ((self.mode2int as u8)                                << 5) |
+                ((self.mode1int as u8)                                << 4) |
+                ((self.mode0int as u8)                                << 3) |
+                ((if self.lycly as u8 == self.ly {1u} else {0} as u8) << 2) |
+                ((self.mode as u8)                                    << 0)
             }
 
             0x42 => self.scy,
@@ -762,11 +762,11 @@ impl Gpu {
 
             // http://nocash.emubase.de/pandocs.htm#lcdvramdmatransferscgbonly
             0x51 => {
-                self.hdma_src = (self.hdma_src & 0x00ff) | (val as u16 << 8);
+                self.hdma_src = (self.hdma_src & 0x00ff) | ((val as u16) << 8);
             }
             0x52 => { self.hdma_src = (self.hdma_src & 0xff00) | (val as u16); }
             0x53 => {
-                self.hdma_dst = (self.hdma_dst & 0x00ff) | (val as u16 << 8);
+                self.hdma_dst = (self.hdma_dst & 0x00ff) | ((val as u16) << 8);
             }
             0x54 => { self.hdma_dst = (self.hdma_dst & 0xff00) | (val as u16); }
             // 0x55 handled in mem
@@ -846,7 +846,7 @@ impl Gpu {
 
 // Update the cached palettes for BG/OBP0/OBP1. This should be called whenever
 // these registers are modified
-fn update_pal(pal: &mut [Color, ..4], val: u8) {
+fn update_pal(pal: &mut [Color; 4], val: u8) {
     // These registers are indices into the actual palette. See
     // http://nocash.emubase.de/pandocs.htm#lcdmonochromepalettes
     pal[0] = PALETTE[((val >> 0) & 0x3) as uint];
@@ -856,7 +856,7 @@ fn update_pal(pal: &mut [Color, ..4], val: u8) {
 }
 
 // Update the cached CGB palette that was just written to
-fn update_cgb_pal(pal: &mut [[Color, ..4], ..8], mem: &[u8, ..CGB_BP_SIZE],
+fn update_cgb_pal(pal: &mut [[Color; 4]; 8], mem: &[u8; CGB_BP_SIZE],
                   addr: u8) {
     debug!("updating cgb pal");
     // See http://nocash.emubase.de/pandocs.htm#lcdcolorpalettescgbonly
@@ -1079,7 +1079,7 @@ mod test {
 
         // BGP is a mapping of indices to shades. Each 2 bits in the mapping
         // specify a shade of grey (0=white, 3=black). Specify a reverse mapping
-        // here where obp[0] = 3, obp[1] = 2, ...
+        // here where obp[0] = 3, obp[1] = 2; .
         mem.wb(BGP, 0b_0001_1011);
 
         // Now paint in that the 10th line needs 8 pixels of each color
@@ -1111,7 +1111,7 @@ mod test {
         // byte[1] = b7 b6 b5 b4 b3 b2 b1 b0
         //
         // and the color for the pixels is:
-        // [ {b7,a7}, {b6,a6}, ...]
+        // [ {b7,a7}, {b6,a6}; .]
         // where {b,a} is a binary number with digits b,a
 
         // Data for tile 0, each pixel is color 0

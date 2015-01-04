@@ -2,7 +2,7 @@
 
 pub struct Rtc {
     pub current: u8,
-    pub regs: [u8, ..8],
+    pub regs: [u8; 8],
 
     s: u8,
     m: u8,
@@ -18,7 +18,7 @@ impl Rtc {
     pub fn new() -> Rtc {
         Rtc {
             s: 0, m: 0, h: 0, d: 0, t: 0, carry: 0, current: 0,
-            regs: [0, ..8], stop: 0, readylatch: false,
+            regs: [0; 8], stop: 0, readylatch: false,
         }
     }
 

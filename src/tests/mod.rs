@@ -40,27 +40,27 @@ macro_rules! test {
     )
 }
 
-test!(special, include_bin!("cpu-01-special.gb.gz"),
+test!(special, include_bytes!("cpu-01-special.gb.gz"),
       "3042476034633502306");
-test!(interrupts, include_bin!("cpu-02-interrupts.gb.gz"),
+test!(interrupts, include_bytes!("cpu-02-interrupts.gb.gz"),
       "462176620006846018");
-test!(op_sp_hl, include_bin!("cpu-03-op-sp-hl.gb.gz"),
+test!(op_sp_hl, include_bytes!("cpu-03-op-sp-hl.gb.gz"),
       "10657845603953411393");
-test!(op_r_imm, include_bin!("cpu-04-op-r-imm.gb.gz"),
+test!(op_r_imm, include_bytes!("cpu-04-op-r-imm.gb.gz"),
       "11318613169574122426");
-test!(op_rp, include_bin!("cpu-05-op-rp.gb.gz"),
+test!(op_rp, include_bytes!("cpu-05-op-rp.gb.gz"),
       "10170984252987847598");
-test!(op_ld_r_r, include_bin!("cpu-06-ld-r-r.gb.gz"),
+test!(op_ld_r_r, include_bytes!("cpu-06-ld-r-r.gb.gz"),
       "6875792126886980649");
-test!(jumping, include_bin!("cpu-07-jumping.gb.gz"),
+test!(jumping, include_bytes!("cpu-07-jumping.gb.gz"),
       "3365161897440759532");
-test!(misc, include_bin!("cpu-08-misc.gb.gz"),
+test!(misc, include_bytes!("cpu-08-misc.gb.gz"),
       "8370387601342429963");
-test!(op_r_r, include_bin!("cpu-09-op-r-r.gb.gz"),
+test!(op_r_r, include_bytes!("cpu-09-op-r-r.gb.gz"),
       "14541846169334570272");
-test!(bit_ops, include_bin!("cpu-10-bit-ops.gb.gz"),
+test!(bit_ops, include_bytes!("cpu-10-bit-ops.gb.gz"),
       "12081860069910899791");
-test!(op_a_hl, include_bin!("cpu-11-op-a-hl.gb.gz"),
+test!(op_a_hl, include_bytes!("cpu-11-op-a-hl.gb.gz"),
       "10885336760602814920");
-test!(instr_timing, include_bin!("instr_timing.gb.gz"),
+test!(instr_timing, include_bytes!("instr_timing.gb.gz"),
       "3437662308716406134");
