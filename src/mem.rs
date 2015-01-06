@@ -574,6 +574,7 @@ impl Memory {
 #[cfg(test)]
 mod test {
     use super::{Memory, Mbc};
+    use std::iter::repeat;
     use gb::GameBoy as GB;
 
     #[test]
@@ -649,7 +650,7 @@ mod test {
 
     macro_rules! load( ($($k:expr => $v:expr),+) => ({
         let mut m = Memory::new(GB);
-        let mut ram = Vec::from_elem(0x1000000, 0u8);
+        let mut ram = repeat(0u8).take(0x1000000).collect::<Vec<_>>();
         ram[0x0149] = 0x03;
         $(ram[$k] = $v;)+
         m.load_cartridge(ram.as_slice().to_vec());
