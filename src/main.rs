@@ -1,10 +1,9 @@
-#![feature(macro_rules, phase)]
 #![cfg_attr(test, deny(warnings))]
 #![cfg_attr(test, allow(dead_code))]
 
-#[phase(plugin, link)] extern crate log;
 extern crate time;
 extern crate getopts;
+#[macro_use] extern crate log;
 
 use std::os;
 use std::io::File;
