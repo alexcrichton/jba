@@ -14,9 +14,9 @@ enum State {
 pub struct Sgb {
     ram: [u8; 0x1000],
     state: State,
-    datai: uint,
-    read: uint,
-    packets: uint,
+    datai: u32,
+    read: u32,
+    packets: u32,
     byte: u8,
     bit: u8,
     command: u8,
@@ -102,10 +102,10 @@ impl Sgb {
                         self.read += 1;
                         if self.read % 8 == 0 {
                             if self.datai == 0 {
-                                self.packets = (self.byte % 8) as uint;
+                                self.packets = (self.byte % 8) as u32;
                                 self.command = self.byte / 8;
                             }
-                            self.data[self.datai] = self.byte;
+                            self.data[self.datai as usize] = self.byte;
                             self.datai += 1;
                             self.byte = 0;
                         }
@@ -161,17 +161,17 @@ impl Sgb {
     // Implements the PALXX commands received to the SGB. This function will
     // update the SGB palettes specified with the data provided in the packet
     // transfer.
-    fn update_pal(&mut self, p1: uint, p2: uint, gpu: &mut gpu::Gpu) {
+    fn update_pal(&mut self, p1: usize, p2: usize, gpu: &mut gpu::Gpu) {
         // Color 0 specified applies to all palettes
-        for i in range(0u, 4) {
+        for i in range(0us, 4) {
             self.pal[i * 4] = pack(self.data[2], self.data[1]);
         }
 
-        for i in range(1u, 3) {
+        for i in range(1us, 3) {
             self.pal[p1 * 4 + i] = pack(self.data[1 + i * 2 + 1],
                                         self.data[1 + i * 2]);
         }
-        for i in range(0u, 3) {
+        for i in range(0us, 3) {
             self.pal[p2 * 4 + i] = pack(self.data[1 + (i + 4) * 2 + 1],
                                         self.data[1 + (i + 4) * 2]);
         }
@@ -200,11 +200,11 @@ impl Sgb {
     fn attr_blk(&mut self, gpu: &mut gpu::Gpu) {
         for i in range(0, self.data[1]) {
             // extract all data from what was received
-            let off = 2 + (i as uint) * 6;
-            let x1 = self.data[off + 2] as int;
-            let y1 = self.data[off + 3] as int;
-            let x2 = self.data[off + 4] as int;
-            let y2 = self.data[off + 5] as int;
+            let off = 2 + (i as usize) * 6;
+            let x1 = self.data[off + 2] as i32;
+            let y1 = self.data[off + 3] as i32;
+            let x2 = self.data[off + 4] as i32;
+            let y2 = self.data[off + 5] as i32;
             let insideon = self.data[off] & 1 != 0;
             let borderon = self.data[off] & 2 != 0;
             let outsideon = self.data[off] & 4 != 0;
@@ -214,18 +214,18 @@ impl Sgb {
             let outsidepal = (self.data[off + 1] >> 4) & 3;
 
             // Apply to the attribute file for each block of data
-            for y in range(0i, 18) {
-                for x in range(0i, 20) {
+            for y in range(0, 18) {
+                for x in range(0, 20) {
                     if x > x1 && x < x2 && y > y1 && y < y2 {
                         if insideon {
-                            gpu.sgb.atf[(y * 20 + x) as uint] = insidepal;
+                            gpu.sgb.atf[(y * 20 + x) as usize] = insidepal;
                         }
                     } else if x < x1 || x > x2 || y < y1 || y > y2 {
                         if outsideon {
-                            gpu.sgb.atf[(y * 20 + x) as uint] = outsidepal;
+                            gpu.sgb.atf[(y * 20 + x) as usize] = outsidepal;
                         }
                     } else if borderon {
-                        gpu.sgb.atf[(y * 20 + x) as uint] = borderpal;
+                        gpu.sgb.atf[(y * 20 + x) as usize] = borderpal;
                     }
                 }
             }
@@ -238,15 +238,15 @@ impl Sgb {
     fn pal_set(&mut self, gpu: &mut gpu::Gpu) {
         // Each tile in SGB RAM is 8 bytes (4 colors)
         let pali = [
-            pack(self.data[2], self.data[1]) as uint * 8,
-            pack(self.data[4], self.data[3]) as uint * 8,
-            pack(self.data[6], self.data[5]) as uint * 8,
-            pack(self.data[8], self.data[7]) as uint * 8,
+            pack(self.data[2], self.data[1]) as usize * 8,
+            pack(self.data[4], self.data[3]) as usize * 8,
+            pack(self.data[6], self.data[5]) as usize * 8,
+            pack(self.data[8], self.data[7]) as usize * 8,
         ];
 
         // i = palette number, j = color number (4 palettes, 4 colors)
-        for i in range(0u, 4) {
-            for j in range(0u, 4) {
+        for i in range(0us, 4) {
+            for j in range(0us, 4) {
                 self.pal[i * 4 + j] = pack(self.ram[pali[i] + 2 * j + 1],
                                            self.ram[pali[i] + 2 * j]);
             }
@@ -285,12 +285,12 @@ impl Sgb {
         let mut sgboffset = 0;
 
         // Why 13x20? Talk to the macboyadvance people.
-        for _ in range(0i, 13) {
-            for _ in range(0i, 20) {
+        for _ in range(0, 13) {
+            for _ in range(0, 20) {
                 let tilei = gpu.vram()[mapbase + offset];
                 offset += 1;
                 let tilei = gpu.add_tilei(0, tilei);
-                for k in range(0u, 16) {
+                for k in range(0us, 16) {
                     if sgboffset >= 4096 { break }
                     self.ram[sgboffset] = gpu.vram()[patbase + tilei * 16 + k];
                     sgboffset += 1;
@@ -304,8 +304,8 @@ impl Sgb {
     // four relevant palettes with their first four colors because these are the
     // only ones that are used in colorizing the game screen.
     fn update_palettes(&self, gpu: &mut gpu::Gpu) {
-        for i in range(0u, 4) {
-            for j in range(0u, 4) {
+        for i in range(0us, 4) {
+            for j in range(0us, 4) {
                 let color = self.pal[i * 4 + j];
                 gpu.sgb.pal[i][j] = [
                     (((color >>  0) & 0x1f) as u8) << 3,

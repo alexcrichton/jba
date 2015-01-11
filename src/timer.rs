@@ -10,12 +10,12 @@ pub struct Timer {
     pub tma: u8,
     pub tac: u8,
 
-    tima_speed: uint,
+    tima_speed: u32,
 }
 
 struct Clock {
-    tima: uint,
-    div: uint,
+    tima: u32,
+    div: u32,
 }
 
 impl Timer {
@@ -45,7 +45,7 @@ impl Timer {
     }
 
     // Details: http://imrannazar.com/GameBoy-Emulation-in-JavaScript:-Timers
-    pub fn step(&mut self, ticks: uint, if_: &mut u8, speed: mem::Speed) {
+    pub fn step(&mut self, ticks: u32, if_: &mut u8, speed: mem::Speed) {
         // undo the multiplication in the cpu
         let ticks = match speed {
             mem::Speed::Normal => ticks / 4,

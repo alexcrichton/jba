@@ -1,5 +1,5 @@
 #![cfg_attr(test, deny(warnings))]
-#![cfg_attr(test, allow(dead_code))]
+#![cfg_attr(test, allow(dead_code, unstable))]
 
 extern crate time;
 extern crate getopts;

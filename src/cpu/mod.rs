@@ -9,7 +9,7 @@ mod z80;
 
 pub struct Cpu {
     regs: z80::Registers,
-    ticks: uint,
+    ticks: u32,
 }
 
 #[allow(dead_code)]
@@ -26,7 +26,7 @@ impl Cpu {
         Cpu { regs: z80::Registers::new(target), ticks: 0 }
     }
 
-    pub fn exec(&mut self, mem: &mut mem::Memory) -> uint {
+    pub fn exec(&mut self, mem: &mut mem::Memory) -> u32 {
         self.regs.int_step();
 
         // When the CPU halts, it simply goes into a "low power mode" that
@@ -53,7 +53,7 @@ impl Cpu {
             if ints != 0 {
                 let i = ints.trailing_zeros();
                 if self.regs.ime != 0 {
-                    mem.if_ &= !(1 << (i as uint));
+                    mem.if_ &= !(1 << (i as u32));
                 }
                 self.regs.ime = 0;
                 self.regs.halt = 0;

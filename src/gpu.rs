@@ -8,13 +8,13 @@ use gb;
 use cpu::Interrupt;
 use mem;
 
-const VRAM_SIZE: uint = 8 << 10; // 8K
-const OAM_SIZE: uint = 0xa0;     // 0xffe00 - 0xffe9f is OAM
-const CGB_BP_SIZE: uint = 64;    // 64 bytes of extra memory
-const NUM_TILES: uint = 384;     // number of in-memory tiles
+const VRAM_SIZE: usize = 8 << 10; // 8K
+const OAM_SIZE: usize = 0xa0;     // 0xffe00 - 0xffe9f is OAM
+const CGB_BP_SIZE: usize = 64;    // 64 bytes of extra memory
+const NUM_TILES: usize = 384;     // number of in-memory tiles
 
-pub const HEIGHT: uint = 144;
-pub const WIDTH: uint = 160;
+pub const HEIGHT: usize = 144;
+pub const WIDTH: usize = 160;
 
 // The palette for the monochrome GB. The possible values are:
 //
@@ -46,7 +46,7 @@ pub struct Gpu {
     // Selected vram bank
     vrambank: u8,
 
-    clock: uint,
+    clock: u32,
 
     // Registers used by the GPU
 
@@ -155,12 +155,12 @@ pub struct SgbData {
 impl Gpu {
     pub fn new(_targ: gb::Target) -> Gpu {
         Gpu {
-            vrambanks: box () ([[0; VRAM_SIZE];  2]),
+            vrambanks: Box::new([[0; VRAM_SIZE];  2]),
             vrambank: 0,
             oam: [0; OAM_SIZE],
             is_cgb: false,
             is_sgb: false,
-            image_data: box () ([255; HEIGHT * WIDTH * 4]),
+            image_data: Box::new([255; HEIGHT * WIDTH * 4]),
 
             mode: Mode::RdOam,
             wx: 0, wy: 0, obp1: 0, obp0: 0, bgp: 0,
@@ -175,31 +175,31 @@ impl Gpu {
             hdma_dst: 0,
             hdma5: 0,
 
-            pal: box Palette {
+            pal: Box::new(Palette {
                 bg: [[0; 4]; 4],
                 obp0: [[0; 4]; 4],
                 obp1: [[0; 4]; 4],
-            },
+            }),
 
-            tiles: box Tiles {
+            tiles: Box::new(Tiles {
                 need_update: false,
                 to_update: [false;  NUM_TILES * 2],
                 data: [[[0; 8]; 8]; NUM_TILES * 2],
-            },
+            }),
 
-            cgb: box CgbData {
+            cgb: Box::new(CgbData {
                 bgp: [255; CGB_BP_SIZE],
                 obp: [0; CGB_BP_SIZE],
                 bgpi: 0,
                 obpi: 0,
                 cbgp: [[[255, 255, 255, 255]; 4]; 8],
                 cobp: [[[  0,   0,   0, 255]; 4]; 8],
-            },
+            }),
 
-            sgb: box SgbData {
+            sgb: Box::new(SgbData {
                 atf: [0;  20 * 18],
                 pal: [[[0, 0, 0, 255]; 4]; 4],
-            }
+            }),
         }
     }
 
@@ -210,10 +210,10 @@ impl Gpu {
     }
 
     pub fn vram(&self) -> &[u8; VRAM_SIZE] {
-        &self.vrambanks[self.vrambank as uint]
+        &self.vrambanks[self.vrambank as usize]
     }
     pub fn vram_mut(&mut self) -> &mut [u8; VRAM_SIZE] {
-        &mut self.vrambanks[self.vrambank as uint]
+        &mut self.vrambanks[self.vrambank as usize]
     }
 
     fn switch(&mut self, mode: Mode, if_: &mut u8) {
@@ -250,7 +250,7 @@ impl Gpu {
     // internal counter of clock cycles that have passed. It's a state machine
     // between a few different states. In one state, however, the rendering of a
     // screen occurs, but that doesn't always happen when calling this function.
-    pub fn step(&mut self, clocks: uint, if_: &mut u8) {
+    pub fn step(&mut self, clocks: u32, if_: &mut u8) {
         // Timings located here:
         //      http://nocash.emubase.de/pandocs.htm#lcdstatusregister
         self.clock += clocks;
@@ -306,7 +306,7 @@ impl Gpu {
     fn update_tileset(&mut self) {
         let tiles = &mut *self.tiles;
         let iter = tiles.to_update.iter_mut();
-        for (i, slot) in iter.enumerate().filter(|&(_, &i)| i) {
+        for (i, slot) in iter.enumerate().filter(|&(_, &mut i)| i) {
             *slot = false;
 
             // Each tile is 16 bytes long. Each pair of bytes represents a line
@@ -318,7 +318,7 @@ impl Gpu {
             //      byte 1 : 01101010
             //
             // The colors are [0, 2, 2, 1, 3, 0, 3, 1]
-            for (j, addr) in range(0u, 8).zip(iter::count((i % NUM_TILES) * 16, 2)) {
+            for (j, addr) in range(0, 8).zip(iter::count((i % NUM_TILES) * 16, 2)) {
                 // All tiles are located 0x8000-0x97ff => 0x0000-0x17ff in VRAM
                 // meaning that the index is simply an index into raw VRAM
                 let (mut lsb, mut msb) = if i < NUM_TILES {
@@ -328,7 +328,7 @@ impl Gpu {
                 };
 
                 // LSB is the right-most pixel.
-                for k in range(0u, 8).rev() {
+                for k in range(0, 8).rev() {
                     tiles.data[i][j][k] = ((msb & 1) << 1) | (lsb & 1);
                     lsb >>= 1;
                     msb >>= 1;
@@ -337,16 +337,16 @@ impl Gpu {
         }
     }
 
-    pub fn add_tilei(&self, base: uint, tilei: u8) -> uint {
+    pub fn add_tilei(&self, base: usize, tilei: u8) -> usize {
         // tiledata = 0 => tilei is a signed byte, so fix it here
         if self.tiledata {
-            base + tilei as uint
+            base + tilei as usize
         } else {
-            (base as int + (tilei as i8 as int)) as uint
+            (base as isize + (tilei as i8 as isize)) as usize
         }
     }
 
-    pub fn bgbase(&self) -> uint {
+    pub fn bgbase(&self) -> usize {
         // vram is from 0x8000-0x9fff
         // self.bgmap: 0=9800-9bff, 1=9c00-9fff
         //
@@ -357,7 +357,7 @@ impl Gpu {
 
     fn render_background(&mut self, scanline: &mut [u8; WIDTH]) {
         let mapbase = self.bgbase();
-        let line = self.ly as uint + self.scy as uint;
+        let line = self.ly as usize + self.scy as usize;
 
         // Now offset from the base to the right location. We divide by 8
         // because each tile is 8 pixels high. We then multiply by 32
@@ -370,7 +370,7 @@ impl Gpu {
         let mut x = self.scx % 8;
 
         // Offset into the canvas to draw. line * width * 4 colors
-        let mut coff = (self.ly as uint) * WIDTH * 4;
+        let mut coff = (self.ly as usize) * WIDTH * 4;
 
         // this.tiledata is a flag to determine which tile data table to use
         // 0=8800-97FF, 1=8000-8FFF. For some odd reason, if tiledata = 0, then
@@ -384,7 +384,7 @@ impl Gpu {
         loop {
             // Backgrounds wrap around, so calculate the offset into the bgmap
             // each loop to check for wrapping
-            let mapoff = ((i as uint + self.scx as uint) % 256) >> 3;
+            let mapoff = ((i as usize + self.scx as usize) % 256) >> 3;
             let tilei = self.vrambanks[0][mapbase + mapoff];
 
             // tiledata = 0 => tilei is a signed byte, so fix it here
@@ -406,29 +406,29 @@ impl Gpu {
                 //  Bit 6    Vertical Flip         (0=Normal, 1=Mirror)
                 //  Bit 7    BG-to-OAM Priority    (0=OAM, 1=BG)
 
-                let attrs = self.vrambanks[1][mapbase + mapoff as uint] as uint;
+                let attrs = self.vrambanks[1][mapbase + mapoff as usize] as usize;
 
                 let tile = self.tiles.data[tilebase +
                                            ((attrs >> 3) & 1) * NUM_TILES];
                 bgpri = attrs & 0x80 != 0;
                 hflip = attrs & 0x20 != 0;
-                row = tile[if attrs & 0x40 != 0 {7 - y} else {y} as uint];
+                row = tile[if attrs & 0x40 != 0 {7 - y} else {y} as usize];
                 bgp = self.cgb.cbgp[attrs & 0x7];
             } else {
                 // Non CGB backgrounds are boring :(
-                row = self.tiles.data[tilebase as uint][y as uint];
+                row = self.tiles.data[tilebase as usize][y as usize];
                 bgpri = false;
                 hflip = false;
                 bgp = self.pal.bg;
             }
 
             while x < 8 && i < WIDTH as u8 {
-                let colori = row[if hflip {7 - x} else {x} as uint];
+                let colori = row[if hflip {7 - x} else {x} as usize];
                 let color;
                 if self.is_sgb && !self.is_cgb {
-                    let sgbaddr = (i >> 3) as uint + (self.ly as uint >> 3) * 20;
-                    let mapped = self.sgb.atf[sgbaddr as uint] as uint;
-                    match bgp[colori as uint][0] {
+                    let sgbaddr = (i >> 3) as usize + (self.ly as usize >> 3) * 20;
+                    let mapped = self.sgb.atf[sgbaddr] as usize;
+                    match bgp[colori as usize][0] {
                           0 => { color = self.sgb.pal[mapped][3]; }
                          96 => { color = self.sgb.pal[mapped][2]; }
                         192 => { color = self.sgb.pal[mapped][1]; }
@@ -438,10 +438,10 @@ impl Gpu {
                         _ => { dpanic!(); color = [0, 0, 0, 0]; }
                     }
                 } else {
-                    color = bgp[colori as uint];
+                    color = bgp[colori as usize];
                 }
                 // To indicate bg priority, list a color >= 4
-                scanline[i as uint] = if bgpri {4} else {colori};
+                scanline[i as usize] = if bgpri {4} else {colori};
 
                 self.image_data[coff] = color[0];
                 self.image_data[coff + 1] = color[1];
@@ -468,7 +468,7 @@ impl Gpu {
         if self.wx >= WIDTH as u8 + 7 { return }
 
         let mapbase = if self.winmap {0x1c00} else {0x1800};
-        let mapbase = mapbase + ((self.ly as uint - self.wy as uint) >> 3) * 32;
+        let mapbase = mapbase + ((self.ly as usize - self.wy as usize) >> 3) * 32;
 
         // X and Y location inside the tile itself to paint
         //
@@ -483,7 +483,7 @@ impl Gpu {
         };
 
         // Offset into the canvas to draw. (line * width + xoff) * 4 colors
-        let mut coff = (self.ly as uint * WIDTH + i as uint) * 4;
+        let mut coff = (self.ly as usize * WIDTH + i as usize) * 4;
 
         // this.tiledata is a flag to determine which tile data table to use
         // 0=8800-97FF, 1=8000-8FFF. For some odd reason, if tiledata = 0, then
@@ -493,9 +493,9 @@ impl Gpu {
 
         debug!("render window from {:x}", mapbase);
 
-        let mut mapoff = 0i;
+        let mut mapoff = 0;
         loop {
-            let tilei = self.vrambanks[0][mapbase + mapoff as uint];
+            let tilei = self.vrambanks[0][mapbase + mapoff as usize];
             mapoff += 1;
 
             // tiledata = 0 => tilei is a signed byte, so fix it here
@@ -506,28 +506,28 @@ impl Gpu {
             let hflip;
             let bgp;
             if self.is_cgb {
-                let attrs = self.vrambanks[1][mapbase + mapoff as uint - 1] as uint;
+                let attrs = self.vrambanks[1][mapbase + mapoff as usize - 1] as usize;
 
                 let tile = self.tiles.data[tilebase +
                                            ((attrs >> 3) & 1) * NUM_TILES];
                 bgpri = attrs & 0x80 != 0;
                 hflip = attrs & 0x20 != 0;
-                row = tile[if attrs & 0x40 != 0 {7 - y} else {y} as uint];
+                row = tile[if attrs & 0x40 != 0 {7 - y} else {y} as usize];
                 bgp = self.cgb.cbgp[attrs & 0x7];
             } else {
-                row = self.tiles.data[tilebase as uint][y as uint];
+                row = self.tiles.data[tilebase as usize][y as usize];
                 bgpri = false;
                 hflip = false;
                 bgp = self.pal.bg;
             }
 
             while x < 8 && i < WIDTH as u8 {
-                let colori = row[if hflip {7 - x} else {x} as uint];
+                let colori = row[if hflip {7 - x} else {x} as usize];
                 let color;
                 if self.is_sgb && !self.is_cgb {
                     let sgbaddr = (i >> 3) + (self.ly >> 3) * 20;
-                    let mapped = self.sgb.atf[sgbaddr as uint] as uint;
-                    match bgp[colori as uint][0] {
+                    let mapped = self.sgb.atf[sgbaddr as usize] as usize;
+                    match bgp[colori as usize][0] {
                           0 => { color = self.sgb.pal[mapped][3]; }
                          96 => { color = self.sgb.pal[mapped][2]; }
                         192 => { color = self.sgb.pal[mapped][1]; }
@@ -537,10 +537,10 @@ impl Gpu {
                         _ => { color = [0, 0, 0, 0]; }
                     }
                 } else {
-                    color = bgp[colori as uint];
+                    color = bgp[colori as usize];
                 }
                 // To indicate bg priority, list a color >= 4
-                scanline[i as uint] = if bgpri {4} else {colori};
+                scanline[i as usize] = if bgpri {4} else {colori};
 
                 self.image_data[coff] = color[0];
                 self.image_data[coff + 1] = color[1];
@@ -561,15 +561,15 @@ impl Gpu {
         // More information about sprites is located at:
         // http://nocash.emubase.de/pandocs.htm#vramspriteattributetableoam
 
-        let line = self.ly as int;
+        let line = self.ly as i32;
         let ysize = if self.objsize {16} else {8};
 
         // All sprits are located in OAM
         // There are 40 sprites in total, each is 4 bytes wide
         for sprite in self.oam.chunks(4) {
-            let mut yoff = (sprite[0] as int) - 16;
-            let xoff = (sprite[1] as int) - 8;
-            let mut tile = sprite[2] as uint;
+            let mut yoff = (sprite[0] as i32) - 16;
+            let xoff = (sprite[1] as i32) - 8;
+            let mut tile = sprite[2] as usize;
             let flags = sprite[3];
 
             // First make sure that this sprite even lands on the current line
@@ -578,7 +578,7 @@ impl Gpu {
             // (which is 8 pixels high) lands below the scanline, this sprite
             // doesn't need to be rendered right now
             if yoff > line || yoff + ysize <= line ||
-               xoff <= -8 || xoff >= WIDTH as int {
+               xoff <= -8 || xoff >= WIDTH as i32 {
                continue
             }
 
@@ -594,7 +594,7 @@ impl Gpu {
             }
 
             // 160px/line, 4 entries/px
-            let mut coff = (WIDTH as int * line + xoff) * 4;
+            let mut coff = (WIDTH as i32 * line + xoff) * 4;
 
             // All sprite tile palettes are at 0x8000-0x8fff => start of vram.
             // If we're in CGB mode, then we get our palette from the spite
@@ -604,34 +604,34 @@ impl Gpu {
             let pal;
             let tiled;
             if self.is_cgb {
-                tiled = self.tiles.data[((flags as uint >> 3) & 1 * NUM_TILES) +
-                                        tile as uint];
-                pal = self.cgb.cobp[(flags & 0x3) as uint];
+                tiled = self.tiles.data[((flags as usize >> 3) & 1 * NUM_TILES) +
+                                        tile as usize];
+                pal = self.cgb.cobp[(flags & 0x3) as usize];
             } else {
                 // bit4 is the palette number. 0 = obp0, 1 = obp1
                 pal = if flags & 0x10 != 0 {self.pal.obp1} else {self.pal.obp0};
-                tiled = self.tiles.data[tile as uint];
+                tiled = self.tiles.data[tile as usize];
             }
 
             // bit6 is the vertical flip bit
             let row = if flags & 0x40 != 0 {
-                tiled[(7 - (line - yoff)) as uint]
+                tiled[(7 - (line - yoff)) as usize]
             } else {
-                tiled[(line - yoff) as uint]
+                tiled[(line - yoff) as usize]
             };
 
-            for x in range(0i, 8) {
+            for x in range(0, 8) {
                 coff += 4;
 
                 // If these pixels are off screen, don't bother drawing
                 // anything. Also, if the background tile at this pixel has
                 // priority, don't render this sprite at all.
-                if xoff + x < 0 || xoff + x >= WIDTH as int ||
-                   scanline[(x + xoff) as uint] > 3 {
+                if xoff + x < 0 || xoff + x >= WIDTH as i32 ||
+                   scanline[(x + xoff) as usize] > 3 {
                     continue
                 }
                 // bit5 is the horizontal flip flag
-                let colori = row[if flags & 0x20 != 0 {7-x} else {x} as uint];
+                let colori = row[if flags & 0x20 != 0 {7-x} else {x} as usize];
 
                 // A color index of 0 for sprites means transparent
                 if colori == 0 { continue }
@@ -640,32 +640,32 @@ impl Gpu {
                 // sprite has this flag set and the data at this location
                 // already contains data (nonzero), then don't render this
                 // sprite
-                if flags & 0x80 != 0 && scanline[(xoff + x) as uint] != 0 {
+                if flags & 0x80 != 0 && scanline[(xoff + x) as usize] != 0 {
                     continue
                 }
 
                 let color;
                 if self.is_sgb && !self.is_cgb {
-                    let sgbaddr = ((xoff as uint + x as uint) >> 3) +
-                                  (line as uint >> 3) * 20;
-                    let mapped = self.sgb.atf[sgbaddr as uint];
-                    match pal[colori as uint][0] {
-                          0 => { color = self.sgb.pal[mapped as uint][3]; }
-                         96 => { color = self.sgb.pal[mapped as uint][2]; }
-                        192 => { color = self.sgb.pal[mapped as uint][1]; }
-                        255 => { color = self.sgb.pal[mapped as uint][0]; }
+                    let sgbaddr = ((xoff as usize + x as usize) >> 3) +
+                                  (line as usize >> 3) * 20;
+                    let mapped = self.sgb.atf[sgbaddr as usize];
+                    match pal[colori as usize][0] {
+                          0 => { color = self.sgb.pal[mapped as usize][3]; }
+                         96 => { color = self.sgb.pal[mapped as usize][2]; }
+                        192 => { color = self.sgb.pal[mapped as usize][1]; }
+                        255 => { color = self.sgb.pal[mapped as usize][0]; }
 
                         // not actually reachable
                         _ => { dpanic!(); color = [0, 0, 0, 0]; }
                     }
                 } else {
-                    color = pal[colori as uint];
+                    color = pal[colori as usize];
                 }
 
-                self.image_data[(coff - 4) as uint] = color[0];
-                self.image_data[(coff - 3) as uint] = color[1];
-                self.image_data[(coff - 2) as uint] = color[2];
-                self.image_data[(coff - 1) as uint] = color[3];
+                self.image_data[(coff - 4) as usize] = color[0];
+                self.image_data[(coff - 3) as usize] = color[1];
+                self.image_data[(coff - 2) as usize] = color[2];
+                self.image_data[(coff - 1) as usize] = color[3];
             }
         }
     }
@@ -688,7 +688,7 @@ impl Gpu {
                 ((self.mode2int as u8)                                << 5) |
                 ((self.mode1int as u8)                                << 4) |
                 ((self.mode0int as u8)                                << 3) |
-                ((if self.lycly as u8 == self.ly {1u} else {0} as u8) << 2) |
+                ((if self.lycly as u8 == self.ly {1} else {0} as u8) << 2) |
                 ((self.mode as u8)                                    << 0)
             }
 
@@ -713,9 +713,9 @@ impl Gpu {
 
             // http://nocash.emubase.de/pandocs.htm#lcdcolorpalettescgbonly
             0x68 => self.cgb.bgpi,
-            0x69 => self.cgb.bgp[(self.cgb.bgpi & 0x3f) as uint],
+            0x69 => self.cgb.bgp[(self.cgb.bgpi & 0x3f) as usize],
             0x6a => self.cgb.obpi,
-            0x6b => self.cgb.obp[(self.cgb.obpi & 0x3f) as uint],
+            0x6b => self.cgb.obp[(self.cgb.obpi & 0x3f) as usize],
 
             _ => 0xff
         }
@@ -782,7 +782,7 @@ impl Gpu {
             0x6a => { self.cgb.obpi = val & 0xbf; }
             0x69 => {
                 let cgb = &mut *self.cgb;
-                cgb.bgp[(cgb.bgpi & 0x3f) as uint] = val;
+                cgb.bgp[(cgb.bgpi & 0x3f) as usize] = val;
                 update_cgb_pal(&mut cgb.cbgp, &cgb.bgp, cgb.bgpi);
                 if cgb.bgpi & 0x80 != 0 {
                     cgb.bgpi = (cgb.bgpi + 1) & 0xbf;
@@ -790,7 +790,7 @@ impl Gpu {
             }
             0x6b => {
                 let cgb = &mut *self.cgb;
-                cgb.obp[(cgb.obpi & 0x3f) as uint] = val;
+                cgb.obp[(cgb.obpi & 0x3f) as usize] = val;
                 update_cgb_pal(&mut cgb.cobp, &cgb.obp, cgb.obpi);
                 if cgb.obpi & 0x80 != 0 {
                     cgb.obpi = (cgb.obpi + 1) & 0xbf;
@@ -806,7 +806,7 @@ impl Gpu {
         let tilei = (addr & 0x1fff) / 16; // each tile is 16 bytes, divide by 16
         let tilei = tilei + (self.vrambank as u16) * (NUM_TILES as u16);
         self.tiles.need_update = true;
-        self.tiles.to_update[tilei as uint] = true;
+        self.tiles.to_update[tilei as usize] = true;
     }
 
     // Trigger a DMA transfer into OAM. This happens whenever something is
@@ -825,7 +825,7 @@ impl Gpu {
 
         debug!("oam dma transfer from {:x}", orval);
         for i in range(0, OAM_SIZE as u16) {
-            mem.gpu.oam[i as uint] = mem.rb(orval | i);
+            mem.gpu.oam[i as usize] = mem.rb(orval | i);
         }
     }
 
@@ -849,10 +849,10 @@ impl Gpu {
 fn update_pal(pal: &mut [Color; 4], val: u8) {
     // These registers are indices into the actual palette. See
     // http://nocash.emubase.de/pandocs.htm#lcdmonochromepalettes
-    pal[0] = PALETTE[((val >> 0) & 0x3) as uint];
-    pal[1] = PALETTE[((val >> 2) & 0x3) as uint];
-    pal[2] = PALETTE[((val >> 4) & 0x3) as uint];
-    pal[3] = PALETTE[((val >> 6) & 0x3) as uint];
+    pal[0] = PALETTE[((val >> 0) & 0x3) as usize];
+    pal[1] = PALETTE[((val >> 2) & 0x3) as usize];
+    pal[2] = PALETTE[((val >> 4) & 0x3) as usize];
+    pal[3] = PALETTE[((val >> 6) & 0x3) as usize];
 }
 
 // Update the cached CGB palette that was just written to
@@ -864,10 +864,10 @@ fn update_cgb_pal(pal: &mut [[Color; 4]; 8], mem: &[u8; CGB_BP_SIZE],
     let pali = addr / 8; // divide by 8 (size of one palette)
     let colori = (addr % 8) / 2; // 2 bytes per color, divide by 2
 
-    let byte1 = mem[(addr & 0x3e) as uint];
-    let byte2 = mem[((addr & 0x3e) + 1) as uint];
+    let byte1 = mem[(addr & 0x3e) as usize];
+    let byte2 = mem[((addr & 0x3e) + 1) as usize];
 
-    let color = &mut pal[pali as uint][colori as uint];
+    let color = &mut pal[pali as usize][colori as usize];
 
     // Bits 0-7 in byte1, others in byte2
     //  Bit 0-4   Red Intensity   (00-1F)
@@ -1061,7 +1061,7 @@ mod test {
         if_ = 0x0;
 
         // When in VBLANK, this lasts for 10 lines
-        for _ in range(0i, 10) {
+        for _ in range(0, 10) {
             assert_eq!(gpu.mode, Mode::VBlank);
             assert_eq!(if_, 0x0);
             gpu.step(456, &mut if_);
@@ -1140,7 +1140,7 @@ mod test {
 
         mem.gpu.ly = 10;
         let offset = 10 * 160 * 4;
-        for i in range(0u, 160 * 4) {
+        for i in range(0, 160 * 4) {
             mem.gpu.image_data[offset + i] = 10;
         }
 
@@ -1148,7 +1148,7 @@ mod test {
         mem.gpu.wb(LCDC, 0);
         mem.gpu.ly = 10;
         mem.gpu.render_line();
-        for i in range(0u, 160 * 4) {
+        for i in range(0, 160 * 4) {
             assert_eq!(mem.gpu.image_data[offset + i], 10);
         }
 
@@ -1158,7 +1158,7 @@ mod test {
 
         // First 3 pixels are all black. SCX = 5 so only 3 pixels of first tile
         // should be shown
-        for i in range(0u, 3) {
+        for i in range(0, 3) {
             assert_eq!(mem.gpu.image_data[offset + i * 4], 0);
             assert_eq!(mem.gpu.image_data[offset + i * 4 + 1], 0);
             assert_eq!(mem.gpu.image_data[offset + i * 4 + 2], 0);
@@ -1166,7 +1166,7 @@ mod test {
         }
 
         // Next 8 pixels should all be next color (dark grey)
-        for i in range(3u, 11) {
+        for i in range(3, 11) {
             assert_eq!(mem.gpu.image_data[offset + i * 4], 96);
             assert_eq!(mem.gpu.image_data[offset + i * 4 + 1], 96);
             assert_eq!(mem.gpu.image_data[offset + i * 4 + 2], 96);
@@ -1174,7 +1174,7 @@ mod test {
         }
 
         // Next 8 pixels should all be next color (light grey)
-        for i in range(11u, 19) {
+        for i in range(11, 19) {
             assert_eq!(mem.gpu.image_data[offset + i * 4], 192);
             assert_eq!(mem.gpu.image_data[offset + i * 4 + 1], 192);
             assert_eq!(mem.gpu.image_data[offset + i * 4 + 2], 192);
@@ -1182,7 +1182,7 @@ mod test {
         }
 
         // Next 8 pixels should all be next color (light grey)
-        for i in range(19u, 27) {
+        for i in range(19, 27) {
             assert_eq!(mem.gpu.image_data[offset + i * 4], 255);
             assert_eq!(mem.gpu.image_data[offset + i * 4 + 1], 255);
             assert_eq!(mem.gpu.image_data[offset + i * 4 + 2], 255);
@@ -1190,7 +1190,7 @@ mod test {
         }
 
         // Finally, the next 8 should be black
-        for i in range(27u, 35) {
+        for i in range(27, 35) {
             assert_eq!(mem.gpu.image_data[offset + i * 4], 0);
             assert_eq!(mem.gpu.image_data[offset + i * 4 + 1], 0);
             assert_eq!(mem.gpu.image_data[offset + i * 4 + 2], 0);

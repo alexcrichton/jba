@@ -16,8 +16,8 @@ pub enum Target {
 pub struct Gb {
     cpu: Cpu,
     mem: Memory,
-    fps: uint,
-    cycles: uint,
+    fps: u32,
+    cycles: u32,
 }
 
 impl Gb {
@@ -55,7 +55,7 @@ impl Gb {
         self.mem.gpu.image_data.as_slice()
     }
 
-    pub fn frames(&mut self) -> uint {
+    pub fn frames(&mut self) -> u32 {
         mem::replace(&mut self.fps, 0)
     }
 

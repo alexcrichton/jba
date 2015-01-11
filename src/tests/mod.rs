@@ -25,7 +25,7 @@ fn run(compressed_rom: &'static [u8], answer: &str) {
         gb.frame();
     }
 
-    let hash = hash::hash(&gb.image());
+    let hash = hash::hash::<_, hash::SipHasher>(&gb.image());
     if answer == "-" {
         panic!("{}", hash)
     } else if answer.to_string() != hash.to_string() {

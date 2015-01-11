@@ -100,13 +100,13 @@ mod test {
 
         // Initially 0, no latching
         rtc.latch(0);
-        for i in range(0u, 8) {
+        for i in range(0, 8) {
             assert_eq!(rtc.regs[i], 0x00);
         }
 
         // Random number, still no latching
         rtc.latch(0x10);
-        for i in range(0u, 8) {
+        for i in range(0, 8) {
             assert_eq!(rtc.regs[i], 0x00);
         }
 

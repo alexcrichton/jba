@@ -17,10 +17,11 @@ mod daa;
 /// - ime : flag for whether interrupts are tunred on or not
 /// - halt : flag as to whether a halt has happened or should
 /// - stop : flag as to whether a stop has happened or should
+#[derive(Show)]
 pub struct Registers {
-    pub ime: uint,
-    pub halt: uint,
-    pub stop: uint,
+    pub ime: u32,
+    pub halt: u32,
+    pub stop: u32,
 
     a: u8,
     b: u8,
@@ -34,7 +35,7 @@ pub struct Registers {
     sp: u16,
     pc: u16,
 
-    delay: uint,
+    delay: u32,
 }
 
 impl Registers {
@@ -137,7 +138,7 @@ impl Registers {
     }
 }
 
-impl fmt::Show for Registers {
+impl fmt::String for Registers {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "a:{:2x} b:{:2x} c:{:2x} d:{:2x} e:{:2x} \
                    f:{:2x} h:{:2x} l:{:2x} pc:{:4x} sp:{:4x} \
