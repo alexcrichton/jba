@@ -2,8 +2,11 @@ extern crate glfw;
 extern crate gl;
 extern crate libc;
 
-use std::mem;
 use std::ffi::CString;
+use std::iter::repeat;
+use std::mem;
+use std::ptr;
+use std::str;
 use self::gl::types as glt;
 use self::glfw::{Context, Key};
 
@@ -32,6 +35,7 @@ pub fn run(mut gb: Gb) {
     window.set_focus_polling(true);
     window.set_size_polling(true);
     glfw.make_context_current(Some(&window));
+    gl::load_with(|s| window.get_proc_address(s));
 
     let cx = Glcx::new();
 
@@ -177,12 +181,14 @@ impl Glcx {
             let src = CString::from_slice(VERTEX.as_bytes());
             gl::ShaderSource(vert, 1, &src.as_ptr(), 0 as *const i32);
             gl::CompileShader(vert);
+            Glcx::check_shader_compile(vert);
 
             // Create and compile the fragment shader
             let frag = gl::CreateShader(gl::FRAGMENT_SHADER);
             let src = CString::from_slice(FRAGMENT.as_bytes());
             gl::ShaderSource(frag, 1, &src.as_ptr(), 0 as *const i32);
             gl::CompileShader(frag);
+            Glcx::check_shader_compile(frag);
 
             // Link the vertex and fragment shader into a shader program
             let program = gl::CreateProgram();
@@ -191,6 +197,7 @@ impl Glcx {
             let buf = CString::from_slice(b"outColor");
             gl::BindFragDataLocation(program, 0, buf.as_ptr());
             gl::LinkProgram(program);
+            Glcx::check_program_link(program);
             assert_eq!(gl::GetError(), 0);
             gl::UseProgram(program);
 
@@ -244,6 +251,32 @@ impl Glcx {
                 vao: vao,
             }
         }
+    }
+
+    unsafe fn check_shader_compile(shader: glt::GLuint) {
+        let mut status = gl::FALSE as glt::GLint;
+        gl::GetShaderiv(shader, gl::COMPILE_STATUS, &mut status);
+        if status == (gl::TRUE as glt::GLint) { return }
+
+        let mut len: glt::GLint = 0;
+        gl::GetShaderiv(shader, gl::INFO_LOG_LENGTH, &mut len);
+        let mut buf = repeat(0u8).take(len as usize).collect::<Vec<_>>();
+        gl::GetShaderInfoLog(shader, len, ptr::null_mut(),
+                             buf.as_mut_ptr() as *mut glt::GLchar);
+        panic!("{}", str::from_utf8(buf.as_slice()).unwrap());
+    }
+
+    unsafe fn check_program_link(program: glt::GLuint) {
+        let mut status = gl::FALSE as glt::GLint;
+        gl::GetProgramiv(program, gl::LINK_STATUS, &mut status);
+        if status == (gl::TRUE as glt::GLint) { return }
+
+        let mut len: glt::GLint = 0;
+        gl::GetProgramiv(program, gl::INFO_LOG_LENGTH, &mut len);
+        let mut buf = repeat(0u8).take(len as usize).collect::<Vec<_>>();
+        gl::GetProgramInfoLog(program, len, ptr::null_mut(),
+                             buf.as_mut_ptr() as *mut glt::GLchar);
+        panic!("{}", str::from_utf8(buf.as_slice()).unwrap());
     }
 
     fn draw(&self, data: &[u8]) {
