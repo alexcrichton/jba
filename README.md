@@ -5,8 +5,7 @@ This is the Rust version of my GameBoy emulator (originally written in JS).
 ## Building
 
 This emulator uses gl-rs and glfw-rs in order to draw on the screen, and hence
-depends on these two libraries. These are both bundled in the repo and will be
-built automatically (unless the `EXTERNAL_GL` var is set). The only system
+depends on these two libraries. These are both downloaded by Cargo. The only system
 dependency this normally requires is that `libglfw` is available.
 
 Otherwise, the build process should be as simple as:
@@ -15,17 +14,17 @@ Otherwise, the build process should be as simple as:
 git clone git://github.com/alexcrichton/jba
 cd jba
 git checkout rust
-make
+cargo build
 ```
 
-And you should have a symlink to a `jba-rs` binary in the current directory.
+And you should have a `jba` binary in the `target` directory.
 
 ## Running
 
 Running JBA is a pretty simple process:
 
 ```
-./jba-rs path/to/rom.gb
+./target/jba path/to/rom.gb
 ```
 
 And that's it! The controls are:
