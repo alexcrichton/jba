@@ -25,7 +25,7 @@ struct Glcx {
 }
 
 pub fn run(mut gb: Gb) {
-    let glfw = glfw::init(glfw::FAIL_ON_ERRORS).unwrap();
+    let mut glfw = glfw::init(glfw::FAIL_ON_ERRORS).unwrap();
 
     let (mut window, events) = glfw.create_window(gpu::WIDTH as u32,
                                                   gpu::HEIGHT as u32,
@@ -43,7 +43,7 @@ pub fn run(mut gb: Gb) {
     let mut ratio = 1 + (gpu::WIDTH as i32 / 10);
     window.set_size((gpu::WIDTH as i32) + 10 * ratio,
                     (gpu::HEIGHT as i32) + 9 * ratio);
-    let context = window.render_context();
+    let mut context = window.render_context();
     while !window.should_close() {
         if focused {
             gb.frame();
