@@ -138,7 +138,7 @@ impl Registers {
     }
 }
 
-impl fmt::String for Registers {
+impl fmt::Display for Registers {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "a:{:2x} b:{:2x} c:{:2x} d:{:2x} e:{:2x} \
                    f:{:2x} h:{:2x} l:{:2x} pc:{:4x} sp:{:4x} \
