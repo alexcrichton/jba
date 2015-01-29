@@ -1,12 +1,15 @@
+#![feature(path, core, std_misc, os, collections, libc, io)]
+#![cfg_attr(test, feature(hash))]
 #![cfg_attr(test, deny(warnings))]
-#![cfg_attr(test, allow(dead_code, unstable))]
+#![cfg_attr(test, allow(dead_code))]
 
 extern crate time;
 extern crate getopts;
 #[macro_use] extern crate log;
+extern crate env_logger;
 
 use std::os;
-use std::io::File;
+use std::old_io::File;
 use getopts as opts;
 
 macro_rules! dpanic( ($($e:tt)*) => ({
@@ -34,6 +37,7 @@ fn usage(prog: &str, opts: &[opts::OptGroup]) {
 }
 
 fn main() {
+    env_logger::init().unwrap();
     let args = os::args();
     let opts = [
         opts::optflag("h", "help", "show this message"),

@@ -6,7 +6,10 @@ authors = []
 
 [dependencies]
 time = "0.1"
-log = "0.1"
+log = "0.2"
+env_logger = "0.2"
+getopts = "0.1"
+libc = "0.1"
 
 [dependencies.gl]
 git = "https://github.com/bjz/gl-rs"
