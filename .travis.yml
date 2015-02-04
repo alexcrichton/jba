@@ -1,23 +1,11 @@
 language: rust
-# Voodoo to get glfw on the system
-before_script:
-    - sudo apt-get install libXxf86vm-dev
-    - git clone https://github.com/glfw/glfw.git
-    - cd glfw
-    - git checkout 3.0.3
-    - cmake -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=/usr
-    - make
-    - sudo make install
-    - cd ..
+sudo: false
 script:
-    - rustc --version
     - cargo build --verbose
     - cargo test --verbose
 branches:
     only:
         - rust
-env:
-    - LD_LIBRARY_PATH=/usr/local/lib
 
 notifications:
   email:
