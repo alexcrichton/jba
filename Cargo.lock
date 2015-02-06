@@ -3,12 +3,12 @@ name = "jba"
 version = "0.1.0"
 dependencies = [
  "env_logger 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "getopts 0.1.4 (registry+https://github.com/rust-lang/crates.io-index)",
- "gl 0.0.7 (git+https://github.com/bjz/gl-rs)",
+ "getopts 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "gl 0.0.8 (git+https://github.com/bjz/gl-rs)",
  "glfw 0.0.3 (git+https://github.com/bjz/glfw-rs)",
  "libc 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "time 0.1.15 (registry+https://github.com/rust-lang/crates.io-index)",
+ "time 0.1.16 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -22,7 +22,7 @@ version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "log 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "regex 0.1.13 (registry+https://github.com/rust-lang/crates.io-index)",
+ "regex 0.1.14 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -32,30 +32,36 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "getopts"
-version = "0.1.4"
+version = "0.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "log 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
+]
 
 [[package]]
 name = "gl"
-version = "0.0.7"
-source = "git+https://github.com/bjz/gl-rs#304569673d345b7b752aff2242f6926043e47b46"
+version = "0.0.8"
+source = "git+https://github.com/bjz/gl-rs#8dced16925dd6c08cbf65bac380a8b802db9fc3d"
 dependencies = [
- "gl_common 0.0.3 (git+https://github.com/bjz/gl-rs)",
- "gl_generator 0.0.14 (git+https://github.com/bjz/gl-rs)",
+ "gl_common 0.0.4 (git+https://github.com/bjz/gl-rs)",
+ "gl_generator 0.0.15 (git+https://github.com/bjz/gl-rs)",
  "khronos_api 0.0.5 (git+https://github.com/bjz/gl-rs)",
+ "libc 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
 name = "gl_common"
-version = "0.0.3"
-source = "git+https://github.com/bjz/gl-rs#304569673d345b7b752aff2242f6926043e47b46"
+version = "0.0.4"
+source = "git+https://github.com/bjz/gl-rs#8dced16925dd6c08cbf65bac380a8b802db9fc3d"
+dependencies = [
+ "libc 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
+]
 
 [[package]]
 name = "gl_generator"
-version = "0.0.14"
-source = "git+https://github.com/bjz/gl-rs#304569673d345b7b752aff2242f6926043e47b46"
+version = "0.0.15"
+source = "git+https://github.com/bjz/gl-rs#8dced16925dd6c08cbf65bac380a8b802db9fc3d"
 dependencies = [
- "gl_common 0.0.3 (git+https://github.com/bjz/gl-rs)",
  "khronos_api 0.0.5 (git+https://github.com/bjz/gl-rs)",
  "log 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "xml-rs 0.1.17 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -81,7 +87,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 [[package]]
 name = "khronos_api"
 version = "0.0.5"
-source = "git+https://github.com/bjz/gl-rs#304569673d345b7b752aff2242f6926043e47b46"
+source = "git+https://github.com/bjz/gl-rs#8dced16925dd6c08cbf65bac380a8b802db9fc3d"
 
 [[package]]
 name = "libc"
@@ -95,7 +101,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "regex"
-version = "0.1.13"
+version = "0.1.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
@@ -105,7 +111,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "time"
-version = "0.1.15"
+version = "0.1.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "gcc 0.1.7 (registry+https://github.com/rust-lang/crates.io-index)",

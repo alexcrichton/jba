@@ -109,7 +109,7 @@ pub struct Gpu {
     pub sgb: Box<SgbData>,
 }
 
-#[derive(PartialEq, Eq, Show, Copy)]
+#[derive(PartialEq, Eq, Debug, Copy)]
 enum Mode {
     HBlank = 0x00, // mode 0
     VBlank = 0x01, // mode 1

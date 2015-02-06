@@ -1,4 +1,4 @@
-#![feature(path, core, std_misc, os, collections, libc, io)]
+#![feature(path, core, std_misc, os, io, env)]
 #![cfg_attr(test, feature(hash))]
 #![cfg_attr(test, deny(warnings))]
 #![cfg_attr(test, allow(dead_code))]
@@ -8,9 +8,8 @@ extern crate getopts;
 #[macro_use] extern crate log;
 extern crate env_logger;
 
-use std::os;
+use std::env;
 use std::old_io::File;
-use getopts as opts;
 
 macro_rules! dpanic( ($($e:tt)*) => ({
     if cfg!(not(ndebug)) {
@@ -30,27 +29,24 @@ mod timer;
 
 #[path = "gl.rs"] mod app;
 
-fn usage(prog: &str, opts: &[opts::OptGroup]) {
-    let h = opts::usage(format!("usage: {} [options] <rom>", prog).as_slice(),
-                        opts);
-    println!("{}", h);
+fn usage(opts: &getopts::Options) {
+    let prog = env::args().next().unwrap().into_string().unwrap();
+    println!("{}", opts.usage(&format!("usage: {} [options] <rom>", prog)));
 }
 
 fn main() {
     env_logger::init().unwrap();
-    let args = os::args();
-    let opts = [
-        opts::optflag("h", "help", "show this message"),
-        opts::optflag("", "fps", "don't run a display, just print FPS"),
-        opts::optopt("g", "gb", "type of gameboy to run", "[gb|cgb|sgb]"),
-    ];
-    let matches = match opts::getopts(args.tail(), &opts) {
+    let mut opts = getopts::Options::new();
+    opts.optflag("h", "help", "show this message")
+        .optflag("", "fps", "don't run a display, just print FPS")
+        .optopt("g", "gb", "type of gameboy to run", "[gb|cgb|sgb]");
+    let matches = match opts.parse(env::args().skip(1)) {
         Ok(m) => m,
         Err(f) => panic!("{}", f),
     };
     if matches.opt_present("h") || matches.opt_present("help") ||
        matches.free.len() == 0 {
-        return usage(args[0].as_slice(), &opts);
+        return usage(&opts);
     }
 
     let rom = File::open(&Path::new(matches.free[0].as_slice())).read_to_end();
@@ -69,7 +65,7 @@ fn main() {
         Some(s) => {
             println!("Invalid gameboy type: {}", s);
             println!("Supported types: gb, cgb, sgb");
-            return usage(args[0].as_slice(), &opts);
+            return usage(&opts);
         }
         None => {
             match mem::Memory::guess_target(rom.as_slice()) {

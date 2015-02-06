@@ -17,7 +17,7 @@ mod daa;
 /// - ime : flag for whether interrupts are tunred on or not
 /// - halt : flag as to whether a halt has happened or should
 /// - stop : flag as to whether a stop has happened or should
-#[derive(Show)]
+#[derive(Debug)]
 pub struct Registers {
     pub ime: u32,
     pub halt: u32,
