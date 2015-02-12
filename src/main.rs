@@ -1,4 +1,4 @@
-#![feature(path, core, std_misc, os, io, env)]
+#![feature(path, core, std_misc, io, env)]
 #![cfg_attr(test, feature(hash))]
 #![cfg_attr(test, deny(warnings))]
 #![cfg_attr(test, allow(dead_code))]
@@ -30,7 +30,7 @@ mod timer;
 #[path = "gl.rs"] mod app;
 
 fn usage(opts: &getopts::Options) {
-    let prog = env::args().next().unwrap().into_string().unwrap();
+    let prog = env::args().next().unwrap();
     println!("{}", opts.usage(&format!("usage: {} [options] <rom>", prog)));
 }
 
