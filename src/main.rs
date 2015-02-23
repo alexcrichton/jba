@@ -1,4 +1,4 @@
-#![feature(path, core, std_misc, io, env)]
+#![feature(old_path, core, std_misc, old_io, env)]
 #![cfg_attr(test, feature(hash))]
 #![cfg_attr(test, deny(warnings))]
 #![cfg_attr(test, allow(dead_code))]

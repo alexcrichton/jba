@@ -163,15 +163,15 @@ impl Sgb {
     // transfer.
     fn update_pal(&mut self, p1: usize, p2: usize, gpu: &mut gpu::Gpu) {
         // Color 0 specified applies to all palettes
-        for i in range(0us, 4) {
+        for i in 0..4 {
             self.pal[i * 4] = pack(self.data[2], self.data[1]);
         }
 
-        for i in range(1us, 3) {
+        for i in 1..3 {
             self.pal[p1 * 4 + i] = pack(self.data[1 + i * 2 + 1],
                                         self.data[1 + i * 2]);
         }
-        for i in range(0us, 3) {
+        for i in 0..3 {
             self.pal[p2 * 4 + i] = pack(self.data[1 + (i + 4) * 2 + 1],
                                         self.data[1 + (i + 4) * 2]);
         }
@@ -198,7 +198,7 @@ impl Sgb {
     // There are only four palettes that modify the screen, and each of these
     // will have four colors (so each gray shade can map to a color).
     fn attr_blk(&mut self, gpu: &mut gpu::Gpu) {
-        for i in range(0, self.data[1]) {
+        for i in 0..self.data[1] {
             // extract all data from what was received
             let off = 2 + (i as usize) * 6;
             let x1 = self.data[off + 2] as i32;
@@ -214,8 +214,8 @@ impl Sgb {
             let outsidepal = (self.data[off + 1] >> 4) & 3;
 
             // Apply to the attribute file for each block of data
-            for y in range(0, 18) {
-                for x in range(0, 20) {
+            for y in 0..18 {
+                for x in 0..20 {
                     if x > x1 && x < x2 && y > y1 && y < y2 {
                         if insideon {
                             gpu.sgb.atf[(y * 20 + x) as usize] = insidepal;
@@ -245,8 +245,8 @@ impl Sgb {
         ];
 
         // i = palette number, j = color number (4 palettes, 4 colors)
-        for i in range(0us, 4) {
-            for j in range(0us, 4) {
+        for i in 0..4 {
+            for j in 0..4 {
                 self.pal[i * 4 + j] = pack(self.ram[pali[i] + 2 * j + 1],
                                            self.ram[pali[i] + 2 * j]);
             }
@@ -285,12 +285,12 @@ impl Sgb {
         let mut sgboffset = 0;
 
         // Why 13x20? Talk to the macboyadvance people.
-        for _ in range(0, 13) {
-            for _ in range(0, 20) {
+        for _ in 0..13 {
+            for _ in 0..20 {
                 let tilei = gpu.vram()[mapbase + offset];
                 offset += 1;
                 let tilei = gpu.add_tilei(0, tilei);
-                for k in range(0us, 16) {
+                for k in 0..16 {
                     if sgboffset >= 4096 { break }
                     self.ram[sgboffset] = gpu.vram()[patbase + tilei * 16 + k];
                     sgboffset += 1;
@@ -304,8 +304,8 @@ impl Sgb {
     // four relevant palettes with their first four colors because these are the
     // only ones that are used in colorizing the game screen.
     fn update_palettes(&self, gpu: &mut gpu::Gpu) {
-        for i in range(0us, 4) {
-            for j in range(0us, 4) {
+        for i in 0..4 {
+            for j in 0..4 {
                 let color = self.pal[i * 4 + j];
                 gpu.sgb.pal[i][j] = [
                     (((color >>  0) & 0x1f) as u8) << 3,

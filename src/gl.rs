@@ -178,14 +178,14 @@ impl Glcx {
 
             // Create and compile the vertex shader
             let vert = gl::CreateShader(gl::VERTEX_SHADER);
-            let src = CString::from_slice(VERTEX.as_bytes());
+            let src = CString::new(VERTEX).unwrap();
             gl::ShaderSource(vert, 1, &src.as_ptr(), 0 as *const i32);
             gl::CompileShader(vert);
             Glcx::check_shader_compile(vert);
 
             // Create and compile the fragment shader
             let frag = gl::CreateShader(gl::FRAGMENT_SHADER);
-            let src = CString::from_slice(FRAGMENT.as_bytes());
+            let src = CString::new(FRAGMENT).unwrap();
             gl::ShaderSource(frag, 1, &src.as_ptr(), 0 as *const i32);
             gl::CompileShader(frag);
             Glcx::check_shader_compile(frag);
@@ -194,7 +194,7 @@ impl Glcx {
             let program = gl::CreateProgram();
             gl::AttachShader(program, vert);
             gl::AttachShader(program, frag);
-            let buf = CString::from_slice(b"outColor");
+            let buf = CString::new("outColor").unwrap();
             gl::BindFragDataLocation(program, 0, buf.as_ptr());
             gl::LinkProgram(program);
             Glcx::check_program_link(program);
@@ -202,21 +202,21 @@ impl Glcx {
             gl::UseProgram(program);
 
             // Specify the layout of the vertex data
-            let buf = CString::from_slice(b"position");
+            let buf = CString::new("position").unwrap();
             let pos_attrib = gl::GetAttribLocation(program, buf.as_ptr());
             gl::EnableVertexAttribArray(pos_attrib as u32);
             gl::VertexAttribPointer(pos_attrib as u32, 2, gl::FLOAT, gl::FALSE,
                         (7 * mem::size_of::<glt::GLfloat>()) as i32,
                         0 as *const libc::c_void);
 
-            let buf = CString::from_slice(b"color");
+            let buf = CString::new("color").unwrap();
             let col_attrib = gl::GetAttribLocation(program, buf.as_ptr());
             gl::EnableVertexAttribArray(col_attrib as u32);
             gl::VertexAttribPointer(col_attrib as u32, 3, gl::FLOAT, gl::FALSE,
                         (7 * mem::size_of::<glt::GLfloat>()) as i32,
                         (2 * mem::size_of::<glt::GLfloat>()) as *const libc::c_void);
 
-            let buf = CString::from_slice(b"texcoord");
+            let buf = CString::new("texcoord").unwrap();
             let tex_attrib = gl::GetAttribLocation(program, buf.as_ptr());
             gl::EnableVertexAttribArray(tex_attrib as u32);
             gl::VertexAttribPointer(tex_attrib as u32, 2, gl::FLOAT, gl::FALSE,
@@ -229,7 +229,7 @@ impl Glcx {
 
             gl::ActiveTexture(gl::TEXTURE0);
             gl::BindTexture(gl::TEXTURE_2D, tex);
-            let buf = CString::from_slice(b"tex");
+            let buf = CString::new("tex").unwrap();
             gl::Uniform1i(gl::GetUniformLocation(program, buf.as_ptr()), 0);
 
             gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S,
