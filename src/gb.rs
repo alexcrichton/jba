@@ -52,7 +52,7 @@ impl Gb {
     }
 
     pub fn image(&self) -> &[u8] {
-        self.mem.gpu.image_data.as_slice()
+        &*self.mem.gpu.image_data
     }
 
     pub fn frames(&mut self) -> u32 {

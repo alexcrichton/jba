@@ -1,25 +1,21 @@
+extern crate flate2;
+
 use std::hash;
-use std::old_io::Command;
-use std::thread;
+use std::io::prelude::*;
 
 use gb;
 use mem;
 
 fn run(compressed_rom: &'static [u8], answer: &str) {
-    let mut p = Command::new("gunzip").arg("-c").arg("-d").spawn().unwrap();
-    let i = p.stdin.take().unwrap();
-    let _t = thread::spawn(move|| {
-        let mut i = i; i.write_all(compressed_rom).unwrap();
-    });
-    let rom = p.stdout.take().unwrap().read_to_end().unwrap();
-    drop(p);
+    let mut rom = Vec::new();
+    flate2::read::GzDecoder::new(compressed_rom).unwrap().read_to_end(&mut rom)
+                            .unwrap();
 
-    let rom = rom.as_slice();
-    let mut gb = gb::Gb::new(match mem::Memory::guess_target(rom) {
+    let mut gb = gb::Gb::new(match mem::Memory::guess_target(&rom) {
         Some(target) => target,
         None => gb::GameBoyColor,
     });
-    gb.load(rom.to_vec());
+    gb.load(rom);
 
     while !gb.test_done() {
         gb.frame();

@@ -263,7 +263,7 @@ impl Glcx {
         let mut buf = repeat(0u8).take(len as usize).collect::<Vec<_>>();
         gl::GetShaderInfoLog(shader, len, ptr::null_mut(),
                              buf.as_mut_ptr() as *mut glt::GLchar);
-        panic!("{}", str::from_utf8(buf.as_slice()).unwrap());
+        panic!("{}", str::from_utf8(&buf).unwrap());
     }
 
     unsafe fn check_program_link(program: glt::GLuint) {
@@ -276,7 +276,7 @@ impl Glcx {
         let mut buf = repeat(0u8).take(len as usize).collect::<Vec<_>>();
         gl::GetProgramInfoLog(program, len, ptr::null_mut(),
                              buf.as_mut_ptr() as *mut glt::GLchar);
-        panic!("{}", str::from_utf8(buf.as_slice()).unwrap());
+        panic!("{}", str::from_utf8(&buf).unwrap());
     }
 
     fn draw(&self, data: &[u8]) {

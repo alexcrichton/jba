@@ -1,6 +1,5 @@
 #![allow(dead_code)]
 
-use std::num::FromPrimitive;
 use cpu::Interrupt;
 
 pub struct Input {
@@ -24,7 +23,6 @@ pub enum Button {
 // Enum for which column of inputs is selected. See
 // http://nocash.emubase.de/pandocs.htm#joypadinput for codes and what each
 // column is.
-#[derive(FromPrimitive)]
 pub enum Selected {
     Button = 0x20,
     Direction = 0x10,
@@ -52,9 +50,11 @@ impl Input {
     pub fn wb(&mut self, _addr: u16, value: u8) {
         // The selected column is also negatively asserted, so invert the value
         // written in to get a positively asserted selection
-        match FromPrimitive::from_u8(!value & 0x30) {
-            Some(col) => { self.col = col; }
-            None => {}
+        match !value & 0x30 {
+            0x20 => self.col = Selected::Button,
+            0x10 => self.col = Selected::Direction,
+            0x00 => self.col = Selected::MltReq,
+            _ => {}
         }
     }
 

@@ -653,7 +653,7 @@ mod test {
         let mut ram = repeat(0u8).take(0x1000000).collect::<Vec<_>>();
         ram[0x0149] = 0x03;
         $(ram[$k] = $v;)+
-        m.load_cartridge(ram.as_slice().to_vec());
+        m.load_cartridge(ram);
         m
     }) );
 

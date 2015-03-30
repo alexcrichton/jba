@@ -2,8 +2,6 @@
 //!
 //! For more information, see: http://nocash.emubase.de/pandocs.htm#videodisplay
 
-use std::iter;
-
 use gb;
 use cpu::Interrupt;
 use mem;
@@ -29,7 +27,7 @@ const PALETTE: [Color; 4] = [
     [  0,   0,   0, 255],
 ];
 
-type Color = [u8; 4];
+pub type Color = [u8; 4];
 
 pub struct Gpu {
     pub oam: [u8; OAM_SIZE],
@@ -318,7 +316,7 @@ impl Gpu {
             //      byte 1 : 01101010
             //
             // The colors are [0, 2, 2, 1, 3, 0, 3, 1]
-            for (j, addr) in range(0, 8).zip(iter::count((i % NUM_TILES) * 16, 2)) {
+            for (j, addr) in (0..8).zip(((i % NUM_TILES) * 16..).step_by(2)) {
                 // All tiles are located 0x8000-0x97ff => 0x0000-0x17ff in VRAM
                 // meaning that the index is simply an index into raw VRAM
                 let (mut lsb, mut msb) = if i < NUM_TILES {
@@ -328,7 +326,7 @@ impl Gpu {
                 };
 
                 // LSB is the right-most pixel.
-                for k in range(0, 8).rev() {
+                for k in (0..8).rev() {
                     tiles.data[i][j][k] = ((msb & 1) << 1) | (lsb & 1);
                     lsb >>= 1;
                     msb >>= 1;
@@ -620,7 +618,7 @@ impl Gpu {
                 tiled[(line - yoff) as usize]
             };
 
-            for x in range(0, 8) {
+            for x in 0..8 {
                 coff += 4;
 
                 // If these pixels are off screen, don't bother drawing
@@ -824,7 +822,7 @@ impl Gpu {
         if orval > 0xf100 { return }
 
         debug!("oam dma transfer from {:x}", orval);
-        for i in range(0, OAM_SIZE as u16) {
+        for i in 0..OAM_SIZE as u16 {
             mem.gpu.oam[i as usize] = mem.rb(orval | i);
         }
     }
@@ -1061,7 +1059,7 @@ mod test {
         if_ = 0x0;
 
         // When in VBLANK, this lasts for 10 lines
-        for _ in range(0, 10) {
+        for _ in 0..10 {
             assert_eq!(gpu.mode, Mode::VBlank);
             assert_eq!(if_, 0x0);
             gpu.step(456, &mut if_);
@@ -1115,32 +1113,32 @@ mod test {
         // where {b,a} is a binary number with digits b,a
 
         // Data for tile 0, each pixel is color 0
-        for i in range(0u16, 8) { // 8 rows of pixels
+        for i in 0u16..8 { // 8 rows of pixels
             mem.wb(0x9000 + i * 2, 0x00);
             mem.wb(0x9000 + i * 2 + 1, 0x00);
         }
 
         // Data for tile 1, each pixel is color 1
-        for i in range(0u16, 8) {
+        for i in 0u16..8 {
             mem.wb(0x9010 + i * 2, 0xff);
             mem.wb(0x9010 + i * 2 + 1, 0x00);
         }
 
         // Data for tile 2, each pixel is color 2
-        for i in range(0u16, 8) {
+        for i in 0u16..8 {
             mem.wb(0x9020 + i * 2, 0x00);
             mem.wb(0x9020 + i * 2 + 1, 0xff);
         }
 
         /* Data for tile 3, each pixel is color 3 */
-        for i in range(0u16, 8) {
+        for i in 0u16..8 {
             mem.wb(0x9030 + i * 2, 0xff);
             mem.wb(0x9030 + i * 2 + 1, 0xff);
         }
 
         mem.gpu.ly = 10;
         let offset = 10 * 160 * 4;
-        for i in range(0, 160 * 4) {
+        for i in 0..160 * 4 {
             mem.gpu.image_data[offset + i] = 10;
         }
 
@@ -1148,7 +1146,7 @@ mod test {
         mem.gpu.wb(LCDC, 0);
         mem.gpu.ly = 10;
         mem.gpu.render_line();
-        for i in range(0, 160 * 4) {
+        for i in 0..160 * 4 {
             assert_eq!(mem.gpu.image_data[offset + i], 10);
         }
 
@@ -1158,7 +1156,7 @@ mod test {
 
         // First 3 pixels are all black. SCX = 5 so only 3 pixels of first tile
         // should be shown
-        for i in range(0, 3) {
+        for i in 0..3 {
             assert_eq!(mem.gpu.image_data[offset + i * 4], 0);
             assert_eq!(mem.gpu.image_data[offset + i * 4 + 1], 0);
             assert_eq!(mem.gpu.image_data[offset + i * 4 + 2], 0);
@@ -1166,7 +1164,7 @@ mod test {
         }
 
         // Next 8 pixels should all be next color (dark grey)
-        for i in range(3, 11) {
+        for i in 3..11 {
             assert_eq!(mem.gpu.image_data[offset + i * 4], 96);
             assert_eq!(mem.gpu.image_data[offset + i * 4 + 1], 96);
             assert_eq!(mem.gpu.image_data[offset + i * 4 + 2], 96);
@@ -1174,7 +1172,7 @@ mod test {
         }
 
         // Next 8 pixels should all be next color (light grey)
-        for i in range(11, 19) {
+        for i in 11..19 {
             assert_eq!(mem.gpu.image_data[offset + i * 4], 192);
             assert_eq!(mem.gpu.image_data[offset + i * 4 + 1], 192);
             assert_eq!(mem.gpu.image_data[offset + i * 4 + 2], 192);
@@ -1182,7 +1180,7 @@ mod test {
         }
 
         // Next 8 pixels should all be next color (light grey)
-        for i in range(19, 27) {
+        for i in 19..27 {
             assert_eq!(mem.gpu.image_data[offset + i * 4], 255);
             assert_eq!(mem.gpu.image_data[offset + i * 4 + 1], 255);
             assert_eq!(mem.gpu.image_data[offset + i * 4 + 2], 255);
@@ -1190,7 +1188,7 @@ mod test {
         }
 
         // Finally, the next 8 should be black
-        for i in range(27, 35) {
+        for i in 27..35 {
             assert_eq!(mem.gpu.image_data[offset + i * 4], 0);
             assert_eq!(mem.gpu.image_data[offset + i * 4 + 1], 0);
             assert_eq!(mem.gpu.image_data[offset + i * 4 + 2], 0);
@@ -1219,22 +1217,22 @@ mod test {
 
         // Background Palette
         mem.wb(0xff68, 0x80); // Indicate auto-increment, index 0
-        for i in range(0, 64u8) {
+        for i in 0..64u8 {
             mem.wb(0xff69, i);
         }
 
-        for i in range(0, 64u8) {
+        for i in 0..64u8 {
             mem.wb(0xff68, 0x80 | i);
             assert_eq!(mem.rb(0xff69), i);
         }
 
         // Object Palette
         mem.wb(0xff6a, 0x80); // Indicate auto-increment, index 0
-        for i in range(0, 64u8) {
+        for i in 0..64u8 {
             mem.wb(0xff6b, i + 64);
         }
 
-        for i in range(0, 64u8) {
+        for i in 0..64u8 {
             mem.wb(0xff6a, 0x80 | i);
             assert_eq!(mem.rb(0xff6b), i + 64);
         }

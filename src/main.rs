@@ -1,4 +1,4 @@
-#![feature(old_path, core, std_misc, old_io)]
+#![feature(core, step_by)]
 #![cfg_attr(test, feature(hash))]
 #![cfg_attr(test, deny(warnings))]
 #![cfg_attr(test, allow(dead_code))]
@@ -9,7 +9,8 @@ extern crate getopts;
 extern crate env_logger;
 
 use std::env;
-use std::old_io::File;
+use std::fs::File;
+use std::io::Read;
 
 macro_rules! dpanic( ($($e:tt)*) => ({
     if cfg!(not(ndebug)) {
@@ -49,16 +50,17 @@ fn main() {
         return usage(&opts);
     }
 
-    let rom = File::open(&Path::new(matches.free[0].as_slice())).read_to_end();
-    let rom = match rom {
-        Ok(rom) => rom,
+    let mut rom = Vec::new();
+    let file = File::open(&matches.free[0]);
+    match file.and_then(|mut f| f.read_to_end(&mut rom)) {
+        Ok(..) => {}
         Err(e) => {
-            println!("failed to read {}: {}", matches.free[0].as_slice(), e);
+            println!("failed to read {}: {}", matches.free[0], e);
             return
         }
     };
 
-    let mut gb = gb::Gb::new(match matches.opt_str("gb").as_ref().map(|s| s.as_slice()) {
+    let mut gb = gb::Gb::new(match matches.opt_str("gb").as_ref().map(|s| &s[..]) {
         Some("gb") => gb::GameBoy,
         Some("cgb") => gb::GameBoyColor,
         Some("sgb") => gb::SuperGameBoy,
@@ -68,7 +70,7 @@ fn main() {
             return usage(&opts);
         }
         None => {
-            match mem::Memory::guess_target(rom.as_slice()) {
+            match mem::Memory::guess_target(&rom) {
                 Some(target) => target,
                 None => gb::GameBoyColor,
             }
