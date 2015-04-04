@@ -6,7 +6,7 @@ use mem::Memory;
 
 pub use self::Target::{GameBoy, GameBoyColor, SuperGameBoy};
 
-#[derive(PartialEq, Eq, Copy)]
+#[derive(PartialEq, Eq, Copy, Clone)]
 pub enum Target {
     GameBoy,
     GameBoyColor,

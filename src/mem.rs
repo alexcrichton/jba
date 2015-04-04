@@ -67,13 +67,13 @@ pub struct Memory {
     pub sgb: Option<Box<sgb::Sgb>>,
 }
 
-#[derive(Copy)]
+#[derive(Copy, Clone)]
 pub enum Speed {
     Normal,
     Double,
 }
 
-#[derive(PartialEq, Eq, Debug, Copy)]
+#[derive(PartialEq, Eq, Debug, Copy, Clone)]
 enum Mbc {
     Unknown,
     Omitted,
