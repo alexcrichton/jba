@@ -1,5 +1,8 @@
 language: rust
-rust: nightly
+rust:
+  - 1.0.0
+  - beta
+  - nightly
 before_install:
   # install a newer cmake since at this time Travis only has version 2.8.7
   - yes | sudo add-apt-repository ppa:kalakris/cmake

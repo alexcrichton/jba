@@ -1,6 +1,6 @@
 extern crate flate2;
 
-use std::hash;
+use std::hash::{Hash, Hasher, SipHasher};
 use std::io::prelude::*;
 
 use gb;
@@ -21,7 +21,9 @@ fn run(compressed_rom: &'static [u8], answer: &str) {
         gb.frame();
     }
 
-    let hash = hash::hash::<_, hash::SipHasher>(&gb.image());
+    let mut s = SipHasher::new_with_keys(0, 0);
+    gb.image().hash(&mut s);
+    let hash = s.finish();
     if answer == "-" {
         panic!("{}", hash)
     } else if answer.to_string() != hash.to_string() {

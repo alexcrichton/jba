@@ -316,7 +316,8 @@ impl Gpu {
             //      byte 1 : 01101010
             //
             // The colors are [0, 2, 2, 1, 3, 0, 3, 1]
-            for (j, addr) in (0..8).zip(((i % NUM_TILES) * 16..).step_by(2)) {
+            for j in 0..8 {
+                let addr = ((i % NUM_TILES) * 16) + j * 2;
                 // All tiles are located 0x8000-0x97ff => 0x0000-0x17ff in VRAM
                 // meaning that the index is simply an index into raw VRAM
                 let (mut lsb, mut msb) = if i < NUM_TILES {

@@ -1,5 +1,3 @@
-#![feature(step_by)]
-#![cfg_attr(test, feature(hash))]
 #![cfg_attr(test, deny(warnings))]
 #![cfg_attr(test, allow(dead_code))]
 
