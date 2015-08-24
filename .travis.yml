@@ -1,20 +1,23 @@
 language: rust
+sudo: false
 rust:
   - 1.0.0
   - beta
   - nightly
-before_install:
-  # install a newer cmake since at this time Travis only has version 2.8.7
-  - yes | sudo add-apt-repository ppa:kalakris/cmake
-  - sudo apt-get update -qq
-install: sudo apt-get install cmake libXxf86vm-dev
 script:
     - cargo build --verbose
     - cargo test --verbose
 branches:
-    only:
-        - rust
+  only:
+    - rust
 
 notifications:
   email:
     on_success: never
+addons:
+  apt:
+    sources:
+      - kalakris-cmake
+    packages:
+      - cmake
+      - libXxf86vm-dev
