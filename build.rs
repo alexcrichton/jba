@@ -6,9 +6,10 @@ use std::env;
 use std::fs::{self, File};
 
 fn main() {
-    let dest = PathBuf::from(env::var_os("OUT_DIR").unwrap());
+    let dest = PathBuf::from(env::var_os("OUT_DIR").unwrap())
+                       .join("gl_bindings.rs");
     if fs::metadata(&dest).is_err() {
-        let mut file = File::create(&dest.join("gl_bindings.rs")).unwrap();
+        let mut file = File::create(&dest).unwrap();
         gl_generator::generate_bindings(gl_generator::StructGenerator,
                                         gl_generator::registry::Ns::Gl,
                                         gl_generator::Fallbacks::All,
