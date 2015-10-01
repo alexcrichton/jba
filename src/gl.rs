@@ -6,6 +6,8 @@ use std::iter::repeat;
 use std::mem;
 use std::ptr;
 use std::str;
+use std::thread;
+
 use self::gl::types as glt;
 use self::glutin::Event;
 use self::glutin::ElementState as ES;
@@ -30,9 +32,10 @@ struct Glcx {
     vao: glt::GLuint,
 }
 
+const WIDTH: u32 = gpu::WIDTH as u32;
+const HEIGHT: u32 = gpu::HEIGHT as u32;
+
 pub fn run(mut gb: Gb) {
-    const WIDTH: u32 = gpu::WIDTH as u32;
-    const HEIGHT: u32 = gpu::HEIGHT as u32;
     let mut ratio = 1 + (WIDTH / 10);
     let window = glutin::WindowBuilder::new()
                         .with_title("JBA".to_string())
@@ -46,56 +49,65 @@ pub fn run(mut gb: Gb) {
     let context = Glcx::new(&window);
 
     let mut focused = true;
-    for event in window.wait_events() {
+    'outer: loop {
+        for event in window.poll_events() {
+            if !handle(event, &mut gb, &window, &mut ratio, &mut focused) {
+                break 'outer
+            }
+        }
+
         if focused {
             gb.frame();
             context.draw(gb.image());
             window.swap_buffers().unwrap();
         }
-
-        println!("{:?}", event);
-
-        match event {
-            Event::Closed => break,
-            Event::Resized(width, height) => {
-                let (width, height) = if width < height {
-                    (width, width * HEIGHT / WIDTH)
-                } else {
-                    (height * WIDTH / HEIGHT, height)
-                };
-                window.set_inner_size(width, height);
-            }
-            Event::Focused(f) => focused = f,
-            Event::KeyboardInput(ES::Pressed, _, Some(VKC::Equals)) => {
-                ratio += 1;
-                window.set_inner_size(WIDTH + 10 * ratio, HEIGHT + 9 * ratio);
-            }
-            Event::KeyboardInput(ES::Pressed, _, Some(VKC::Minus)) => {
-                ratio -= 1;
-                window.set_inner_size(WIDTH + 10 * ratio, HEIGHT + 9 * ratio);
-            }
-            Event::KeyboardInput(action, _, Some(virt)) => {
-                let button = match virt {
-                    VKC::Z => Button::A,
-                    VKC::X => Button::B,
-                    VKC::Return => Button::Select,
-                    VKC::Comma => Button::Start,
-
-                    VKC::Left => Button::Left,
-                    VKC::Right => Button::Right,
-                    VKC::Down => Button::Down,
-                    VKC::Up => Button::Up,
-
-                    _ => continue,
-                };
-                match action {
-                    ES::Pressed => gb.keydown(button),
-                    ES::Released => gb.keyup(button),
-                }
-            }
-            _ => ()
-        }
+        thread::sleep_ms(10);
     }
+}
+
+fn handle(event: Event, gb: &mut Gb, window: &glutin::Window, ratio: &mut u32,
+         focused: &mut bool) -> bool {
+    match event {
+        Event::Closed => return false,
+        Event::Resized(width, height) => {
+            let (width, height) = if width < height {
+                (width, width * HEIGHT / WIDTH)
+            } else {
+                (height * WIDTH / HEIGHT, height)
+            };
+            window.set_inner_size(width, height);
+        }
+        Event::Focused(f) => *focused = f,
+        Event::KeyboardInput(ES::Pressed, _, Some(VKC::Equals)) => {
+            *ratio += 1;
+            window.set_inner_size(WIDTH + 10 * *ratio, HEIGHT + 9 * *ratio);
+        }
+        Event::KeyboardInput(ES::Pressed, _, Some(VKC::Minus)) => {
+            *ratio -= 1;
+            window.set_inner_size(WIDTH + 10 * *ratio, HEIGHT + 9 * *ratio);
+        }
+        Event::KeyboardInput(action, _, Some(virt)) => {
+            let button = match virt {
+                VKC::Z => Button::A,
+                VKC::X => Button::B,
+                VKC::Return => Button::Select,
+                VKC::Comma => Button::Start,
+
+                VKC::Left => Button::Left,
+                VKC::Right => Button::Right,
+                VKC::Down => Button::Down,
+                VKC::Up => Button::Up,
+
+                _ => return true,
+            };
+            match action {
+                ES::Pressed => gb.keydown(button),
+                ES::Released => gb.keyup(button),
+            }
+        }
+        _ => ()
+    }
+    return true
 }
 
 // Shader sources
