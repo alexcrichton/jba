@@ -7,7 +7,7 @@ rust:
   - beta
   - nightly
 script:
-  #- cargo test
+  - cargo test
   - if [ "$TRAVIS_OS_NAME" = "linux" ]; then
       docker pull alexcrichton/rust-centos-dist;
       docker run -v $HOME/rust:/rust:ro -v `pwd`:/home/rustbuild
