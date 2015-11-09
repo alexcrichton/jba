@@ -7,6 +7,7 @@ use std::mem;
 use std::ptr;
 use std::str;
 use std::thread;
+use std::time::Duration;
 
 use self::gl::types as glt;
 use self::glutin::Event;
@@ -61,7 +62,7 @@ pub fn run(mut gb: Gb) {
             context.draw(gb.image());
             window.swap_buffers().unwrap();
         }
-        thread::sleep_ms(10);
+        thread::sleep(Duration::from_millis(10));
     }
 }
 
