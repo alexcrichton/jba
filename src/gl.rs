@@ -139,7 +139,7 @@ impl Glcx {
     fn new(window: &glutin::Window) -> Glcx {
         // lots of code lifted from
         // http://www.open.gl/content/code/c3_multitexture.txt
-        let gl = gl::Gl::load(window);
+        let gl = gl::Gl::load_with(|ptr| window.get_proc_address(ptr) as *const _);
         unsafe {
             let mut vao = 0;
             gl.GenVertexArrays(1, &mut vao);
