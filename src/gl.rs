@@ -18,6 +18,7 @@ use input::Button;
 use gpu;
 use gb::Gb;
 
+#[allow(unknown_lints)]
 mod gl {
     include!(concat!(env!("OUT_DIR"), "/gl_bindings.rs"));
 }
