@@ -157,8 +157,8 @@ impl Glcx {
             ];
             gl.BindBuffer(gl::ARRAY_BUFFER, vbo);
             gl.BufferData(gl::ARRAY_BUFFER,
-                           (VERTICES.len() * 4) as i64,
-                           VERTICES.as_ptr() as *const libc::c_void,
+                           (VERTICES.len() * 4) as libc::ssize_t,
+                           VERTICES.as_ptr() as *const _,
                            gl::STATIC_DRAW);
 
             let mut ebo = 0;
@@ -171,8 +171,8 @@ impl Glcx {
 
             gl.BindBuffer(gl::ELEMENT_ARRAY_BUFFER, ebo);
             gl.BufferData(gl::ELEMENT_ARRAY_BUFFER,
-                        (ELEMENTS.len() * mem::size_of::<glt::GLuint>()) as i64,
-                        ELEMENTS.as_ptr() as *const libc::c_void,
+                        (ELEMENTS.len() * mem::size_of::<glt::GLuint>()) as libc::ssize_t,
+                        ELEMENTS.as_ptr() as *const _,
                         gl::STATIC_DRAW);
 
             // Create and compile the vertex shader
@@ -206,21 +206,21 @@ impl Glcx {
             gl.EnableVertexAttribArray(pos_attrib as u32);
             gl.VertexAttribPointer(pos_attrib as u32, 2, gl::FLOAT, gl::FALSE,
                         (7 * mem::size_of::<glt::GLfloat>()) as i32,
-                        0 as *const libc::c_void);
+                        0 as *const _);
 
             let buf = CString::new("color").unwrap();
             let col_attrib = gl.GetAttribLocation(program, buf.as_ptr());
             gl.EnableVertexAttribArray(col_attrib as u32);
             gl.VertexAttribPointer(col_attrib as u32, 3, gl::FLOAT, gl::FALSE,
                         (7 * mem::size_of::<glt::GLfloat>()) as i32,
-                        (2 * mem::size_of::<glt::GLfloat>()) as *const libc::c_void);
+                        (2 * mem::size_of::<glt::GLfloat>()) as *const _);
 
             let buf = CString::new("texcoord").unwrap();
             let tex_attrib = gl.GetAttribLocation(program, buf.as_ptr());
             gl.EnableVertexAttribArray(tex_attrib as u32);
             gl.VertexAttribPointer(tex_attrib as u32, 2, gl::FLOAT, gl::FALSE,
                         (7 * mem::size_of::<glt::GLfloat>()) as i32,
-                        (5 * mem::size_of::<glt::GLfloat>()) as *const libc::c_void);
+                        (5 * mem::size_of::<glt::GLfloat>()) as *const _);
 
             // Load textures
             let mut tex = 0;
@@ -287,13 +287,13 @@ impl Glcx {
             self.gl.TexImage2D(gl::TEXTURE_2D, 0, gl::RGB as i32,
                                gpu::WIDTH as i32, gpu::HEIGHT as i32,
                                0, gl::RGBA, gl::UNSIGNED_BYTE,
-                               data.as_ptr() as *const libc::c_void);
+                               data.as_ptr() as *const _);
             assert_eq!(self.gl.GetError(), 0);
 
             // Draw a rectangle from the 2 triangles using 6
             // indices
             self.gl.DrawElements(gl::TRIANGLES, 6, gl::UNSIGNED_INT,
-                                 0 as *const libc::c_void);
+                                 0 as *const _);
         }
     }
 }
